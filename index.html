@@ -1,81 +1,2538 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="de">
-  <head>
-    <title>Schön, dass du da bist</title>
-    <style>
-  body {
-    font-family: system-ui, sans-serif;
-    margin: 2rem;
-    line-height: 1.6;
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NovOS 3.1</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --panel: #111118;
+    --panel2: #16161f;
+    --border: #2a2a3a;
+    --accent: #7c6aff;
+    --accent2: #ff6a8a;
+    --accent3: #6affca;
+    --text: #e8e8f0;
+    --text2: #8888aa;
+    --taskbar-h: 48px;
+    --radius: 12px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; user-select:none; }
+  body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); width:100vw; height:100vh; overflow:hidden; font-size:13px; }
+
+  /* ══════════════════ LOGIN SCREEN ══════════════════ */
+  #login-screen {
+    position:fixed; inset:0; z-index:9999;
+    background: radial-gradient(ellipse 80% 60% at 20% 80%,#1a0d3a 0%,transparent 60%),
+                radial-gradient(ellipse 60% 80% at 80% 20%,#0d1f3a 0%,transparent 60%),
+                #07060f;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:0;
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  #login-screen.out { opacity:0; transform:scale(1.04); pointer-events:none; }
+
+  .login-time {
+    font-size:72px; font-weight:200; letter-spacing:-2px; color:var(--text);
+    line-height:1; margin-bottom:6px;
+  }
+  .login-date { font-size:16px; color:var(--text2); font-weight:400; margin-bottom:48px; }
+
+  .login-avatar {
+    width:80px; height:80px; border-radius:50%;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    display:flex; align-items:center; justify-content:center;
+    font-size:36px; margin-bottom:16px;
+    box-shadow:0 0 40px rgba(124,106,255,0.4);
+  }
+  .login-name { font-size:18px; font-weight:600; margin-bottom:6px; }
+  .login-sub { font-size:12px; color:var(--text2); margin-bottom:32px; }
+
+  .login-btn {
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    border:none; border-radius:50px; padding:13px 40px;
+    color:white; font-family:'Inter',sans-serif; font-size:14px; font-weight:600;
+    cursor:pointer; transition:transform 0.15s, box-shadow 0.15s;
+    box-shadow:0 4px 24px rgba(124,106,255,0.4);
+  }
+  .login-btn:hover { transform:scale(1.04); box-shadow:0 8px 32px rgba(124,106,255,0.6); }
+  .login-btn:active { transform:scale(0.98); }
+
+  .login-stars {
+    position:absolute; inset:0; pointer-events:none;
+    background-image:
+      radial-gradient(1px 1px at 10% 15%,rgba(255,255,255,0.6) 0%,transparent 100%),
+      radial-gradient(1px 1px at 22% 55%,rgba(255,255,255,0.3) 0%,transparent 100%),
+      radial-gradient(1px 1px at 40% 8%, rgba(255,255,255,0.5) 0%,transparent 100%),
+      radial-gradient(1px 1px at 60% 70%,rgba(255,255,255,0.4) 0%,transparent 100%),
+      radial-gradient(1px 1px at 75% 30%,rgba(255,255,255,0.6) 0%,transparent 100%),
+      radial-gradient(1px 1px at 88% 85%,rgba(255,255,255,0.3) 0%,transparent 100%),
+      radial-gradient(1px 1px at 50% 45%,rgba(255,255,255,0.2) 0%,transparent 100%),
+      radial-gradient(1px 1px at 30% 90%,rgba(255,255,255,0.4) 0%,transparent 100%),
+      radial-gradient(1px 1px at 95% 50%,rgba(255,255,255,0.5) 0%,transparent 100%),
+      radial-gradient(1px 1px at 5%  70%,rgba(255,255,255,0.3) 0%,transparent 100%);
   }
 
-  .intro h1 {
-    margin-bottom: 0.5rem;
+  /* ══════════════════ DESKTOP ══════════════════ */
+  #desktop {
+    width:100%; height:100%; position:relative;
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 80%,#1a0d3a 0%,transparent 60%),
+      radial-gradient(ellipse 60% 80% at 80% 20%,#0d1f3a 0%,transparent 60%),
+      radial-gradient(ellipse 40% 40% at 50% 50%,#120f2a 0%,transparent 70%),
+      #07060f;
+    display:none;
+  }
+  #desktop.visible { display:block; }
+  #desktop::before {
+    content:''; position:absolute; inset:0;
+    background-image:
+      radial-gradient(1px 1px at 15% 20%,rgba(255,255,255,0.5) 0%,transparent 100%),
+      radial-gradient(1px 1px at 35% 60%,rgba(255,255,255,0.3) 0%,transparent 100%),
+      radial-gradient(1px 1px at 55% 10%,rgba(255,255,255,0.4) 0%,transparent 100%),
+      radial-gradient(1px 1px at 75% 45%,rgba(255,255,255,0.6) 0%,transparent 100%),
+      radial-gradient(1px 1px at 85% 80%,rgba(255,255,255,0.3) 0%,transparent 100%),
+      radial-gradient(1px 1px at 25% 85%,rgba(255,255,255,0.5) 0%,transparent 100%),
+      radial-gradient(1px 1px at 65% 30%,rgba(255,255,255,0.4) 0%,transparent 100%),
+      radial-gradient(1px 1px at 90% 15%,rgba(255,255,255,0.3) 0%,transparent 100%),
+      radial-gradient(1px 1px at 45% 75%,rgba(255,255,255,0.5) 0%,transparent 100%),
+      radial-gradient(1px 1px at 10% 50%,rgba(255,255,255,0.4) 0%,transparent 100%);
   }
 
-  .apps {
-    margin-top: 2rem;
+  /* Desktop icons */
+  .icon-grid {
+    position:absolute; top:16px; left:16px;
+    display:flex; flex-direction:column; gap:4px;
+  }
+  .desk-icon {
+    display:flex; flex-direction:column; align-items:center;
+    gap:5px; width:72px; cursor:pointer; padding:8px 4px;
+    border-radius:10px; transition:background 0.15s;
+  }
+  .desk-icon:hover { background:rgba(124,106,255,0.15); }
+  .desk-icon:active { background:rgba(124,106,255,0.25); }
+  .desk-icon .ico {
+    width:44px; height:44px; border-radius:10px;
+    display:flex; align-items:center; justify-content:center; font-size:22px;
+  }
+  .desk-icon span { font-size:11px; color:var(--text); text-align:center; text-shadow:0 1px 4px #000; line-height:1.2; }
+
+  /* ══════════════════ TASKBAR ══════════════════ */
+  #taskbar {
+    position:absolute; bottom:0; left:0; right:0;
+    height:var(--taskbar-h);
+    background:rgba(10,10,20,0.8); backdrop-filter:blur(20px);
+    border-top:1px solid var(--border);
+    display:flex; align-items:center; padding:0 12px; gap:6px; z-index:1000;
+  }
+  #start-btn {
+    width:36px; height:36px;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    border-radius:10px; display:flex; align-items:center; justify-content:center;
+    cursor:pointer; font-size:16px;
+    box-shadow:0 0 16px rgba(124,106,255,0.4);
+    transition:transform 0.15s, box-shadow 0.15s; flex-shrink:0;
+  }
+  #start-btn:hover { transform:scale(1.08); box-shadow:0 0 24px rgba(124,106,255,0.6); }
+  .taskbar-sep { width:1px; height:28px; background:var(--border); margin:0 4px; flex-shrink:0; }
+  #taskbar-apps { display:flex; gap:6px; flex:1; overflow:hidden; }
+  .tb-app {
+    height:36px; padding:0 10px; background:var(--panel);
+    border:1px solid var(--border); border-radius:8px;
+    display:flex; align-items:center; gap:6px;
+    cursor:pointer; font-size:11px; color:var(--text2);
+    transition:all 0.15s; white-space:nowrap; max-width:140px;
+  }
+  .tb-app:hover { background:var(--panel2); color:var(--text); border-color:var(--accent); }
+  .tb-app.active { color:var(--accent); border-color:var(--accent); background:rgba(124,106,255,0.1); }
+
+  #tb-right { display:flex; align-items:center; gap:10px; flex-shrink:0; }
+  #tb-icons { display:flex; align-items:center; gap:8px; }
+  .tb-icon { font-size:14px; cursor:pointer; opacity:0.7; transition:opacity 0.15s; }
+  .tb-icon:hover { opacity:1; }
+  #clock { font-size:13px; font-weight:600; color:var(--text); }
+  #date-display { font-size:10px; color:var(--text2); }
+
+  /* ══════════════════ START MENU ══════════════════ */
+  #start-menu {
+    position:absolute; bottom:calc(var(--taskbar-h) + 8px); left:12px;
+    width:320px; background:rgba(14,14,24,0.97);
+    backdrop-filter:blur(24px); border:1px solid var(--border);
+    border-radius:14px; box-shadow:0 24px 80px rgba(0,0,0,0.8);
+    padding:16px; z-index:2000; display:none;
+    animation:fadeUp 0.18s ease;
+  }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+  #start-menu.open { display:block; }
+  .sm-header {
+    font-size:20px; font-weight:800;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    margin-bottom:12px;
+  }
+  .sm-search {
+    width:100%; background:var(--panel2); border:1px solid var(--border);
+    border-radius:8px; padding:8px 12px; color:var(--text);
+    font-family:'Inter',sans-serif; font-size:12px; outline:none; margin-bottom:12px;
+  }
+  .sm-search:focus { border-color:var(--accent); }
+  .sm-section { font-size:10px; color:var(--text2); text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; }
+  .sm-apps { display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-bottom:12px; }
+  .sm-app {
+    background:var(--panel2); border:1px solid var(--border);
+    border-radius:8px; padding:9px 10px;
+    display:flex; align-items:center; gap:8px;
+    cursor:pointer; transition:all 0.15s;
+  }
+  .sm-app:hover { border-color:var(--accent); background:rgba(124,106,255,0.1); }
+  .sm-app .ico { font-size:16px; }
+  .sm-app .name { font-size:12px; color:var(--text); }
+  .sm-footer {
+    border-top:1px solid var(--border); padding-top:10px; margin-top:4px;
+    display:flex; gap:6px;
+  }
+  .sm-footer-btn {
+    flex:1; padding:8px; border-radius:8px;
+    background:var(--panel2); border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center; gap:6px;
+    cursor:pointer; font-size:11px; color:var(--text2); transition:all 0.15s;
+  }
+  .sm-footer-btn:hover { border-color:var(--accent); color:var(--text); }
+
+  /* ══════════════════ WINDOW ══════════════════ */
+  .window {
+    position:absolute; background:var(--panel); border:1px solid var(--border);
+    border-radius:var(--radius); box-shadow:0 24px 80px rgba(0,0,0,0.7),0 0 0 1px rgba(255,255,255,0.04);
+    display:flex; flex-direction:column; overflow:hidden; transition:box-shadow 0.2s;
+    min-width:280px; min-height:200px;
+  }
+  .window.focused {
+    box-shadow:0 24px 80px rgba(0,0,0,0.8),0 0 0 1px rgba(124,106,255,0.3),0 0 60px rgba(124,106,255,0.05);
+    border-color:rgba(124,106,255,0.3);
+  }
+  .win-titlebar {
+    height:38px; background:var(--panel2); border-bottom:1px solid var(--border);
+    display:flex; align-items:center; padding:0 12px; gap:8px;
+    cursor:grab; flex-shrink:0;
+  }
+  .win-titlebar:active { cursor:grabbing; }
+  .win-btns { display:flex; gap:6px; }
+  .win-btn { width:12px; height:12px; border-radius:50%; cursor:pointer; border:none; outline:none; transition:filter 0.15s; }
+  .win-btn:hover { filter:brightness(1.3); }
+  .btn-close { background:#ff5f57; }
+  .btn-min   { background:#febc2e; }
+  .btn-max   { background:#28c840; }
+  .win-title { font-size:12px; color:var(--text2); margin-left:4px; flex:1; display:flex; align-items:center; gap:6px; }
+  .win-body { flex:1; overflow:hidden; display:flex; flex-direction:column; }
+  .resize-handle { position:absolute; bottom:0; right:0; width:16px; height:16px; cursor:nw-resize; opacity:0.4; }
+  .resize-handle::after {
+    content:''; position:absolute; bottom:4px; right:4px;
+    width:8px; height:8px; border-right:2px solid var(--text2); border-bottom:2px solid var(--text2); border-radius:1px;
   }
 
-  .app {
-    margin-bottom: 1.5rem;
-    padding: 1rem;
-    border-radius: 8px;
-    background: #f5f5f5;
+  /* ══════════════════ CONTEXT MENU ══════════════════ */
+  #ctx-menu {
+    position:absolute; z-index:3000; background:rgba(14,14,24,0.97);
+    backdrop-filter:blur(20px); border:1px solid var(--border);
+    border-radius:10px; padding:6px; box-shadow:0 16px 48px rgba(0,0,0,0.7);
+    min-width:190px; display:none; animation:ctxIn 0.12s ease;
+  }
+  @keyframes ctxIn { from{opacity:0;transform:scale(0.95)} to{opacity:1;transform:scale(1)} }
+  #ctx-menu.open { display:block; }
+  .ctx-item {
+    padding:8px 12px; border-radius:6px; cursor:pointer;
+    font-size:12px; color:var(--text2);
+    display:flex; align-items:center; gap:10px; transition:all 0.1s;
+  }
+  .ctx-item:hover { background:rgba(124,106,255,0.15); color:var(--text); }
+  .ctx-item.danger:hover { background:rgba(255,106,138,0.15); color:var(--accent2); }
+  .ctx-sep { height:1px; background:var(--border); margin:4px 0; }
+
+  /* ══════════════════ NOTIFICATIONS ══════════════════ */
+  #notif-area { position:absolute; top:16px; right:16px; display:flex; flex-direction:column; gap:8px; z-index:4000; pointer-events:none; }
+  .notif {
+    background:rgba(14,14,24,0.97); backdrop-filter:blur(20px);
+    border:1px solid var(--border); border-left:3px solid var(--accent);
+    border-radius:10px; padding:12px 16px; min-width:260px;
+    box-shadow:0 8px 32px rgba(0,0,0,0.6); animation:notifIn 0.3s ease; pointer-events:all;
+  }
+  .notif.out { animation:notifOut 0.3s ease forwards; }
+  @keyframes notifIn { from{opacity:0;transform:translateX(20px)} to{opacity:1;transform:none} }
+  @keyframes notifOut { from{opacity:1;transform:none} to{opacity:0;transform:translateX(20px)} }
+  .notif-title { font-size:12px; font-weight:600; color:var(--text); margin-bottom:3px; }
+  .notif-msg { font-size:11px; color:var(--text2); }
+
+  /* ══════════════════ SCROLLBAR ══════════════════ */
+  ::-webkit-scrollbar { width:5px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+  ::-webkit-scrollbar-thumb:hover { background:var(--text2); }
+
+  /* ══════════════════ TERMINAL ══════════════════ */
+  .terminal-body {
+    background:#060610; padding:14px;
+    font-family:'Courier New',monospace; font-size:12px;
+    color:var(--accent3); overflow-y:auto; flex:1; line-height:1.6;
+  }
+  .terminal-line { margin-bottom:2px; }
+  .terminal-prompt { color:var(--accent); }
+  .terminal-cmd { color:var(--text); }
+  .terminal-out { color:var(--text2); }
+  .terminal-err { color:var(--accent2); }
+  .terminal-input-row {
+    display:flex; align-items:center; gap:6px;
+    padding:8px 14px; border-top:1px solid var(--border); background:#060610;
+  }
+  .terminal-prompt-inp { color:var(--accent); flex-shrink:0; font-family:'Courier New',monospace; font-size:12px; }
+  .terminal-input {
+    flex:1; background:none; border:none; outline:none;
+    color:var(--text); font-family:'Courier New',monospace; font-size:12px;
   }
 
-  .app a {
-    color: #0066cc;
-    text-decoration: none;
-    font-weight: 600;
+  /* ══════════════════ FILE MANAGER ══════════════════ */
+  .fm-sidebar { width:150px; flex-shrink:0; border-right:1px solid var(--border); padding:12px 8px; background:var(--panel2); }
+  .fm-section { font-size:10px; color:var(--text2); text-transform:uppercase; letter-spacing:1px; margin:10px 0 6px; padding:0 8px; }
+  .fm-item {
+    display:flex; align-items:center; gap:8px;
+    padding:7px 8px; border-radius:6px;
+    cursor:pointer; font-size:12px; color:var(--text2); transition:all 0.1s;
+  }
+  .fm-item:hover { background:var(--border); color:var(--text); }
+  .fm-item.active { background:rgba(124,106,255,0.2); color:var(--accent); }
+  .fm-content { flex:1; padding:14px; overflow-y:auto; background:var(--panel); }
+  .fm-toolbar { display:flex; align-items:center; gap:8px; padding:8px 14px; border-bottom:1px solid var(--border); background:var(--panel2); flex-shrink:0; }
+  .fm-path { font-size:11px; color:var(--text2); flex:1; }
+  .fm-grid { display:grid; grid-template-columns:repeat(auto-fill,80px); gap:10px; }
+  .fm-file {
+    display:flex; flex-direction:column; align-items:center; gap:5px;
+    padding:10px 6px; border-radius:8px; cursor:pointer; transition:background 0.1s;
+  }
+  .fm-file:hover { background:rgba(124,106,255,0.12); }
+  .fm-file:active { background:rgba(124,106,255,0.2); }
+  .fm-file .ico { font-size:28px; }
+  .fm-file .name { font-size:10px; color:var(--text2); text-align:center; word-break:break-word; line-height:1.3; }
+  .fm-file.selected { background:rgba(124,106,255,0.2); }
+
+  /* ══════════════════ BROWSER ══════════════════ */
+  .browser-bar {
+    display:flex; align-items:center; gap:6px;
+    padding:8px 10px; border-bottom:1px solid var(--border); background:var(--panel2); flex-shrink:0;
+  }
+  .browser-nav-btn {
+    width:26px; height:26px; border-radius:6px; background:none; border:none;
+    color:var(--text2); cursor:pointer; font-size:13px;
+    display:flex; align-items:center; justify-content:center; transition:all 0.1s;
+  }
+  .browser-nav-btn:hover { background:var(--border); color:var(--text); }
+  .browser-url {
+    flex:1; background:var(--panel); border:1px solid var(--border); border-radius:20px;
+    padding:5px 14px; color:var(--text); font-family:'Inter',sans-serif; font-size:12px; outline:none;
+  }
+  .browser-url:focus { border-color:var(--accent); }
+  .browser-tabs { display:flex; gap:2px; padding:6px 10px 0; background:var(--panel2); flex-shrink:0; }
+  .browser-tab {
+    padding:5px 14px; border-radius:6px 6px 0 0; font-size:11px; cursor:pointer;
+    background:var(--panel); color:var(--text2); border:1px solid var(--border); border-bottom:none;
+    transition:all 0.1s;
+  }
+  .browser-tab.active { background:var(--panel); color:var(--text); border-color:rgba(124,106,255,0.3); }
+  .browser-content { flex:1; overflow-y:auto; }
+  .browser-page { max-width:640px; margin:0 auto; padding:24px; }
+  .browser-page h1 { font-size:22px; font-weight:800; color:var(--accent); margin-bottom:8px; }
+  .browser-page h2 { font-size:15px; font-weight:700; color:var(--text); margin:18px 0 8px; }
+  .browser-page p { color:var(--text2); line-height:1.7; margin-bottom:10px; font-size:13px; }
+  .browser-page a { color:var(--accent); cursor:pointer; }
+  .browser-quicklinks { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px; }
+  .browser-ql {
+    padding:14px; background:var(--panel2); border:1px solid var(--border); border-radius:10px;
+    cursor:pointer; transition:all 0.15s;
+  }
+  .browser-ql:hover { border-color:var(--accent); }
+  .browser-ql .ql-icon { font-size:20px; margin-bottom:6px; }
+  .browser-ql .ql-title { font-size:12px; font-weight:600; color:var(--text); }
+  .browser-ql .ql-url { font-size:10px; color:var(--text2); margin-top:2px; }
+
+  /* ══════════════════ MUSIC ══════════════════ */
+  .music-body {
+    padding:24px; display:flex; flex-direction:column; align-items:center; gap:16px;
+    background:linear-gradient(160deg,#0f0820,#07060f); flex:1; overflow-y:auto;
+  }
+  .album-art {
+    width:140px; height:140px; border-radius:14px;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    display:flex; align-items:center; justify-content:center; font-size:60px;
+    box-shadow:0 16px 48px rgba(124,106,255,0.5);
+    animation:spin-slow 20s linear infinite paused; flex-shrink:0;
+  }
+  .album-art.playing { animation-play-state:running; }
+  @keyframes spin-slow { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+  .track-info { text-align:center; }
+  .track-title { font-size:16px; font-weight:700; color:var(--text); }
+  .track-artist { font-size:12px; color:var(--text2); margin-top:3px; }
+  .track-album { font-size:11px; color:var(--text2); opacity:0.6; margin-top:2px; }
+  .music-progress { width:100%; }
+  .progress-bar { width:100%; height:4px; background:var(--border); border-radius:2px; cursor:pointer; position:relative; }
+  .progress-fill { height:100%; background:linear-gradient(90deg,var(--accent),var(--accent2)); border-radius:2px; transition:width 0.5s linear; }
+  .progress-times { display:flex; justify-content:space-between; margin-top:5px; font-size:10px; color:var(--text2); }
+  .music-controls { display:flex; align-items:center; gap:16px; }
+  .music-btn { background:none; border:none; cursor:pointer; color:var(--text2); font-size:18px; transition:color 0.15s,transform 0.15s; }
+  .music-btn:hover { color:var(--text); transform:scale(1.1); }
+  .music-btn.play-btn {
+    width:48px; height:48px; border-radius:50%;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    color:white; font-size:20px; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 4px 20px rgba(124,106,255,0.5);
+  }
+  .music-btn.play-btn:hover { transform:scale(1.05); }
+  .volume-row { display:flex; align-items:center; gap:10px; width:100%; }
+  .volume-slider {
+    flex:1; height:3px; background:var(--border); border-radius:2px;
+    cursor:pointer; -webkit-appearance:none; appearance:none; outline:none;
+  }
+  .volume-slider::-webkit-slider-thumb {
+    -webkit-appearance:none; width:12px; height:12px; border-radius:50%;
+    background:var(--accent); cursor:pointer;
+  }
+  .music-playlist { width:100%; }
+  .playlist-item {
+    display:flex; align-items:center; gap:12px; padding:8px 10px;
+    border-radius:8px; cursor:pointer; transition:background 0.1s;
+  }
+  .playlist-item:hover { background:rgba(255,255,255,0.05); }
+  .playlist-item.active { background:rgba(124,106,255,0.15); }
+  .playlist-item .num { font-size:11px; color:var(--text2); width:16px; text-align:center; }
+  .playlist-item .p-info { flex:1; }
+  .playlist-item .p-title { font-size:12px; color:var(--text); }
+  .playlist-item .p-artist { font-size:10px; color:var(--text2); }
+  .playlist-item .p-dur { font-size:10px; color:var(--text2); }
+
+  /* ══════════════════ SETTINGS ══════════════════ */
+  .settings-sidebar { width:170px; flex-shrink:0; border-right:1px solid var(--border); padding:12px 8px; background:var(--panel2); overflow-y:auto; }
+  .settings-content { flex:1; padding:20px; overflow-y:auto; }
+  .setting-group { margin-bottom:24px; }
+  .setting-group h3 { font-size:14px; font-weight:700; margin-bottom:12px; color:var(--text); padding-bottom:6px; border-bottom:1px solid var(--border); }
+  .setting-row { display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid rgba(42,42,58,0.5); }
+  .setting-label { color:var(--text2); font-size:12px; }
+  .setting-label small { display:block; font-size:10px; color:var(--text2); opacity:0.6; margin-top:2px; }
+  .toggle { width:40px; height:22px; background:var(--border); border-radius:11px; cursor:pointer; position:relative; transition:background 0.2s; flex-shrink:0; }
+  .toggle.on { background:var(--accent); }
+  .toggle::after { content:''; position:absolute; top:3px; left:3px; width:16px; height:16px; border-radius:50%; background:white; transition:left 0.2s; }
+  .toggle.on::after { left:21px; }
+  .setting-select {
+    background:var(--panel); border:1px solid var(--border); border-radius:6px;
+    padding:4px 8px; color:var(--text); font-family:'Inter',sans-serif; font-size:11px; outline:none; cursor:pointer;
+  }
+  .setting-btn {
+    padding:6px 14px; border-radius:6px; border:1px solid var(--border);
+    background:var(--panel); color:var(--text2); font-family:'Inter',sans-serif;
+    font-size:11px; cursor:pointer; transition:all 0.15s;
+  }
+  .setting-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .setting-btn.danger:hover { border-color:var(--accent2); color:var(--accent2); }
+  .about-box {
+    background:var(--panel2); border:1px solid var(--border); border-radius:10px;
+    padding:16px; display:flex; gap:14px; align-items:center;
+  }
+  .about-logo { font-size:36px; }
+  .about-name { font-size:16px; font-weight:700; }
+  .about-ver { font-size:11px; color:var(--text2); margin-top:3px; }
+
+  /* ══════════════════ CALCULATOR ══════════════════ */
+  .calc-body { flex:1; display:flex; flex-direction:column; background:#0a0a14; padding:16px; gap:12px; }
+  .calc-display {
+    background:var(--panel2); border:1px solid var(--border); border-radius:10px;
+    padding:14px 16px; text-align:right;
+  }
+  .calc-expr { font-size:11px; color:var(--text2); min-height:16px; }
+  .calc-val { font-size:28px; font-weight:300; color:var(--text); word-break:break-all; }
+  .calc-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; flex:1; }
+  .calc-btn {
+    border-radius:10px; border:none; cursor:pointer;
+    font-family:'Inter',sans-serif; font-size:16px; font-weight:500;
+    background:var(--panel2); color:var(--text);
+    display:flex; align-items:center; justify-content:center;
+    transition:all 0.1s; border:1px solid var(--border);
+  }
+  .calc-btn:hover { background:var(--border); }
+  .calc-btn:active { transform:scale(0.94); }
+  .calc-btn.op { background:rgba(124,106,255,0.15); color:var(--accent); border-color:rgba(124,106,255,0.3); }
+  .calc-btn.op:hover { background:rgba(124,106,255,0.25); }
+  .calc-btn.eq { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:white; border:none; box-shadow:0 4px 16px rgba(124,106,255,0.4); }
+  .calc-btn.eq:hover { filter:brightness(1.1); }
+  .calc-btn.clr { color:var(--accent2); }
+  .calc-btn.span2 { grid-column:span 2; }
+
+  /* ══════════════════ TEXT EDITOR ══════════════════ */
+  .editor-toolbar {
+    display:flex; align-items:center; gap:6px; padding:6px 12px;
+    border-bottom:1px solid var(--border); background:var(--panel2); flex-shrink:0; flex-wrap:wrap;
+  }
+  .editor-btn {
+    padding:4px 8px; border-radius:5px; border:1px solid var(--border);
+    background:none; color:var(--text2); font-family:'Inter',sans-serif; font-size:11px;
+    cursor:pointer; transition:all 0.1s;
+  }
+  .editor-btn:hover { background:var(--border); color:var(--text); }
+  .editor-sep { width:1px; height:18px; background:var(--border); margin:0 2px; }
+  .editor-area {
+    flex:1; background:#070710; padding:16px; color:var(--text);
+    font-family:'Courier New',monospace; font-size:13px; line-height:1.7;
+    outline:none; resize:none; border:none; overflow-y:auto;
+    white-space:pre-wrap; tab-size:2;
+  }
+  .editor-statusbar {
+    display:flex; justify-content:space-between; align-items:center;
+    padding:4px 12px; border-top:1px solid var(--border); background:var(--panel2);
+    font-size:10px; color:var(--text2); flex-shrink:0;
   }
 
-  .app a:hover {
-    text-decoration: underline;
+  /* ══════════════════ SYSTEM MONITOR ══════════════════ */
+  .sysmon-body { flex:1; padding:16px; overflow-y:auto; background:var(--panel); display:flex; flex-direction:column; gap:14px; }
+  .sysmon-card { background:var(--panel2); border:1px solid var(--border); border-radius:10px; padding:14px; }
+  .sysmon-title { font-size:11px; font-weight:600; color:var(--text2); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px; }
+  .sysmon-val { font-size:24px; font-weight:700; color:var(--text); margin-bottom:8px; }
+  .sysmon-val span { font-size:12px; font-weight:400; color:var(--text2); }
+  .bar-track { width:100%; height:8px; background:var(--border); border-radius:4px; overflow:hidden; }
+  .bar-fill { height:100%; border-radius:4px; transition:width 1s ease; }
+  .sysmon-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .proc-list { display:flex; flex-direction:column; gap:4px; }
+  .proc-row { display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid rgba(42,42,58,0.5); font-size:11px; }
+  .proc-name { flex:1; color:var(--text); }
+  .proc-cpu { width:50px; text-align:right; color:var(--text2); }
+  .proc-mem { width:50px; text-align:right; color:var(--text2); }
+
+  /* ══════════════════ GALLERY ══════════════════ */
+  .gallery-toolbar { display:flex; align-items:center; gap:8px; padding:8px 12px; border-bottom:1px solid var(--border); background:var(--panel2); flex-shrink:0; }
+  .gallery-grid { flex:1; padding:14px; overflow-y:auto; display:grid; grid-template-columns:repeat(auto-fill,120px); gap:10px; }
+  .gallery-item {
+    width:120px; height:90px; border-radius:8px; cursor:pointer;
+    border:2px solid transparent; transition:all 0.15s; overflow:hidden;
+    display:flex; align-items:center; justify-content:center; font-size:40px;
+    position:relative;
+  }
+  .gallery-item:hover { border-color:var(--accent); transform:scale(1.03); }
+  .gallery-item .label {
+    position:absolute; bottom:0; left:0; right:0;
+    background:rgba(0,0,0,0.6); padding:3px 6px;
+    font-size:9px; color:white; text-align:center;
   }
 
-    </style>
-  </head>
-  <body>
-    <section class="intro">
-  <h1>Schön, dass du da bist</h1>
-  <p>
-    Willkommen! Hier findest du zwei kleine, aber feine Web‑Apps, die dir den Alltag
-    erleichtern und gleichzeitig Freude machen. Beide laufen direkt im Browser und
-    konzentrieren sich auf Klarheit, Geschwindigkeit und Einfachheit.
-  </p>
-</section>
+  /* ══════════════════ WEATHER ══════════════════ */
+  .weather-body { flex:1; padding:20px; overflow-y:auto; background:linear-gradient(160deg,#0d1a2e,#07060f); }
+  .weather-main { text-align:center; padding:20px 0; }
+  .weather-icon { font-size:72px; margin-bottom:8px; }
+  .weather-temp { font-size:56px; font-weight:200; color:var(--text); }
+  .weather-desc { font-size:16px; color:var(--text2); margin-top:4px; }
+  .weather-city { font-size:13px; color:var(--text2); margin-top:2px; opacity:0.7; }
+  .weather-details { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:20px; }
+  .weather-detail { background:rgba(255,255,255,0.05); border-radius:10px; padding:12px; text-align:center; }
+  .weather-detail .wd-val { font-size:18px; font-weight:600; color:var(--text); }
+  .weather-detail .wd-label { font-size:10px; color:var(--text2); margin-top:3px; }
+  .weather-forecast { margin-top:16px; background:rgba(255,255,255,0.03); border-radius:12px; padding:12px; }
+  .forecast-row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.05); }
+  .forecast-row:last-child { border-bottom:none; }
+  .forecast-day { font-size:12px; color:var(--text2); width:60px; }
+  .forecast-ico { font-size:18px; }
+  .forecast-temps { font-size:12px; color:var(--text); }
+  .forecast-temps span { color:var(--text2); }
+</style>
+</head>
+<body>
 
-<section class="apps">
-  <h2>Apps</h2>
+<!-- ══ LOGIN SCREEN ══ -->
+<div id="login-screen">
+  <div class="login-stars"></div>
+  <div class="login-time" id="login-time">00:00</div>
+  <div class="login-date" id="login-date">Montag, 1. Januar</div>
+  <div class="login-avatar">👤</div>
+  <div class="login-name">Nova User</div>
+  <div class="login-sub">NovOS 3.1 · Willkommen zurück</div>
+  <button class="login-btn" onclick="doLogin()">Anmelden</button>
+</div>
 
-  <article class="app">
-    <h3>Villochat</h3>
-    <p>
-      Ein minimalistischer Chatraum für schnelle Kommunikation ohne Anmeldung.
-      Perfekt für spontane Gruppen, Unterrichtssituationen oder kleine Communities.
-    </p>
-    <p>
-      <a href="https://sites.google.com/view/villochat" target="_blank">
-        Villochat öffnen
-      </a>
-    </p>
-  </article>
+<!-- ══ DESKTOP ══ -->
+<div id="desktop">
 
-  <article class="app">
-    <h3>KlassenBlatt</h3>
-    <p>
-      Ein flexibler Editor zum Erstellen von Arbeitsblättern, Listen und
-      Unterrichtsmaterial. Läuft komplett im Browser und speichert lokal.
-    </p>
-    <p>
-      <a href="https://klassenblatt-editor.vercel.app/" target="_blank">
-        KlassenBlatt öffnen
-      </a>
-    </p>
-  </article>
-</section>
-    <script>
-      
-    </script>
-  </body>
+  <div class="icon-grid">
+    <div class="desk-icon" ondblclick="openApp('files')">
+      <div class="ico" style="background:linear-gradient(135deg,#1e3a5f,#0d2040)">📂</div>
+      <span>Dateien</span>
+    </div>
+    <div class="desk-icon" ondblclick="openApp('browser')">
+      <div class="ico" style="background:linear-gradient(135deg,#1a2040,#0d0f2a)">🌐</div>
+      <span>Browser</span>
+    </div>
+    <div class="desk-icon" ondblclick="openApp('terminal')">
+      <div class="ico" style="background:linear-gradient(135deg,#0f1f0f,#0a150a)">💻</div>
+      <span>Terminal</span>
+    </div>
+    <div class="desk-icon" ondblclick="openApp('music')">
+      <div class="ico" style="background:linear-gradient(135deg,#3a1040,#1a0520)">🎵</div>
+      <span>Musik</span>
+    </div>
+    <div class="desk-icon" ondblclick="openApp('calc')">
+      <div class="ico" style="background:linear-gradient(135deg,#1a3a20,#0a1f10)">🧮</div>
+      <span>Rechner</span>
+    </div>
+    <div class="desk-icon" ondblclick="openApp('editor')">
+      <div class="ico" style="background:linear-gradient(135deg,#3a2a10,#1f1508)">📝</div>
+      <span>Editor</span>
+    </div>
+    <div class="desk-icon" ondblclick="openApp('gallery')">
+      <div class="ico" style="background:linear-gradient(135deg,#2a1a3a,#150a20)">🖼️</div>
+      <span>Galerie</span>
+    </div>
+    <div class="desk-icon" ondblclick="openApp('weather')">
+      <div class="ico" style="background:linear-gradient(135deg,#0d2a3a,#061520)">🌤️</div>
+      <span>Wetter</span>
+    </div>
+    <div class="desk-icon" ondblclick="openApp('sysmon')">
+      <div class="ico" style="background:linear-gradient(135deg,#2a1a10,#150d08)">📊</div>
+      <span>Monitor</span>
+    </div>
+    <div class="desk-icon" ondblclick="openApp('settings')">
+      <div class="ico" style="background:linear-gradient(135deg,#222,#111)">⚙️</div>
+      <span>Einstellungen</span>
+    </div>
+  </div>
+
+  <!-- Notifications -->
+  <div id="notif-area"></div>
+
+  <!-- Context Menu -->
+  <div id="ctx-menu">
+    <div class="ctx-item" onclick="cycleWallpaper();closeCtxMenu()">🖼️ Hintergrund ändern</div>
+    <div class="ctx-item" onclick="openApp('files');closeCtxMenu()">📂 Neues Datei-Fenster</div>
+    <div class="ctx-sep"></div>
+    <div class="ctx-item" onclick="showNotif('Desktop','Anzeige aktualisiert ✓');closeCtxMenu()">🔄 Aktualisieren</div>
+    <div class="ctx-item" onclick="openApp('settings');closeCtxMenu()">⚙️ Einstellungen</div>
+    <div class="ctx-sep"></div>
+    <div class="ctx-item danger" onclick="closeCtxMenu();doLogout()">🔴 Abmelden</div>
+  </div>
+
+  <!-- Start Menu -->
+  <div id="start-menu">
+    <div class="sm-header">NovOS 3.1</div>
+    <input class="sm-search" type="text" placeholder="🔍 Apps durchsuchen..." id="sm-search-inp" oninput="filterStartMenu(this.value)">
+    <div class="sm-section">Apps</div>
+    <div class="sm-apps" id="sm-apps-grid">
+      <div class="sm-app" data-app="terminal" onclick="openApp('terminal');closeStartMenu()"><span class="ico">💻</span><span class="name">Terminal</span></div>
+      <div class="sm-app" data-app="files"    onclick="openApp('files');closeStartMenu()"><span class="ico">📂</span><span class="name">Dateien</span></div>
+      <div class="sm-app" data-app="browser"  onclick="openApp('browser');closeStartMenu()"><span class="ico">🌐</span><span class="name">Browser</span></div>
+      <div class="sm-app" data-app="music"    onclick="openApp('music');closeStartMenu()"><span class="ico">🎵</span><span class="name">Musik</span></div>
+      <div class="sm-app" data-app="calc"     onclick="openApp('calc');closeStartMenu()"><span class="ico">🧮</span><span class="name">Rechner</span></div>
+      <div class="sm-app" data-app="editor"   onclick="openApp('editor');closeStartMenu()"><span class="ico">📝</span><span class="name">Editor</span></div>
+      <div class="sm-app" data-app="gallery"  onclick="openApp('gallery');closeStartMenu()"><span class="ico">🖼️</span><span class="name">Galerie</span></div>
+      <div class="sm-app" data-app="weather"  onclick="openApp('weather');closeStartMenu()"><span class="ico">🌤️</span><span class="name">Wetter</span></div>
+      <div class="sm-app" data-app="sysmon"   onclick="openApp('sysmon');closeStartMenu()"><span class="ico">📊</span><span class="name">Monitor</span></div>
+      <div class="sm-app" data-app="settings" onclick="openApp('settings');closeStartMenu()"><span class="ico">⚙️</span><span class="name">Einstellungen</span></div>
+    </div>
+    <div class="sm-footer">
+      <div class="sm-footer-btn" onclick="closeStartMenu();showNotif('NovOS','Energie-Optionen...')">⚡ Energie</div>
+      <div class="sm-footer-btn" onclick="closeStartMenu();doLogout()">🔴 Abmelden</div>
+      <div class="sm-footer-btn" onclick="closeStartMenu();showNotif('NovOS','Neustart...')">🔄 Neustart</div>
+    </div>
+  </div>
+
+  <!-- Taskbar -->
+  <div id="taskbar">
+    <div id="start-btn" onclick="toggleStartMenu()" title="Start">✦</div>
+    <div class="taskbar-sep"></div>
+    <div id="taskbar-apps"></div>
+    <div id="tb-right">
+      <div id="tb-icons">
+        <span class="tb-icon" title="WLAN" onclick="showNotif('Netzwerk','Verbunden mit: NovNet-5G 📶')">📶</span>
+        <span class="tb-icon" title="Lautstärke" onclick="showNotif('Audio','Lautstärke: 70% 🔊')">🔊</span>
+        <span class="tb-icon" title="Akku" onclick="showNotif('Akku','Akku: 87% 🔋')">🔋</span>
+      </div>
+      <div style="text-align:right">
+        <div id="clock"></div>
+        <div id="date-display"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════
+// CLOCK
+// ══════════════════════════════════════
+const DAYS = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+const MONTHS = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+const DAYS_SHORT = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+
+function updateClock() {
+  const n = new Date();
+  const h = String(n.getHours()).padStart(2,'0');
+  const m = String(n.getMinutes()).padStart(2,'0');
+  const timeStr = `${h}:${m}`;
+  const dateStr = `${DAYS_SHORT[n.getDay()]}, ${n.getDate()}. ${MONTHS[n.getMonth()].slice(0,3)}`;
+
+  const c = document.getElementById('clock');
+  const d = document.getElementById('date-display');
+  const lt = document.getElementById('login-time');
+  const ld = document.getElementById('login-date');
+
+  if(c) c.textContent = timeStr;
+  if(d) d.textContent = dateStr;
+  if(lt) lt.textContent = timeStr;
+  if(ld) ld.textContent = `${DAYS[n.getDay()]}, ${n.getDate()}. ${MONTHS[n.getMonth()]}`;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ══════════════════════════════════════════════════════
+// PERSISTENT SETTINGS (localStorage) — defined early so
+// loadNovSettings() can be called right after clock init
+// ══════════════════════════════════════════════════════
+const ACCENT_PRESETS = {
+  lila:  { accent:'#7c6aff', accent2:'#ff6a8a', accent3:'#6affca' },
+  blau:  { accent:'#3a8fff', accent2:'#6affca', accent3:'#ffca6a' },
+  gruen: { accent:'#2ecc71', accent2:'#6affca', accent3:'#a78bfa' },
+  pink:  { accent:'#ff6ab0', accent2:'#ff9f6a', accent3:'#6affca' },
+  orange:{ accent:'#ff8c42', accent2:'#ff6a8a', accent3:'#6affca' },
+  cyan:  { accent:'#00d4ff', accent2:'#ff6a8a', accent3:'#ffca6a' },
+};
+const WALLPAPER_PRESETS = [
+  'radial-gradient(ellipse 80% 60% at 20% 80%,#1a0d3a 0%,transparent 60%),radial-gradient(ellipse 60% 80% at 80% 20%,#0d1f3a 0%,transparent 60%),#07060f',
+  'radial-gradient(ellipse 80% 60% at 80% 20%,#0d3a1a 0%,transparent 60%),radial-gradient(ellipse 60% 80% at 20% 80%,#1a3a0d 0%,transparent 60%),#060f07',
+  'radial-gradient(ellipse 80% 60% at 50% 10%,#3a0d1a 0%,transparent 60%),radial-gradient(ellipse 60% 80% at 50% 90%,#0d1a3a 0%,transparent 60%),#0f0607',
+  'radial-gradient(ellipse 80% 60% at 0% 50%,#1a1a0d 0%,transparent 60%),radial-gradient(ellipse 60% 80% at 100% 50%,#0d0d3a 0%,transparent 60%),#09090f',
+  'radial-gradient(ellipse 80% 60% at 50% 0%,#001a2e 0%,transparent 60%),radial-gradient(ellipse 60% 80% at 50% 100%,#002e1a 0%,transparent 60%),#060c0a',
+  'linear-gradient(135deg,#0a0a0f 0%,#1a0a2e 50%,#0a1a2e 100%)',
+  'radial-gradient(ellipse at center,#1a1a2e 0%,#0a0a0f 100%)',
+  'linear-gradient(160deg,#0d0d1a 0%,#1a0d2e 40%,#0d1a1a 100%)',
+];
+const DEFAULT_SETTINGS = {
+  accentPreset: 'lila',
+  wallpaperIdx: 0,
+  darkMode: true,
+  userName: 'Nova User',
+  uiScale: '13px',
+  animations: true,
+  transparency: true,
+  systemSounds: true,
+  volume: 70,
+  doNotDisturb: false,
+  showClock: true,
+  taskbarPos: 'bottom',
+  notifBrowser: true,
+  notifMusic: true,
+  notifMail: true,
+  wifiEnabled: true,
+  bluetooth: false,
+  vpn: false,
+  telemetry: false,
+  locationServices: true,
+  browserHomepage: 'nov://start',
+  browserSearch: 'DuckDuckGo',
+};
+let NovSettings = {};
+function loadNovSettings() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('novos_settings') || '{}');
+    NovSettings = Object.assign({}, DEFAULT_SETTINGS, saved);
+  } catch(e) { NovSettings = {...DEFAULT_SETTINGS}; }
+  applyAllSettings();
+}
+function saveNovSettings() {
+  try { localStorage.setItem('novos_settings', JSON.stringify(NovSettings)); } catch(e) {}
+}
+function setSetting(key, value) {
+  NovSettings[key] = value;
+  saveNovSettings();
+  applyAllSettings();
+}
+function applyAllSettings() {
+  const preset = ACCENT_PRESETS[NovSettings.accentPreset] || ACCENT_PRESETS.lila;
+  const root = document.documentElement;
+  root.style.setProperty('--accent', preset.accent);
+  root.style.setProperty('--accent2', preset.accent2);
+  root.style.setProperty('--accent3', preset.accent3);
+  if(!NovSettings.darkMode) {
+    root.style.setProperty('--bg','#f0f0f7');
+    root.style.setProperty('--panel','#ffffff');
+    root.style.setProperty('--panel2','#e8e8f0');
+    root.style.setProperty('--border','#d0d0e0');
+    root.style.setProperty('--text','#1a1a2e');
+    root.style.setProperty('--text2','#5a5a7a');
+  } else {
+    root.style.setProperty('--bg','#0a0a0f');
+    root.style.setProperty('--panel','#111118');
+    root.style.setProperty('--panel2','#16161f');
+    root.style.setProperty('--border','#2a2a3a');
+    root.style.setProperty('--text','#e8e8f0');
+    root.style.setProperty('--text2','#8888aa');
+  }
+  const wpEl = document.getElementById('desktop');
+  if(wpEl) wpEl.style.background = WALLPAPER_PRESETS[NovSettings.wallpaperIdx % WALLPAPER_PRESETS.length];
+  document.body.style.fontSize = NovSettings.uiScale;
+  document.querySelectorAll('.login-name').forEach(el => el.textContent = NovSettings.userName);
+  if(!NovSettings.animations) {
+    const s = document.getElementById('anim-disable-style') || document.createElement('style');
+    s.id = 'anim-disable-style';
+    s.textContent = '* { animation:none!important; transition:none!important; }';
+    document.head.appendChild(s);
+  } else {
+    document.getElementById('anim-disable-style')?.remove();
+  }
+}
+function cycleWallpaper() {
+  NovSettings.wallpaperIdx = (NovSettings.wallpaperIdx + 1) % WALLPAPER_PRESETS.length;
+  saveNovSettings();
+  applyAllSettings();
+  showNotif('Desktop', 'Hintergrund geändert 🖼️');
+}
+
+// Load persistent settings immediately
+loadNovSettings();
+
+// ══════════════════════════════════════
+// LOGIN
+// ══════════════════════════════════════
+function doLogin() {
+  const ls = document.getElementById('login-screen');
+  const desktop = document.getElementById('desktop');
+  ls.classList.add('out');
+  setTimeout(() => {
+    ls.style.display = 'none';
+    desktop.classList.add('visible');
+    setTimeout(() => showNotif('NovOS 3.1', 'Willkommen, Nova User! 👋'), 400);
+    setTimeout(() => showNotif('NovUpdate', '3 Updates verfügbar', '#6affca'), 2000);
+  }, 600);
+}
+function doLogout() {
+  const ls = document.getElementById('login-screen');
+  const desktop = document.getElementById('desktop');
+  [...Object.keys(windows)].forEach(id => closeWindow(id));
+  musicPlaying=false; clearInterval(musicInterval);
+  clearInterval(sysmonInterval);
+  browserHistory=['nov://start']; browserPos=0;
+  calcVal='0'; calcExpr=''; calcNewNum=true;
+  desktop.classList.remove('visible');
+  ls.style.display = 'flex';
+  ls.classList.remove('out');
+}
+
+// ══════════════════════════════════════
+// NOTIFICATIONS
+// ══════════════════════════════════════
+function showNotif(title, msg, color) {
+  const area = document.getElementById('notif-area');
+  const el = document.createElement('div');
+  el.className = 'notif';
+  if(color) el.style.borderLeftColor = color;
+  el.innerHTML = `<div class="notif-title">${title}</div><div class="notif-msg">${msg}</div>`;
+  area.appendChild(el);
+  setTimeout(() => { el.classList.add('out'); setTimeout(()=>el.remove(),300); }, 3500);
+}
+
+// cycleWallpaper and wallpapers are defined in the SETTINGS section below
+
+// ══════════════════════════════════════
+// START MENU
+// ══════════════════════════════════════
+function toggleStartMenu() {
+  const sm = document.getElementById('start-menu');
+  const isOpen = sm.classList.contains('open');
+  sm.classList.toggle('open', !isOpen);
+  if(!isOpen) setTimeout(()=>document.getElementById('sm-search-inp')?.focus(),50);
+}
+function closeStartMenu() {
+  document.getElementById('start-menu').classList.remove('open');
+}
+function filterStartMenu(q) {
+  const items = document.querySelectorAll('#sm-apps-grid .sm-app');
+  const query = q.toLowerCase();
+  items.forEach(item => {
+    const name = item.querySelector('.name').textContent.toLowerCase();
+    item.style.display = (!query || name.includes(query)) ? 'flex' : 'none';
+  });
+}
+
+// ══════════════════════════════════════
+// CONTEXT MENU
+// ══════════════════════════════════════
+document.getElementById('desktop').addEventListener('contextmenu', e => {
+  if(e.target.closest('.window') || e.target.closest('#taskbar')) return;
+  e.preventDefault();
+  const cm = document.getElementById('ctx-menu');
+  cm.style.left = Math.min(e.clientX, window.innerWidth-210) + 'px';
+  cm.style.top  = Math.min(e.clientY, window.innerHeight-200) + 'px';
+  cm.classList.add('open');
+});
+document.addEventListener('click', e => {
+  if(!e.target.closest('#ctx-menu')) closeCtxMenu();
+  if(!e.target.closest('#start-menu') && !e.target.closest('#start-btn')) closeStartMenu();
+});
+function closeCtxMenu() { document.getElementById('ctx-menu').classList.remove('open'); }
+
+// ══════════════════════════════════════
+// WINDOW SYSTEM
+// ══════════════════════════════════════
+let windows = {}, topZ = 10, isDragging = false, isResizing = false, dragData = {};
+
+const appDefs = {
+  terminal: { title:'Terminal',    icon:'💻', w:560, h:420 },
+  files:    { title:'Dateien',     icon:'📂', w:640, h:440 },
+  browser:  { title:'NovBrowser',  icon:'🌐', w:720, h:520 },
+  music:    { title:'NovMusic',    icon:'🎵', w:340, h:520 },
+  calc:     { title:'Rechner',     icon:'🧮', w:300, h:440 },
+  editor:   { title:'TextEditor',  icon:'📝', w:600, h:460 },
+  gallery:  { title:'Galerie',     icon:'🖼️', w:600, h:440 },
+  weather:  { title:'Wetter',      icon:'🌤️', w:380, h:520 },
+  sysmon:   { title:'Systemmonitor',icon:'📊',w:500, h:440 },
+  settings: { title:'Einstellungen',icon:'⚙️',w:560, h:440 },
+};
+
+function openApp(app) {
+  if(windows[app]) { focusWindow(app); return; }
+  const def = appDefs[app];
+  if(!def) return;
+  const el = document.createElement('div');
+  el.className = 'window focused';
+  el.id = 'win-'+app;
+  el.style.cssText = `width:${def.w}px;height:${def.h}px;left:${80+Math.random()*100}px;top:${50+Math.random()*80}px;z-index:${++topZ}`;
+  el.innerHTML = `
+    <div class="win-titlebar" id="tb-${app}">
+      <div class="win-btns">
+        <button class="win-btn btn-close" onclick="closeWindow('${app}')"></button>
+        <button class="win-btn btn-min"   onclick="minimizeWindow('${app}')"></button>
+        <button class="win-btn btn-max"   onclick="maximizeWindow('${app}')"></button>
+      </div>
+      <div class="win-title">${def.icon} ${def.title}</div>
+    </div>
+    <div class="win-body" id="body-${app}">${buildAppBody(app)}</div>
+    <div class="resize-handle" id="rh-${app}"></div>`;
+  document.getElementById('desktop').appendChild(el);
+  windows[app] = { el, def, minimized:false };
+  setupDrag(app); setupResize(app); addTaskbarBtn(app); focusWindow(app);
+  if(app==='browser')  setTimeout(()=>browserInit(),10);
+  if(app==='terminal') setTimeout(()=>initTerminal(),10);
+  if(app==='music')    setTimeout(()=>initMusic(),10);
+  if(app==='files')    setTimeout(()=>{ loadDir('home'); },50);
+  if(app==='sysmon')   setTimeout(()=>initSysmon(),10);
+  if(app==='editor')   setTimeout(()=>initEditor(),10);
+  if(app==='settings') setTimeout(()=>initSettingsSidebar(),10);
+}
+
+function buildAppBody(id) {
+  switch(id) {
+    case 'terminal': return buildTerminal();
+    case 'files':    return buildFiles();
+    case 'browser':  return buildBrowser();
+    case 'music':    return buildMusic();
+    case 'calc':     return buildCalc();
+    case 'editor':   return buildEditor();
+    case 'gallery':  return buildGallery();
+    case 'weather':  return buildWeather();
+    case 'sysmon':   return buildSysmon();
+    case 'settings': return buildSettings();
+    default: return '<div style="padding:20px;color:var(--text2)">Laden...</div>';
+  }
+}
+
+function closeWindow(id) {
+  if(id==='music') { clearInterval(musicInterval); musicPlaying=false; }
+  if(id==='sysmon') clearInterval(sysmonInterval);
+  document.getElementById('win-'+id)?.remove();
+  removeTaskbarBtn(id);
+  delete windows[id];
+}
+function minimizeWindow(id) {
+  const w = windows[id]; if(!w) return;
+  w.el.style.display='none'; w.minimized=true;
+  document.querySelector(`.tb-app[data-id="${id}"]`)?.classList.remove('active');
+}
+function maximizeWindow(id) {
+  const w = windows[id]; if(!w) return;
+  if(w.maximized) {
+    const r = w.prevRect;
+    w.el.style.left=r.l; w.el.style.top=r.t; w.el.style.width=r.w; w.el.style.height=r.h;
+    w.maximized=false;
+  } else {
+    w.prevRect = { l:w.el.style.left, t:w.el.style.top, w:w.el.style.width, h:w.el.style.height };
+    w.el.style.left='0'; w.el.style.top='0';
+    w.el.style.width='100vw';
+    w.el.style.height=`calc(100vh - ${getComputedStyle(document.documentElement).getPropertyValue('--taskbar-h')})`;
+    w.maximized=true;
+  }
+}
+function focusWindow(id) {
+  document.querySelectorAll('.window').forEach(w=>w.classList.remove('focused'));
+  document.querySelectorAll('.tb-app').forEach(b=>b.classList.remove('active'));
+  const w = windows[id]; if(!w) return;
+  w.el.style.zIndex=++topZ; w.el.classList.add('focused');
+  w.el.style.display='flex'; w.minimized=false;
+  document.querySelector(`.tb-app[data-id="${id}"]`)?.classList.add('active');
+}
+function addTaskbarBtn(id) {
+  const def = appDefs[id];
+  const btn = document.createElement('div');
+  btn.className='tb-app active'; btn.dataset.id=id;
+  btn.innerHTML=`${def.icon} ${def.title}`;
+  btn.onclick=()=>{
+    if(windows[id]?.minimized) focusWindow(id);
+    else if(windows[id]?.el.classList.contains('focused')) minimizeWindow(id);
+    else focusWindow(id);
+  };
+  document.getElementById('taskbar-apps').appendChild(btn);
+}
+function removeTaskbarBtn(id) {
+  document.querySelector(`.tb-app[data-id="${id}"]`)?.remove();
+}
+
+function setupDrag(id) {
+  document.getElementById('tb-'+id).addEventListener('mousedown', e => {
+    if(e.target.classList.contains('win-btn')) return;
+    focusWindow(id); isDragging=true;
+    const r=document.getElementById('win-'+id).getBoundingClientRect();
+    dragData={id, ox:e.clientX-r.left, oy:e.clientY-r.top}; e.preventDefault();
+  });
+}
+document.addEventListener('mousemove', e => {
+  if(isDragging) {
+    const w=document.getElementById('win-'+dragData.id); if(!w) return;
+    w.style.left=(e.clientX-dragData.ox)+'px';
+    w.style.top=Math.max(0,e.clientY-dragData.oy)+'px';
+  }
+  if(isResizing) {
+    const w=document.getElementById('win-'+dragData.id); if(!w) return;
+    const r=w.getBoundingClientRect();
+    w.style.width=Math.max(280,e.clientX-r.left)+'px';
+    w.style.height=Math.max(200,e.clientY-r.top)+'px';
+  }
+});
+document.addEventListener('mouseup',()=>{isDragging=false;isResizing=false;});
+
+function setupResize(id) {
+  document.getElementById('rh-'+id).addEventListener('mousedown', e=>{
+    isResizing=true; dragData={id}; e.preventDefault(); e.stopPropagation();
+  });
+}
+document.getElementById('desktop').addEventListener('mousedown', e=>{
+  const w=e.target.closest('.window');
+  if(w) focusWindow(w.id.replace('win-',''));
+});
+
+// ══════════════════════════════════════
+// TERMINAL
+// ══════════════════════════════════════
+function buildTerminal() {
+  return `
+    <div class="terminal-body" id="term-output">
+      <div class="terminal-line" style="color:var(--accent)">NovOS Terminal v3.1.0</div>
+      <div class="terminal-line terminal-out">Tippe 'help' für alle Befehle.</div>
+      <div class="terminal-line"> </div>
+    </div>
+    <div class="terminal-input-row">
+      <span class="terminal-prompt-inp">user@novos:~$</span>
+      <input class="terminal-input" id="term-input" type="text" autocomplete="off" spellcheck="false" placeholder="_">
+    </div>`;
+}
+const termHistory = []; let histIdx=-1;
+function initTerminal() {
+  const inp=document.getElementById('term-input'); if(!inp) return;
+  inp.focus();
+  inp.addEventListener('keydown', e=>{
+    if(e.key==='Enter') {
+      const cmd=inp.value.trim();
+      if(cmd){termHistory.unshift(cmd);histIdx=-1;}
+      runTermCmd(cmd); inp.value='';
+    } else if(e.key==='ArrowUp') { histIdx=Math.min(histIdx+1,termHistory.length-1); inp.value=termHistory[histIdx]||''; }
+    else if(e.key==='ArrowDown') { histIdx=Math.max(histIdx-1,-1); inp.value=histIdx===-1?'':termHistory[histIdx]; }
+    else if(e.key==='Tab') { e.preventDefault(); autocomplete(inp); }
+  });
+}
+function autocomplete(inp) {
+  const partial=inp.value;
+  const match=Object.keys(termCmds).find(k=>k.startsWith(partial) && k!==partial);
+  if(match) inp.value=match;
+}
+const termCmds = {
+  help:     ()=>`<span style="color:var(--accent)">Verfügbare Befehle:</span><br>help ls pwd echo date uname whoami clear neofetch<br>cat &lt;datei&gt;  edit &lt;datei&gt;  mkdir rm cp mv top disk openapp`,
+  ls:       ()=>`<span style="color:var(--accent2)">Dokumente/</span>  <span style="color:var(--accent2)">Downloads/</span>  <span style="color:var(--accent2)">Bilder/</span>  README.md  config.json  .secret`,
+  'ls -la': ()=>`drwxr-xr-x  user user  Dokumente<br>drwxr-xr-x  user user  Downloads<br>drwxr-xr-x  user user  Bilder<br>-rw-r--r--  user user  README.md (4.2 KB)<br>-rw-r--r--  user user  config.json (1.1 KB)<br>-rw-------  user user  .secret (128 B)`,
+  pwd:      ()=>`/home/user`,
+  whoami:   ()=>`user`,
+  date:     ()=>new Date().toLocaleString('de-DE'),
+  uname:    ()=>`NovOS 3.1.0-nova x86_64 GNU/Linux`,
+  'uname -a':()=>`NovOS 3.1.0-nova #1 SMP PREEMPT x86_64 GNU/Linux`,
+  top:      ()=>`<span style="color:var(--accent)">Prozesse: 142 total, 3 running</span><br>CPU:  23.4%  Mem: 4.2GB/16GB<br>novshell  1.2%  novd  0.8%  Xorg  2.1%`,
+  disk:     ()=>`Filesystem: /dev/nova0  Size: 512G  Used: 128G  Avail: 384G  73% /`,
+  calc:     ()=>`<span style="color:var(--text2)">Tipp: Öffne den Rechner mit 'openapp calc'</span>`,
+  neofetch: ()=>`<span style="color:var(--accent)">     ✦✦✦</span>   <span style="color:var(--text)">user@novos</span>
+<span style="color:var(--accent)">    ✦✦✦✦✦</span>  OS: <span style="color:var(--text)">NovOS 3.1.0</span>
+<span style="color:var(--accent)">   ✦✦✦✦✦✦✦</span> Kernel: <span style="color:var(--text)">nova-6.4.2</span>
+<span style="color:var(--accent)">    ✦✦✦✦✦</span>  Shell: <span style="color:var(--text)">novsh 2.1</span>
+<span style="color:var(--accent)">     ✦✦✦</span>   DE: <span style="color:var(--text)">NovaShell 3</span>
+<span style="color:var(--accent)">      ✦</span>    Memory: <span style="color:var(--text)">4.2GB / 16GB</span>
+           Resolution: <span style="color:var(--text)">1920x1080</span>`,
+  'cat README.md': ()=>`# NovOS 3.1.0\n\nWillkommen in NovOS – dem modernen,\nsicheren Betriebssystem für alle.\n\nVersion: 3.1.0\nKernel: nova-6.4.2\nLizenz: NovaCL v2`,
+  'cat .secret': ()=>`<span style="color:var(--accent2)">Zugriff verweigert: Berechtigung fehlt</span>`,
+  'cat config.json': ()=>`{\n  "theme": "dark",\n  "locale": "de-DE",\n  "animations": true,\n  "telemetry": false\n}`,
+  mkdir:    ()=>`<span style="color:var(--text2)">Syntax: mkdir &lt;ordnername&gt;</span>`,
+  rm:       ()=>`<span style="color:var(--text2)">Syntax: rm &lt;datei&gt;</span>`,
+  cp:       ()=>`<span style="color:var(--text2)">Syntax: cp &lt;quelle&gt; &lt;ziel&gt;</span>`,
+  mv:       ()=>`<span style="color:var(--text2)">Syntax: mv &lt;quelle&gt; &lt;ziel&gt;</span>`,
+};
+function runTermCmd(cmd) {
+  const out=document.getElementById('term-output'); if(!out) return;
+  const echo=document.createElement('div');
+  echo.className='terminal-line';
+  echo.innerHTML=`<span class="terminal-prompt">user@novos:~$</span> <span class="terminal-cmd">${cmd}</span>`;
+  out.appendChild(echo);
+  if(cmd==='clear'){out.innerHTML='';return;}
+  const res=document.createElement('div');
+  res.className='terminal-line terminal-out';
+  if(!cmd){res.style.display='none';}
+  else if(termCmds[cmd]){res.innerHTML=termCmds[cmd]();}
+  else if(cmd.startsWith('cat ')){ 
+    const fname=cmd.slice(4).trim();
+    // check vfs
+    const path=Object.keys(vfsContents).find(k=>k.endsWith('/'+fname));
+    if(path!==undefined){ res.innerHTML=`<pre style="color:var(--accent3);white-space:pre-wrap">${vfsContents[path].replace(/</g,'&lt;')}</pre>`; }
+    else if(termCmds['cat '+fname]){ res.innerHTML=termCmds['cat '+fname](); }
+    else { res.innerHTML=`<span class="terminal-err">cat: ${fname}: Keine solche Datei</span>`; }
+  }
+  else if(cmd.startsWith('edit ')){ 
+    const fname=cmd.slice(5).trim();
+    const path=Object.keys(vfsContents).find(k=>k.endsWith('/'+fname));
+    if(path!==undefined){ 
+      const [dir,name]=path.split('/');
+      fmOpenTxt(dir,name);
+      res.innerHTML=`<span style="color:var(--accent3)">${fname} in NovEdit geöffnet ✓</span>`;
+    } else { res.innerHTML=`<span class="terminal-err">edit: ${fname}: Nicht gefunden</span>`; }
+  }
+  else if(cmd==='ls docs'||cmd==='ls Dokumente'){ res.innerHTML=vfs.docs.map(f=>`<span style="color:${f.type==='dir'?'var(--accent2)':'var(--text2)'}">${f.n}</span>`).join('  '); }
+  else if(cmd==='ls ~'||cmd==='ls /home/user'){ res.innerHTML=vfs.home.map(f=>`<span style="color:${f.type==='dir'?'var(--accent2)':'var(--text2)'}">${f.n}</span>`).join('  '); }
+  else if(cmd.startsWith('echo ')) res.textContent=cmd.slice(5);
+  else if(cmd.startsWith('mkdir ')){ res.innerHTML=`<span style="color:var(--accent3)">Ordner '${cmd.slice(6)}' erstellt</span>`; }
+  else if(cmd.startsWith('openapp ')){ const a=cmd.slice(8); if(appDefs[a]){openApp(a);res.innerHTML=`<span style="color:var(--accent3)">${appDefs[a].title} geöffnet</span>`;}else{res.innerHTML=`<span class="terminal-err">App nicht gefunden: ${a}</span>`;} }
+  else { res.innerHTML=`<span class="terminal-err">novsh: Befehl nicht gefunden: ${cmd}</span>`; }
+  out.appendChild(res);
+  out.scrollTop=out.scrollHeight;
+}
+
+// ══════════════════════════════════════
+// VIRTUAL FILESYSTEM
+// ══════════════════════════════════════
+const vfs = {
+  home: [
+    {ico:'📂',n:'Dokumente',type:'dir',key:'docs'},
+    {ico:'📂',n:'Bilder',type:'dir',key:'pics'},
+    {ico:'📂',n:'Downloads',type:'dir',key:'dl'},
+    {ico:'📂',n:'Videos',type:'dir',key:'vids'},
+    {ico:'📝',n:'README.txt',type:'txt'},
+    {ico:'⚙️',n:'config.json',type:'file'},
+  ],
+  docs: [
+    {ico:'📝',n:'Notizen.txt',type:'txt'},
+    {ico:'📝',n:'Ideen.txt',type:'txt'},
+    {ico:'📝',n:'Tagebuch.txt',type:'txt'},
+    {ico:'📄',n:'Brief.docx',type:'file'},
+    {ico:'📊',n:'Statistik.xlsx',type:'file'},
+    {ico:'📋',n:'Bericht.pdf',type:'file'},
+  ],
+  pics: [
+    {ico:'🖼️',n:'Urlaub.png',type:'file'},
+    {ico:'🖼️',n:'Profil.jpg',type:'file'},
+    {ico:'🖼️',n:'Screenshot.png',type:'file'},
+    {ico:'🎨',n:'Design.svg',type:'file'},
+  ],
+  dl: [
+    {ico:'📦',n:'setup.exe',type:'file'},
+    {ico:'🗜️',n:'Archiv.zip',type:'file'},
+    {ico:'🎵',n:'Song.mp3',type:'file'},
+    {ico:'🎬',n:'Film.mkv',type:'file'},
+  ],
+  vids: [
+    {ico:'🎬',n:'Urlaub.mp4',type:'file'},
+    {ico:'🎬',n:'Aufnahme.mkv',type:'file'},
+    {ico:'🎥',n:'Tutorial.webm',type:'file'},
+  ],
+};
+const vfsContents = {
+  'home/README.txt': '# NovOS 3.1\n\nWillkommen in deinem Heimordner!\nDu kannst hier Dateien erstellen,\nbearbeiten und speichern.\n\n- Doppelklick öffnet .txt Dateien\n- Rechtsklick für mehr Optionen\n\nViel Spaß! ✦',
+  'docs/Notizen.txt': 'Meine Notizen\n=============\n\n- NovOS ausprobieren ✓\n- Texteditor testen ✓\n- Neue Datei erstellen\n- Cloud-Sync einrichten\n',
+  'docs/Ideen.txt': 'Projektideen\n============\n\n1. KI-Integration in NovEdit\n2. Dark Mode Varianten\n3. Cloud-Speicher erweitern\n4. Plugin-System entwickeln\n5. Mobile Version planen\n',
+  'docs/Tagebuch.txt': new Date().toLocaleDateString('de-DE') + '\n\nHeute habe ich NovOS 3.1 ausprobiert.\nDer neue Texteditor gefällt mir sehr!\nBesonders das virtuelle Dateisystem\nist eine tolle Neuerung.\n',
+};
+let fmCurrentDir = 'home';
+let fmSelectedFile = null;
+
+// FILE MANAGER
+function buildFiles() {
+  return `
+    <div class="fm-toolbar">
+      <button class="editor-btn" onclick="fmBack()">← Zurück</button>
+      <span class="fm-path" id="fm-path-bar">~/</span>
+      <span style="flex:1"></span>
+      <button class="editor-btn" onclick="fmNewTxt()">📝 Neue .txt</button>
+      <button class="editor-btn" onclick="fmNewFolder()">📂 Neuer Ordner</button>
+      <button class="editor-btn" onclick="fmImportFile()">📥 Importieren</button>
+    </div>
+    <div style="display:flex;flex:1;overflow:hidden">
+      <div class="fm-sidebar">
+        <div class="fm-section">Orte</div>
+        <div class="fm-item active" id="fmi-home" onclick="fmNav('home',this)">🏠 Privat</div>
+        <div class="fm-item" id="fmi-docs" onclick="fmNav('docs',this)">📄 Dokumente</div>
+        <div class="fm-item" id="fmi-pics" onclick="fmNav('pics',this)">🖼️ Bilder</div>
+        <div class="fm-item" id="fmi-dl" onclick="fmNav('dl',this)">⬇️ Downloads</div>
+        <div class="fm-item" id="fmi-vids" onclick="fmNav('vids',this)">🎬 Videos</div>
+        <div class="fm-section">Geräte</div>
+        <div class="fm-item" onclick="showNotif('Dateien','Laufwerk C: 512GB – 73% belegt 💾')">💾 Laufwerk C:</div>
+        <div class="fm-item" onclick="fmImportFile()">🖥️ Vom PC öffnen</div>
+        <div class="fm-item" onclick="showNotif('Netzwerk','NovCloud verbunden ☁️','#6affca')">☁️ NovCloud</div>
+      </div>
+      <div class="fm-content" id="fm-content-area" oncontextmenu="fmBgContext(event)">
+        <div class="fm-grid" id="fm-grid"></div>
+      </div>
+    </div>
+    <!-- File context menu -->
+    <div id="fm-ctx" style="position:fixed;z-index:9000;background:rgba(14,14,24,0.97);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:10px;padding:6px;box-shadow:0 16px 48px rgba(0,0,0,0.7);min-width:180px;display:none;">
+      <div class="ctx-item" id="fm-ctx-open">📂 Öffnen</div>
+      <div class="ctx-item" id="fm-ctx-edit">✏️ Bearbeiten</div>
+      <div class="ctx-sep"></div>
+      <div class="ctx-item" id="fm-ctx-rename">🏷️ Umbenennen</div>
+      <div class="ctx-item" id="fm-ctx-download">💾 Herunterladen</div>
+      <div class="ctx-sep"></div>
+      <div class="ctx-item danger" id="fm-ctx-delete">🗑️ Löschen</div>
+    </div>`;
+}
+function fmNav(key, el) {
+  document.querySelectorAll('#body-files .fm-item').forEach(i=>i.classList.remove('active'));
+  el.classList.add('active');
+  fmCurrentDir = key;
+  loadDir(key);
+}
+function fmBack() {
+  const el = document.getElementById('fmi-home');
+  if(el) {
+    document.querySelectorAll('#body-files .fm-item').forEach(i=>i.classList.remove('active'));
+    el.classList.add('active');
+    fmCurrentDir = 'home';
+    loadDir('home');
+  }
+}
+const pathMap = {home:'~/',docs:'~/Dokumente/',pics:'~/Bilder/',dl:'~/Downloads/',vids:'~/Videos/'};
+function loadDir(key) {
+  const grid=document.getElementById('fm-grid');
+  const pathBar=document.getElementById('fm-path-bar');
+  if(!grid) return;
+  fmCurrentDir = key;
+  if(pathBar) pathBar.textContent = pathMap[key]||'~/';
+  const files = vfs[key]||[];
+  grid.innerHTML = files.map((f,i) => {
+    const isSelected = fmSelectedFile === f.n;
+    return `<div class="fm-file${isSelected?' selected':''}" id="fmf-${i}"
+      ondblclick="fmDblClick('${key}','${f.n}','${f.type}')"
+      onclick="fmSelectFile('${f.n}','${key}',${i})"
+      oncontextmenu="fmFileContext(event,'${key}','${f.n}','${f.type}')"
+      title="${f.n}">
+      <div class="ico">${f.ico}</div>
+      <div class="name">${f.n}</div>
+    </div>`;
+  }).join('');
+}
+function fmSelectFile(name, key, idx) {
+  fmSelectedFile = name;
+  document.querySelectorAll('#fm-grid .fm-file').forEach((el,i) => el.classList.toggle('selected', i===idx));
+}
+function fmDblClick(key, name, type) {
+  if(type === 'dir') { fmOpenDir(name); return; }
+  if(type === 'txt') { fmOpenTxt(key, name); return; }
+  showNotif('Dateien', name + ' kann nicht geöffnet werden (kein Viewer)', '#ff6a8a');
+}
+function fmOpenDir(name) {
+  const entry = (vfs[fmCurrentDir]||[]).find(f=>f.n===name && f.type==='dir');
+  const key = entry?.key || name.toLowerCase();
+  if(vfs[key]) {
+    fmCurrentDir = key;
+    document.querySelectorAll('#body-files .fm-item').forEach(i=>i.classList.remove('active'));
+    const sidebar = document.getElementById('fmi-'+key);
+    if(sidebar) sidebar.classList.add('active');
+    loadDir(key);
+  }
+}
+function fmOpenTxt(dirKey, name) {
+  const path = dirKey+'/'+name;
+  const content = vfsContents[path] || '';
+  editorOpenFile(name, content, path);
+}
+
+// File context menu
+function fmFileContext(e, key, name, type) {
+  e.preventDefault(); e.stopPropagation();
+  fmSelectFile(name, key, -1);
+  const ctx = document.getElementById('fm-ctx'); if(!ctx) return;
+  ctx.style.left = Math.min(e.clientX, window.innerWidth-200)+'px';
+  ctx.style.top  = Math.min(e.clientY, window.innerHeight-180)+'px';
+  ctx.style.display = 'block';
+  document.getElementById('fm-ctx-open').onclick = () => { closeFmCtx(); fmDblClick(key, name, type); };
+  document.getElementById('fm-ctx-edit').style.display = type==='txt'?'flex':'none';
+  document.getElementById('fm-ctx-edit').onclick = () => { closeFmCtx(); fmOpenTxt(key, name); };
+  document.getElementById('fm-ctx-rename').onclick = () => { closeFmCtx(); fmRename(key, name); };
+  document.getElementById('fm-ctx-download').onclick = () => { closeFmCtx(); fmDownload(key, name, type); };
+  document.getElementById('fm-ctx-delete').onclick = () => { closeFmCtx(); fmDelete(key, name); };
+}
+function fmBgContext(e) {
+  if(e.target.closest('.fm-file')) return;
+  e.preventDefault();
+  closeFmCtx();
+}
+function closeFmCtx() {
+  const ctx=document.getElementById('fm-ctx'); if(ctx) ctx.style.display='none';
+}
+document.addEventListener('click', () => closeFmCtx());
+
+function fmRename(key, oldName) {
+  const newName = prompt('Umbenennen:', oldName);
+  if(!newName || newName===oldName) return;
+  const arr = vfs[key];
+  const f = arr.find(x=>x.n===oldName);
+  if(!f) return;
+  // rename content key
+  const oldPath = key+'/'+oldName;
+  const newPath = key+'/'+newName;
+  if(vfsContents[oldPath] !== undefined) { vfsContents[newPath]=vfsContents[oldPath]; delete vfsContents[oldPath]; }
+  f.n = newName;
+  f.ico = getFileIcon(newName, f.type);
+  loadDir(key);
+  showNotif('Dateien', `"${oldName}" → "${newName}" ✓`, '#6affca');
+}
+function fmDelete(key, name) {
+  if(!confirm(`"${name}" wirklich löschen?`)) return;
+  const arr = vfs[key];
+  const idx = arr.findIndex(x=>x.n===name);
+  if(idx>=0) arr.splice(idx,1);
+  delete vfsContents[key+'/'+name];
+  loadDir(key);
+  showNotif('Dateien', `"${name}" gelöscht 🗑️`, '#ff6a8a');
+}
+function fmDownload(key, name, type) {
+  const path = key+'/'+name;
+  if(type==='txt' && vfsContents[path]!==undefined) {
+    const blob = new Blob([vfsContents[path]], {type:'text/plain'});
+    const a = document.createElement('a'); a.href=URL.createObjectURL(blob);
+    a.download=name; a.click();
+    showNotif('Dateien', name+' wird heruntergeladen 💾', '#6affca');
+  } else {
+    showNotif('Dateien', 'Nur .txt-Dateien können heruntergeladen werden', '#ff6a8a');
+  }
+}
+function fmNewTxt() {
+  const name = prompt('Dateiname (.txt):', 'Neue Datei.txt');
+  if(!name) return;
+  const safeName = name.endsWith('.txt') ? name : name+'.txt';
+  if(vfs[fmCurrentDir].find(f=>f.n===safeName)) { showNotif('Dateien','Datei existiert bereits','#ff6a8a'); return; }
+  vfs[fmCurrentDir].push({ico:'📝', n:safeName, type:'txt'});
+  vfsContents[fmCurrentDir+'/'+safeName] = '';
+  loadDir(fmCurrentDir);
+  showNotif('Dateien', safeName+' erstellt ✓', '#6affca');
+  // immediately open in editor
+  setTimeout(()=>fmOpenTxt(fmCurrentDir, safeName), 100);
+}
+function fmNewFolder() {
+  const name = prompt('Ordnername:', 'Neuer Ordner');
+  if(!name) return;
+  if(vfs[fmCurrentDir].find(f=>f.n===name)) { showNotif('Dateien','Ordner existiert bereits','#ff6a8a'); return; }
+  const key = 'custom_'+Date.now();
+  vfs[key] = [];
+  vfs[fmCurrentDir].push({ico:'📂', n:name, type:'dir', key});
+  loadDir(fmCurrentDir);
+  showNotif('Dateien', 'Ordner "'+name+'" erstellt 📂', '#6affca');
+}
+function fmImportFile() {
+  const input = document.createElement('input');
+  input.type='file'; input.accept='.txt,.md,.json,.csv,.log,.xml,.html,.js,.py,.css';
+  input.onchange = e => {
+    const file = e.target.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const content = ev.target.result;
+      const name = file.name;
+      const isTxt = /\.(txt|md|json|csv|log|xml|html|js|py|css)$/i.test(name);
+      const type = isTxt ? 'txt' : 'file';
+      // Add to current dir
+      if(!vfs[fmCurrentDir].find(f=>f.n===name)) {
+        vfs[fmCurrentDir].push({ico: getFileIcon(name, type), n:name, type});
+      }
+      if(isTxt) vfsContents[fmCurrentDir+'/'+name] = content;
+      loadDir(fmCurrentDir);
+      showNotif('Dateien', `"${name}" importiert ✓`, '#6affca');
+      if(isTxt) setTimeout(()=>fmOpenTxt(fmCurrentDir, name), 150);
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+function getFileIcon(name, type) {
+  if(type==='dir') return '📂';
+  if(type==='txt'||/\.(txt|md|log)$/i.test(name)) return '📝';
+  if(/\.(json|xml|html|css|js|py)$/i.test(name)) return '⚙️';
+  if(/\.(png|jpg|jpeg|svg|gif|webp)$/i.test(name)) return '🖼️';
+  if(/\.(mp3|wav|ogg|flac)$/i.test(name)) return '🎵';
+  if(/\.(mp4|mkv|webm|avi)$/i.test(name)) return '🎬';
+  if(/\.(pdf)$/i.test(name)) return '📋';
+  if(/\.(zip|rar|tar|gz)$/i.test(name)) return '🗜️';
+  if(/\.(exe|msi)$/i.test(name)) return '📦';
+  return '📄';
+}
+
+// ══════════════════════════════════════
+// BROWSER (MULTI-TAB + REAL IFRAME)
+// ══════════════════════════════════════
+let browserTabsData = [];
+let browserActiveTab = null;
+let browserBookmarks = [];
+let browserNextTabId = 1;
+
+function browserLoadState() {
+  try {
+    const s = JSON.parse(localStorage.getItem('novos_browser') || '{}');
+    browserBookmarks = s.bookmarks || [
+      {title:'NovOS Start', url:'nov://start'},
+      {title:'Nachrichten', url:'nov://news'},
+      {title:'NovStore', url:'nov://store'},
+    ];
+    browserTabsData = s.tabs || [];
+    if(!browserTabsData.length) {
+      browserTabsData = [{id:'t1', url:'nov://start', title:'Neuer Tab', history:['nov://start'], histPos:0}];
+    }
+    browserActiveTab = s.activeTab || browserTabsData[0].id;
+    browserNextTabId = Math.max(...browserTabsData.map(t=>parseInt(t.id.slice(1))+1), 2);
+  } catch(e) {
+    browserTabsData = [{id:'t1', url:'nov://start', title:'Neuer Tab', history:['nov://start'], histPos:0}];
+    browserActiveTab = 't1';
+    browserBookmarks = [];
+  }
+}
+function browserSaveState() {
+  try { localStorage.setItem('novos_browser', JSON.stringify({tabs: browserTabsData, activeTab: browserActiveTab, bookmarks: browserBookmarks})); } catch(e) {}
+}
+
+function buildBrowser() {
+  browserLoadState();
+  return `
+    <div id="br-tabs-bar" style="display:flex;align-items:center;background:var(--panel2);border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0;min-height:36px;"></div>
+    <div class="browser-bar">
+      <button class="browser-nav-btn" id="br-back-btn" onclick="browserBack()">←</button>
+      <button class="browser-nav-btn" id="br-fwd-btn" onclick="browserFwd()">→</button>
+      <button class="browser-nav-btn" id="br-reload-btn" onclick="browserRefresh()">↻</button>
+      <button class="browser-nav-btn" onclick="browserHome()" title="Startseite">🏠</button>
+      <div style="display:flex;align-items:center;flex:1;background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:0 4px 0 12px;gap:6px" id="br-url-wrap">
+        <span id="br-security-icon" style="font-size:11px;color:var(--accent3);flex-shrink:0">🔒</span>
+        <input class="browser-url" id="browser-url" style="border:none;background:none;border-radius:0;padding:5px 4px" value="nov://start"
+          onkeydown="if(event.key==='Enter'){browserGo(this.value)}"
+          onfocus="this.select()">
+      </div>
+      <button class="browser-nav-btn" onclick="browserAddBookmark()" title="Lesezeichen">🔖</button>
+      <button class="browser-nav-btn" onclick="browserGo('nov://bookmarks')" title="Alle Lesezeichen">📚</button>
+    </div>
+    <div id="browser-main" style="flex:1;position:relative;overflow:hidden;display:flex;flex-direction:column;">
+      <div id="browser-novpage" style="flex:1;overflow-y:auto;display:none;"></div>
+      <div id="browser-iframe-wrap" style="flex:1;position:relative;display:none;">
+        <div id="browser-loading-bar" style="position:absolute;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%;transition:width 0.3s;z-index:10;display:none;"></div>
+        <iframe id="browser-iframe" style="width:100%;height:100%;border:none;background:white;" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+      </div>
+      <div id="browser-error-page" style="flex:1;overflow-y:auto;display:none;"></div>
+    </div>`;
+}
+
+function browserInit() {
+  browserRebuildTabs();
+  const tab = browserTabsData.find(t=>t.id===browserActiveTab) || browserTabsData[0];
+  browserNavigateTo(tab.url, false);
+}
+
+function browserRebuildTabs() {
+  const bar = document.getElementById('br-tabs-bar'); if(!bar) return;
+  bar.innerHTML = browserTabsData.map(tab => {
+    const isActive = tab.id === browserActiveTab;
+    return `<div onclick="browserSwitchTab('${tab.id}')" style="
+      display:inline-flex;align-items:center;gap:6px;padding:0 12px;height:36px;
+      font-size:11px;cursor:pointer;white-space:nowrap;border-right:1px solid var(--border);
+      background:${isActive?'var(--panel)':'var(--panel2)'};
+      color:${isActive?'var(--text)':'var(--text2)'};
+      border-bottom:${isActive?'2px solid var(--accent)':'2px solid transparent'};
+      flex-shrink:0;min-width:100px;max-width:180px;overflow:hidden;">
+      <span style="overflow:hidden;text-overflow:ellipsis;flex:1">${tab.favicon||'🌐'} ${tab.title||'Neuer Tab'}</span>
+      <span onclick="browserCloseTab(event,'${tab.id}')" style="opacity:0.5;padding:2px 3px;border-radius:3px;flex-shrink:0;"
+        onmouseover="this.style.opacity=1;this.style.background='rgba(255,255,255,0.1)'"
+        onmouseout="this.style.opacity=0.5;this.style.background='none'">✕</span>
+    </div>`;
+  }).join('') +
+  `<div onclick="browserNewTab()" style="display:inline-flex;align-items:center;padding:0 10px;height:36px;cursor:pointer;color:var(--text2);font-size:16px;opacity:0.5;flex-shrink:0"
+    onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.5">+</div>`;
+}
+
+function browserNewTab(url) {
+  const id = 't' + browserNextTabId++;
+  const startUrl = url || NovSettings.browserHomepage || 'nov://start';
+  browserTabsData.push({id, url: startUrl, title:'Neuer Tab', history:[startUrl], histPos:0});
+  browserActiveTab = id;
+  browserRebuildTabs();
+  browserNavigateTo(startUrl, false);
+  browserSaveState();
+}
+
+function browserSwitchTab(id) {
+  browserActiveTab = id;
+  browserRebuildTabs();
+  const tab = browserTabsData.find(t=>t.id===id);
+  if(tab) browserNavigateTo(tab.url, false);
+}
+
+function browserCloseTab(e, id) {
+  e.stopPropagation();
+  if(browserTabsData.length<=1) { browserNavigateTo('nov://start',false); return; }
+  const idx = browserTabsData.findIndex(t=>t.id===id);
+  browserTabsData = browserTabsData.filter(t=>t.id!==id);
+  if(browserActiveTab===id) {
+    const newTab = browserTabsData[Math.min(idx, browserTabsData.length-1)];
+    browserActiveTab = newTab.id;
+    browserNavigateTo(newTab.url, false);
+  }
+  browserRebuildTabs();
+  browserSaveState();
+}
+
+function browserGetActiveTab() {
+  return browserTabsData.find(t=>t.id===browserActiveTab);
+}
+
+function browserGo(url) {
+  // Detect if it's a plain search term (no protocol, no dot)
+  let finalUrl = url.trim();
+  if(finalUrl && !finalUrl.includes('://') && !finalUrl.startsWith('nov://')) {
+    // Has a dot => likely URL, otherwise search
+    if(finalUrl.includes('.') && !finalUrl.includes(' ')) {
+      if(!finalUrl.startsWith('http')) finalUrl = 'https://' + finalUrl;
+    } else {
+      // Search
+      const engine = NovSettings.browserSearch || 'DuckDuckGo';
+      const searchUrls = {
+        'DuckDuckGo': 'https://duckduckgo.com/?q=',
+        'Google': 'https://www.google.com/search?q=',
+        'Bing': 'https://www.bing.com/search?q=',
+        'Ecosia': 'https://www.ecosia.org/search?q=',
+        'Startpage': 'https://www.startpage.com/search?q=',
+      };
+      finalUrl = (searchUrls[engine] || searchUrls.DuckDuckGo) + encodeURIComponent(finalUrl);
+    }
+  }
+  const tab = browserGetActiveTab();
+  if(tab) {
+    tab.history = tab.history.slice(0, tab.histPos+1);
+    tab.history.push(finalUrl);
+    tab.histPos = tab.history.length-1;
+    tab.url = finalUrl;
+  }
+  browserNavigateTo(finalUrl, true);
+  browserSaveState();
+}
+
+function browserNavigateTo(url, isNew) {
+  const urlInput = document.getElementById('browser-url');
+  if(urlInput) urlInput.value = url;
+  const secIcon = document.getElementById('br-security-icon');
+  if(secIcon) secIcon.textContent = url.startsWith('https://') ? '🔒' : url.startsWith('http://') ? '⚠️' : '✦';
+
+  const novpage = document.getElementById('browser-novpage');
+  const iframeWrap = document.getElementById('browser-iframe-wrap');
+  const iframe = document.getElementById('browser-iframe');
+  const errPage = document.getElementById('browser-error-page');
+
+  if(!novpage || !iframeWrap || !iframe) return;
+
+  // Internal nov:// page
+  if(url.startsWith('nov://') || !url.includes('://')) {
+    novpage.style.display='flex'; novpage.style.flexDirection='column';
+    iframeWrap.style.display='none';
+    errPage.style.display='none';
+    novpage.innerHTML = browserPage(url);
+    browserUpdateTabTitle(url);
+    return;
+  }
+
+  // External URL via iframe
+  novpage.style.display='none';
+  iframeWrap.style.display='block';
+  errPage.style.display='none';
+
+  // Show loading bar
+  const loadBar = document.getElementById('browser-loading-bar');
+  if(loadBar) { loadBar.style.display='block'; loadBar.style.width='0%'; setTimeout(()=>loadBar.style.width='70%',50); }
+
+  iframe.onload = () => {
+    if(loadBar) { loadBar.style.width='100%'; setTimeout(()=>{loadBar.style.display='none';loadBar.style.width='0%';},400); }
+    // Try to get title
+    try { const t=iframe.contentDocument?.title; if(t) browserUpdateTabTitle(t,true); } catch(e){}
+    browserUpdateTabTitle(url);
+  };
+  iframe.onerror = () => {
+    iframeWrap.style.display='none'; errPage.style.display='flex'; errPage.style.flexDirection='column';
+    errPage.innerHTML=`<div class="browser-page"><h1 style="color:var(--accent2)">⚠️ Seite nicht erreichbar</h1><p>${url}</p><p>Diese Seite kann nicht geladen werden. Mögliche Ursachen:</p><ul style="color:var(--text2);padding-left:20px;line-height:2"><li>Keine Internetverbindung</li><li>Seite existiert nicht</li><li>CORS-Einschränkungen des Browsers</li></ul><button class="setting-btn" onclick="browserGo('${url}')">↻ Erneut versuchen</button></div>`;
+  };
+  try { iframe.src = url; } catch(e) { iframe.onerror(); }
+  browserUpdateTabTitle(new URL(url).hostname);
+}
+
+function browserUpdateTabTitle(title, fromPage=false) {
+  const tab = browserGetActiveTab(); if(!tab) return;
+  if(!fromPage) {
+    if(title.startsWith('nov://')) {
+      const pageNames = {'nov://start':'NovBrowser','nov://news':'NovNews','nov://store':'NovStore','nov://maps':'NovMaps','nov://mail':'NovMail','nov://docs':'NovDocs','nov://games':'NovGames','nov://bookmarks':'Lesezeichen'};
+      tab.title = pageNames[title] || title.replace('nov://','');
+      tab.favicon = '✦';
+    } else {
+      try { tab.title = new URL(title.startsWith('http')?title:'https://'+title).hostname.replace('www.',''); tab.favicon='🌐'; } catch(e) { tab.title = title.slice(0,25); }
+    }
+  } else {
+    tab.title = title.slice(0,30);
+  }
+  browserRebuildTabs();
+}
+
+function browserBack() {
+  const tab = browserGetActiveTab(); if(!tab||tab.histPos<=0) return;
+  tab.histPos--;
+  tab.url = tab.history[tab.histPos];
+  browserNavigateTo(tab.url, false);
+}
+function browserFwd() {
+  const tab = browserGetActiveTab(); if(!tab||tab.histPos>=tab.history.length-1) return;
+  tab.histPos++;
+  tab.url = tab.history[tab.histPos];
+  browserNavigateTo(tab.url, false);
+}
+function browserRefresh() {
+  const tab = browserGetActiveTab(); if(!tab) return;
+  const u = tab.url;
+  const iframe = document.getElementById('browser-iframe');
+  if(iframe && !u.startsWith('nov://')) { iframe.src = iframe.src; }
+  else browserNavigateTo(u, false);
+}
+function browserHome() {
+  browserGo(NovSettings.browserHomepage || 'nov://start');
+}
+function browserAddBookmark() {
+  const tab = browserGetActiveTab(); if(!tab) return;
+  const bm = {title: tab.title, url: tab.url};
+  if(!browserBookmarks.find(b=>b.url===bm.url)) {
+    browserBookmarks.push(bm);
+    browserSaveState();
+    showNotif('NovBrowser', `"${bm.title}" als Lesezeichen gespeichert 🔖`, '#6affca');
+  } else {
+    showNotif('NovBrowser','Lesezeichen bereits vorhanden','#ff6a8a');
+  }
+}
+
+// ══════════════════════════════════════
+// BROWSER PAGE RENDERER
+// ══════════════════════════════════════
+function browserPage(url) {
+  const nav=(u)=>`onclick="browserGo('${u}')"`;
+  if(url==='nov://bookmarks') return `<div class="browser-page">
+    <h1>📚 Lesezeichen</h1>
+    <p style="margin-bottom:16px">${browserBookmarks.length} gespeicherte Lesezeichen</p>
+    ${browserBookmarks.length ? browserBookmarks.map((bm,i)=>`
+      <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);">
+        <span style="font-size:18px">🔖</span>
+        <div style="flex:1;cursor:pointer" onclick="browserGo('${bm.url}')">
+          <div style="font-size:13px;color:var(--text);font-weight:600">${bm.title}</div>
+          <div style="font-size:10px;color:var(--accent)">${bm.url}</div>
+        </div>
+        <button class="setting-btn danger" onclick="browserBookmarks.splice(${i},1);browserSaveState();browserNavigateTo('nov://bookmarks',false)">✕</button>
+      </div>`).join('') : '<p style="color:var(--text2)">Noch keine Lesezeichen. Klicke 🔖 in der Adressleiste.</p>'}
+  </div>`;
+  if(url==='nov://start') return `<div class="browser-page">
+    <h1>✦ NovBrowser</h1>
+    <p>Schnell, sicher, privat. Willkommen im NovBrowser.</p>
+    <div style="display:flex;gap:8px;margin:16px 0;align-items:center">
+      <input style="flex:1;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-family:Inter,sans-serif;font-size:13px;outline:none" placeholder="Im Web suchen..." onkeydown="if(event.key==='Enter')browserGo('nov://search?q='+encodeURIComponent(this.value))">
+      <button class="browser-nav-btn" style="background:var(--accent);color:white;width:36px;border-radius:8px" onclick="const v=this.previousElementSibling.value;if(v)browserGo('nov://search?q='+encodeURIComponent(v))">↵</button>
+    </div>
+    <div class="browser-quicklinks">
+      <div class="browser-ql" ${nav('nov://news')}><div class="ql-icon">📰</div><div class="ql-title">NovNews</div><div class="ql-url">nov://news</div></div>
+      <div class="browser-ql" ${nav('nov://games')}><div class="ql-icon">🎮</div><div class="ql-title">NovGames</div><div class="ql-url">nov://games</div></div>
+      <div class="browser-ql" ${nav('nov://store')}><div class="ql-icon">🛒</div><div class="ql-title">NovStore</div><div class="ql-url">nov://store</div></div>
+      <div class="browser-ql" ${nav('nov://maps')}><div class="ql-icon">🗺️</div><div class="ql-title">NovMaps</div><div class="ql-url">nov://maps</div></div>
+      <div class="browser-ql" ${nav('nov://mail')}><div class="ql-icon">📧</div><div class="ql-title">NovMail</div><div class="ql-url">nov://mail</div></div>
+      <div class="browser-ql" ${nav('nov://docs')}><div class="ql-icon">📄</div><div class="ql-title">NovDocs</div><div class="ql-url">nov://docs</div></div>
+    </div></div>`;
+  if(url==='nov://news') return `<div class="browser-page">
+    <h1>📰 NovNews</h1>
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+      ${['Alle','Technik','Wissenschaft','Sport','Wirtschaft'].map(t=>`<span style="padding:4px 10px;border-radius:20px;background:var(--panel2);border:1px solid var(--border);font-size:11px;cursor:pointer;color:var(--text2)">${t}</span>`).join('')}
+    </div>
+    ${[['KI überholt menschliche Entwickler','Neue Studie: Autonome Systeme lösen 94% aller Code-Aufgaben selbstständig. Nova Corp plant Integration in NovOS 4.0.','vor 2 Std.'],
+       ['NovOS 4.0 angekündigt','Nova Corp kündigt nächste Systemgeneration für 2027 an. Neuer KI-Copilot wird in alle Apps integriert.','vor 5 Std.'],
+       ['Mondstation Alpha eröffnet','Erste permanente Menschenbewohnung auf dem Mond nimmt Betrieb auf. 12 Wissenschaftler starten ihre Mission.','vor 1 Tag'],
+       ['Quantencomputer durchbricht 1-Mio-Qubit-Barriere','Historischer Meilenstein in der Quantencomputing-Forschung. Neue Anwendungen in Kryptographie möglich.','vor 2 Tagen']
+      ].map(([h,b,t])=>`<div style="padding:14px 0;border-bottom:1px solid var(--border)"><div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:5px;cursor:pointer">${h}</div><div style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:5px">${b}</div><div style="font-size:10px;color:var(--accent);opacity:0.7">${t}</div></div>`).join('')}
+    </div>`;
+  if(url.startsWith('nov://search')) {
+    const q=decodeURIComponent(url.split('?q=')[1]||'');
+    return `<div class="browser-page"><h1 style="font-size:18px">🔍 Suchergebnisse für „${q}"</h1>
+      ${[`${q} – Wikipedia`,`${q}: Aktuelle Nachrichten – NovNews`,`${q} erklärt – NovWiki`,`Bilder zu: ${q}`,`${q} Forum – NovCommunity`].map((r,i)=>`
+        <div style="padding:12px 0;border-bottom:1px solid var(--border)">
+          <div style="font-size:12px;color:var(--accent3);margin-bottom:2px">nov://wiki/${encodeURIComponent(q)}/${i}</div>
+          <div style="font-size:14px;color:var(--accent);cursor:pointer;margin-bottom:3px">${r}</div>
+          <div style="font-size:11px;color:var(--text2)">Dies ist ein Suchergebnis für „${q}". Klicke um mehr zu erfahren.</div>
+        </div>`).join('')}</div>`;
+  }
+  if(url==='nov://games') return `<div class="browser-page"><h1>🎮 NovGames</h1>
+    <p>Entdecke Spiele für NovOS.</p>
+    ${[['⭐','StarRace 3D','Rennspiel','Kostenlos'],['🗡️','DungeonCrawler','RPG','2,99 €'],['🧩','Hexapuzzle','Puzzle','Kostenlos'],['🚀','AstroMiner','Strategie','4,99 €']].map(([i,n,g,p])=>`
+    <div style="display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid var(--border)">
+      <div style="width:48px;height:48px;border-radius:10px;background:var(--panel2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:24px">${i}</div>
+      <div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--text)">${n}</div><div style="font-size:11px;color:var(--text2)">${g}</div></div>
+      <button class="setting-btn" onclick="showNotif('NovStore','${n} wird installiert…')">${p}</button>
+    </div>`).join('')}</div>`;
+  if(url==='nov://store') return `<div class="browser-page"><h1>🛒 NovStore</h1>
+    <h2>Empfohlen</h2>
+    ${[['📊','DataVis Pro','Datenvisualisierung','9,99 €'],['🎨','PixelForge','Bildbearbeitung','14,99 €'],['🔐','VaultPass','Passwortmanager','Kostenlos'],['📡','NetScanner','Netzwerk-Tool','Kostenlos']].map(([i,n,g,p])=>`
+    <div style="display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid var(--border)">
+      <div style="width:44px;height:44px;border-radius:10px;background:var(--panel2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:22px">${i}</div>
+      <div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--text)">${n}</div><div style="font-size:11px;color:var(--text2)">${g}</div></div>
+      <button class="setting-btn" onclick="showNotif('NovStore','${n} installiert ✓','#6affca')">${p}</button>
+    </div>`).join('')}</div>`;
+  if(url==='nov://maps') return `<div class="browser-page"><h1>🗺️ NovMaps</h1>
+    <div style="background:var(--panel2);border:1px solid var(--border);border-radius:12px;height:200px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;margin-bottom:16px">
+      <div style="font-size:40px">🗺️</div>
+      <div style="color:var(--text2);font-size:12px">Karte lädt… (Simulation)</div>
+    </div>
+    <h2>In der Nähe</h2>
+    ${['☕ NovCafé – 200m','🏪 TechStore – 450m','🏥 Nova-Klinikum – 1.2km','🏋️ FitNova – 800m'].map(p=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--text2)">${p}</div>`).join('')}</div>`;
+  if(url==='nov://mail') return `<div class="browser-page"><h1>📧 NovMail</h1>
+    ${[['Nova Corp','NovOS 4.0 Preview – Einladung','Wir freuen uns, dich zur Beta einzuladen!','vor 1 Std.','📌'],['NovStore','Deine Bestellung #4821','Deine App wurde erfolgreich installiert.','vor 3 Std.',''],['NovNews','Dein täglicher Digest','Top-Meldungen vom heutigen Tag...','vor 5 Std.',''],['NovCloud','Speicher fast voll','Du nutzt 92% deines Cloud-Speichers.','gestern','⚠️']].map(([von,betr,prev,t,badge])=>`
+    <div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer" onclick="showNotif('NovMail','E-Mail wird geöffnet')">
+      <div style="width:36px;height:36px;border-radius:50%;background:var(--panel2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">✉️</div>
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;justify-content:space-between;margin-bottom:2px">
+          <span style="font-size:12px;font-weight:600;color:var(--text)">${von} ${badge}</span>
+          <span style="font-size:10px;color:var(--text2)">${t}</span>
+        </div>
+        <div style="font-size:12px;color:var(--text);margin-bottom:2px">${betr}</div>
+        <div style="font-size:11px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${prev}</div>
+      </div>
+    </div>`).join('')}</div>`;
+  if(url==='nov://docs') return `<div class="browser-page"><h1>📄 NovDocs</h1>
+    <p>Deine zuletzt bearbeiteten Dokumente:</p>
+    ${[['📄','Projektplan.docx','vor 2 Std.'],['📊','Quartalsbericht.xlsx','gestern'],['📝','Ideen.txt','vor 3 Tagen'],['📋','Präsentation.pptx','vor 1 Woche']].map(([i,n,t])=>`
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer" onclick="showNotif('NovDocs','${n} wird geöffnet')">
+      <span style="font-size:24px">${i}</span>
+      <div style="flex:1"><div style="font-size:13px;color:var(--text)">${n}</div><div style="font-size:10px;color:var(--text2)">${t}</div></div>
+    </div>`).join('')}</div>`;
+  return `<div class="browser-page">
+    <h1 style="color:var(--accent2)">Fehler 404</h1>
+    <p>Seite <strong>${url}</strong> nicht gefunden.</p>
+    <p>Versuche eine andere Adresse wie <a ${nav('nov://start')}>nov://start</a>.</p></div>`;
+}
+
+// ══════════════════════════════════════
+// MUSIC
+// ══════════════════════════════════════
+let musicPlaying=false, musicInterval=null, progressPct=0, curTrack=0;
+const tracks=[
+  {title:'Neon Drift',artist:'Synthwave Collective',album:'Digital Dreams',dur:'3:42',secs:222,ico:'🌆'},
+  {title:'Quantum Beat',artist:'Nova Circuit',album:'System Sounds',dur:'4:15',secs:255,ico:'⚡'},
+  {title:'Stellar Void',artist:'Deep Space Audio',album:'Cosmos EP',dur:'5:01',secs:301,ico:'🌌'},
+  {title:'Cyber Rain',artist:'NeonPulse',album:'Rain Sessions',dur:'3:28',secs:208,ico:'🌧️'},
+  {title:'Nova Rise',artist:'Synthwave Collective',album:'Digital Dreams',dur:'4:44',secs:284,ico:'🚀'},
+];
+let elapsed=0;
+function buildMusic() {
+  const t=tracks[curTrack];
+  return `
+    <div class="music-body" id="music-body">
+      <div class="album-art" id="album-art">${t.ico}</div>
+      <div class="track-info">
+        <div class="track-title" id="track-title">${t.title}</div>
+        <div class="track-artist" id="track-artist">${t.artist}</div>
+        <div class="track-album" id="track-album">${t.album}</div>
+      </div>
+      <div class="music-progress" style="width:100%">
+        <div class="progress-bar" id="prog-bar" onclick="seekMusic(event,this)">
+          <div class="progress-fill" id="prog-fill" style="width:0%"></div>
+        </div>
+        <div class="progress-times"><span id="cur-time">0:00</span><span id="total-time">${t.dur}</span></div>
+      </div>
+      <div class="music-controls">
+        <button class="music-btn" onclick="shuffleTrack()" title="Shuffle">⇌</button>
+        <button class="music-btn" onclick="prevTrack()">⏮</button>
+        <button class="music-btn play-btn" id="play-btn" onclick="togglePlay()">▶</button>
+        <button class="music-btn" onclick="nextTrack()">⏭</button>
+        <button class="music-btn" onclick="showNotif('NovMusic','Wiederholung aktiviert 🔁')" title="Repeat">🔁</button>
+      </div>
+      <div class="volume-row" style="width:100%">
+        <span style="font-size:13px">🔈</span>
+        <input type="range" class="volume-slider" min="0" max="100" value="70" oninput="showNotif('Audio','Lautstärke: '+this.value+'%')">
+        <span style="font-size:13px">🔊</span>
+      </div>
+      <div class="music-playlist" style="width:100%">
+        <div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Playlist</div>
+        ${tracks.map((tr,i)=>`
+        <div class="playlist-item ${i===curTrack?'active':''}" id="pli-${i}" onclick="selectTrack(${i})">
+          <span class="num">${i===curTrack&&musicPlaying?'▶':(i+1)}</span>
+          <div class="p-info"><div class="p-title">${tr.title}</div><div class="p-artist">${tr.artist}</div></div>
+          <span class="p-dur">${tr.dur}</span>
+        </div>`).join('')}
+      </div>
+    </div>`;
+}
+function initMusic() { updateMusicUI(); }
+function togglePlay() {
+  musicPlaying=!musicPlaying;
+  const pb=document.getElementById('play-btn');
+  if(pb) pb.textContent=musicPlaying?'⏸':'▶';
+  document.getElementById('album-art')?.classList.toggle('playing',musicPlaying);
+  if(musicPlaying) {
+    musicInterval=setInterval(()=>{
+      elapsed=Math.min(elapsed+1, tracks[curTrack].secs);
+      if(elapsed>=tracks[curTrack].secs){nextTrack();return;}
+      progressPct=(elapsed/tracks[curTrack].secs)*100;
+      const pf=document.getElementById('prog-fill');
+      if(pf) pf.style.width=progressPct+'%';
+      const ct=document.getElementById('cur-time');
+      if(ct) ct.textContent=`${Math.floor(elapsed/60)}:${String(elapsed%60).padStart(2,'0')}`;
+    },1000);
+  } else clearInterval(musicInterval);
+}
+function nextTrack(){ curTrack=(curTrack+1)%tracks.length; elapsed=0; progressPct=0; updateMusicUI(); if(musicPlaying){clearInterval(musicInterval);togglePlay();} }
+function prevTrack(){ curTrack=(curTrack-1+tracks.length)%tracks.length; elapsed=0; progressPct=0; updateMusicUI(); if(musicPlaying){clearInterval(musicInterval);togglePlay();} }
+function selectTrack(i){ curTrack=i; elapsed=0; progressPct=0; updateMusicUI(); if(!musicPlaying)togglePlay(); }
+function shuffleTrack(){ curTrack=Math.floor(Math.random()*tracks.length); elapsed=0; progressPct=0; updateMusicUI(); }
+function updateMusicUI() {
+  const t=tracks[curTrack];
+  const setT=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=val;};
+  setT('track-title',t.title); setT('track-artist',t.artist); setT('track-album',t.album);
+  setT('total-time',t.dur); setT('cur-time','0:00');
+  const pf=document.getElementById('prog-fill'); if(pf) pf.style.width='0%';
+  const aa=document.getElementById('album-art'); if(aa) aa.textContent=t.ico;
+  document.querySelectorAll('#body-music .playlist-item').forEach((el,i)=>el.classList.toggle('active',i===curTrack));
+}
+function seekMusic(e,bar) {
+  const r=bar.getBoundingClientRect();
+  progressPct=((e.clientX-r.left)/r.width)*100;
+  elapsed=Math.floor((progressPct/100)*tracks[curTrack].secs);
+  document.getElementById('prog-fill').style.width=progressPct+'%';
+  document.getElementById('cur-time').textContent=`${Math.floor(elapsed/60)}:${String(elapsed%60).padStart(2,'0')}`;
+}
+
+// ══════════════════════════════════════
+// CALCULATOR
+// ══════════════════════════════════════
+let calcExpr='', calcVal='0', calcNewNum=true;
+function buildCalc() {
+  return `
+    <div class="calc-body">
+      <div class="calc-display">
+        <div class="calc-expr" id="calc-expr"></div>
+        <div class="calc-val" id="calc-val">0</div>
+      </div>
+      <div class="calc-grid">
+        ${[
+          ['C','clr','←','clr','÷','op'],
+          ['7','','8','','9','','×','op'],
+          ['4','','5','','6','','−','op'],
+          ['1','','2','','3','','+','op'],
+          ['±','','.','','0 span2','','=','eq'],
+        ].map(row=>{
+          let html='';
+          for(let i=0;i<row.length;i+=2){
+            const label=row[i], cls=row[i+1];
+            const realLabel=label.replace(' span2','');
+            const span=label.includes('span2')?' class="calc-btn '+cls+' span2"':` class="calc-btn ${cls}"`;
+            html+=`<button${span} onclick="calcPress('${realLabel}')">${realLabel}</button>`;
+          }
+          return html;
+        }).join('')}
+      </div>
+    </div>`;
+}
+function calcPress(k) {
+  const vEl=document.getElementById('calc-val');
+  const eEl=document.getElementById('calc-expr');
+  if(!vEl||!eEl) return;
+  if(k==='C') { calcVal='0'; calcExpr=''; calcNewNum=true; }
+  else if(k==='←') { if(calcNewNum){calcExpr='';calcVal='0';} else calcVal=calcVal.length>1?calcVal.slice(0,-1):'0'; }
+  else if(k==='±') { calcVal=(parseFloat(calcVal)*-1).toString(); }
+  else if(['÷','×','−','+'].includes(k)) {
+    if(calcExpr && !calcNewNum) {
+      const op2=calcExpr.trim().slice(-1);
+      const a=parseFloat(calcExpr);
+      let res=parseFloat(calcVal);
+      if(op2==='÷'&&res!==0) res=a/res;
+      else if(op2==='×') res=a*res;
+      else if(op2==='−') res=a-res;
+      else if(op2==='+') res=a+res;
+      calcVal=parseFloat(res.toFixed(10)).toString();
+    }
+    calcExpr=calcVal+' '+k; calcNewNum=true;
+  }
+  else if(k==='=') {
+    try {
+      if(!calcExpr) return;
+      const a=parseFloat(calcExpr); const op=calcExpr.trim().slice(-1);
+      let res=parseFloat(calcVal);
+      if(op==='÷') res = parseFloat(calcVal)!==0 ? a/parseFloat(calcVal) : 'Fehler';
+      else if(op==='×') res=a*parseFloat(calcVal);
+      else if(op==='−') res=a-parseFloat(calcVal);
+      else if(op==='+') res=a+parseFloat(calcVal);
+      else res=parseFloat(calcVal);
+      const finalRes = (typeof res === 'string') ? res : parseFloat(res.toFixed(10)).toString();
+      calcExpr=calcExpr+' '+calcVal+' ='; calcVal=finalRes; calcNewNum=true;
+    } catch(e){ calcVal='Fehler'; calcNewNum=true; }
+  }
+  else if(k==='.') { if(calcNewNum){calcVal='0.';calcNewNum=false;} else if(!calcVal.includes('.')) calcVal+='.'; }
+  else {
+    if(calcNewNum||calcVal==='0'){calcVal=k;calcNewNum=false;}
+    else calcVal+=k;
+  }
+  vEl.textContent=calcVal; eEl.textContent=calcExpr;
+}
+
+// ══════════════════════════════════════
+// TEXT EDITOR (FULL FEATURED)
+// ══════════════════════════════════════
+let editorTabs = []; // {id, name, content, vfsPath, unsaved}
+let editorActiveTab = null;
+let editorNextId = 1;
+
+function buildEditor() {
+  return `
+    <div id="editor-tabs-bar" style="display:flex;align-items:center;background:var(--panel2);border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0;min-height:34px;"></div>
+    <div class="editor-toolbar" id="editor-toolbar">
+      <button class="editor-btn" onclick="editorNew()" title="Neue Datei (Strg+N)">📄 Neu</button>
+      <button class="editor-btn" onclick="editorOpenFromPC()" title="Datei öffnen">📂 Öffnen</button>
+      <button class="editor-btn" onclick="editorSave()" title="Speichern (Strg+S)" id="editor-save-btn">💾 Speichern</button>
+      <button class="editor-btn" onclick="editorSaveAs()" title="Speichern unter">💾 Als...</button>
+      <div class="editor-sep"></div>
+      <button class="editor-btn" onclick="editorUndo()" title="Rückgängig">↩</button>
+      <button class="editor-btn" onclick="editorRedo()" title="Wiederholen">↪</button>
+      <div class="editor-sep"></div>
+      <button class="editor-btn" id="editor-wrap-btn" onclick="editorToggleWrap()" title="Zeilenumbruch">↵ Wrap</button>
+      <select class="setting-select" id="editor-font-size" onchange="editorChangeFontSize(this.value)" title="Schriftgröße">
+        <option value="11px">11px</option>
+        <option value="12px">12px</option>
+        <option value="13px" selected>13px</option>
+        <option value="15px">15px</option>
+        <option value="18px">18px</option>
+        <option value="22px">22px</option>
+      </select>
+      <select class="setting-select" id="editor-font-family" onchange="document.getElementById('editor-area').style.fontFamily=this.value" title="Schriftart">
+        <option value="'Courier New',monospace">Monospace</option>
+        <option value="Inter,sans-serif">Sans-Serif</option>
+        <option value="Georgia,serif">Serif</option>
+      </select>
+      <div class="editor-sep"></div>
+      <button class="editor-btn" onclick="editorFindOpen()" title="Suchen (Strg+F)">🔍 Suchen</button>
+      <button class="editor-btn" onclick="editorWordCount()">📊 Stats</button>
+    </div>
+    <!-- Find & Replace Bar -->
+    <div id="editor-find-bar" style="display:none;padding:6px 12px;background:rgba(124,106,255,0.08);border-bottom:1px solid var(--border);display:none;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap;">
+      <span style="font-size:11px;color:var(--text2)">Suchen:</span>
+      <input id="editor-find-inp" class="sm-search" style="width:140px;margin:0;padding:4px 8px" placeholder="Suchbegriff..." oninput="editorFindHighlight()">
+      <span style="font-size:11px;color:var(--text2)">Ersetzen:</span>
+      <input id="editor-replace-inp" class="sm-search" style="width:140px;margin:0;padding:4px 8px" placeholder="Ersetzung...">
+      <button class="editor-btn" onclick="editorFindNext()">Nächste</button>
+      <button class="editor-btn" onclick="editorReplaceOne()">Ersetzen</button>
+      <button class="editor-btn" onclick="editorReplaceAll()">Alle ersetzen</button>
+      <span id="editor-find-count" style="font-size:11px;color:var(--accent)"></span>
+      <button class="editor-btn" onclick="editorFindClose()" style="margin-left:auto">✕</button>
+    </div>
+    <textarea class="editor-area" id="editor-area" spellcheck="true" style="resize:none;"></textarea>
+    <div class="editor-statusbar">
+      <span id="editor-file-name" style="color:var(--accent);font-weight:600">Unbenannt</span>
+      <span id="editor-pos">Zeile 1, Spalte 1</span>
+      <span id="editor-words">0 Wö · 0 Z</span>
+      <span id="editor-encoding">UTF-8</span>
+      <span>NovEdit 2.0</span>
+    </div>`;
+}
+
+function initEditor() {
+  const area = document.getElementById('editor-area'); if(!area) return;
+  // Create default tab if no tabs
+  if(editorTabs.length === 0) {
+    editorNewTab('Unbenannt.txt', '# Willkommen in NovEdit 2.0\n\nNeu: Tabs, Suchen/Ersetzen, echte Datei-Integration!\n\nTipps:\n- Strg+S = Speichern\n- Strg+N = Neue Datei\n- Strg+F = Suchen\n- Dateien aus dem Dateimanager öffnen\n\nViel Spaß! ✦', null);
+  } else {
+    renderTabs(); loadActiveTab();
+  }
+  area.addEventListener('input', () => { editorMarkUnsaved(); updateEditorStatus(); });
+  area.addEventListener('keyup', updateEditorStatus);
+  area.addEventListener('keydown', e => {
+    if(e.ctrlKey||e.metaKey) {
+      if(e.key==='s'){e.preventDefault();editorSave();}
+      else if(e.key==='n'){e.preventDefault();editorNew();}
+      else if(e.key==='f'){e.preventDefault();editorFindOpen();}
+      else if(e.key==='z'){e.preventDefault();editorUndo();}
+      else if(e.key==='y'){e.preventDefault();editorRedo();}
+    }
+    if(e.key==='Tab'){e.preventDefault(); document.execCommand('insertText',false,'  ');}
+  });
+  area.addEventListener('click', updateEditorStatus);
+  updateEditorStatus();
+}
+
+function editorNewTab(name, content, vfsPath) {
+  const id = 'tab'+editorNextId++;
+  editorTabs.push({id, name, content: content||'', vfsPath, unsaved:false});
+  editorActiveTab = id;
+  renderTabs();
+  loadActiveTab();
+  return id;
+}
+
+function renderTabs() {
+  const bar = document.getElementById('editor-tabs-bar'); if(!bar) return;
+  bar.innerHTML = editorTabs.map(tab => `
+    <div onclick="editorSwitchTab('${tab.id}')" style="
+      display:inline-flex;align-items:center;gap:6px;padding:0 12px;height:34px;
+      font-size:11px;cursor:pointer;white-space:nowrap;border-right:1px solid var(--border);
+      background:${tab.id===editorActiveTab?'var(--panel)':'var(--panel2)'};
+      color:${tab.id===editorActiveTab?'var(--text)':'var(--text2)'};
+      border-bottom:${tab.id===editorActiveTab?'2px solid var(--accent)':'2px solid transparent'};
+      flex-shrink:0;">
+      ${tab.unsaved?'●':''} ${tab.name}
+      <span onclick="editorCloseTab(event,'${tab.id}')" style="opacity:0.5;padding:2px 3px;border-radius:3px;font-size:10px;" onmouseover="this.style.opacity=1;this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.opacity=0.5;this.style.background='none'">✕</span>
+    </div>`).join('') +
+    `<div onclick="editorNew()" style="display:inline-flex;align-items:center;padding:0 10px;height:34px;cursor:pointer;color:var(--text2);font-size:16px;opacity:0.5;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.5">+</div>`;
+}
+
+function editorSwitchTab(id) {
+  // save current content to current tab
+  const cur = editorTabs.find(t=>t.id===editorActiveTab);
+  if(cur) { cur.content = document.getElementById('editor-area')?.value||''; }
+  editorActiveTab = id;
+  renderTabs();
+  loadActiveTab();
+}
+
+function editorCloseTab(e, id) {
+  e.stopPropagation();
+  const tab = editorTabs.find(t=>t.id===id);
+  if(tab?.unsaved && !confirm(`"${tab.name}" hat ungespeicherte Änderungen. Trotzdem schließen?`)) return;
+  editorTabs = editorTabs.filter(t=>t.id!==id);
+  if(editorActiveTab===id) {
+    editorActiveTab = editorTabs.length ? editorTabs[editorTabs.length-1].id : null;
+    if(!editorTabs.length) editorNewTab('Unbenannt.txt','',null);
+    else { renderTabs(); loadActiveTab(); }
+  } else { renderTabs(); }
+}
+
+function loadActiveTab() {
+  const area = document.getElementById('editor-area'); if(!area) return;
+  const tab = editorTabs.find(t=>t.id===editorActiveTab);
+  if(!tab) return;
+  area.value = tab.content;
+  const fn = document.getElementById('editor-file-name');
+  if(fn) fn.textContent = tab.name;
+  updateEditorStatus();
+}
+
+function editorMarkUnsaved() {
+  const tab = editorTabs.find(t=>t.id===editorActiveTab);
+  if(tab && !tab.unsaved) { tab.unsaved=true; renderTabs(); }
+}
+
+function editorNew() {
+  const name = prompt('Dateiname:', 'Unbenannt.txt') || 'Unbenannt.txt';
+  editorNewTab(name, '', null);
+}
+
+function editorOpenFromPC() {
+  const input = document.createElement('input');
+  input.type='file'; input.accept='.txt,.md,.json,.csv,.log,.xml,.html,.js,.py,.css,.ini,.yaml,.toml,.sh,.bat';
+  input.onchange = e => {
+    const file = e.target.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      editorNewTab(file.name, ev.target.result, null);
+      showNotif('NovEdit', file.name+' geöffnet ✓', '#6affca');
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+// Open file from VFS (called by file manager)
+function editorOpenFile(name, content, vfsPath) {
+  // Check if already open
+  const existing = editorTabs.find(t=>t.vfsPath===vfsPath);
+  if(existing) { editorSwitchTab(existing.id); openApp('editor'); return; }
+  openApp('editor');
+  // save current before switching
+  const cur = editorTabs.find(t=>t.id===editorActiveTab);
+  if(cur) cur.content = document.getElementById('editor-area')?.value||'';
+  editorNewTab(name, content, vfsPath);
+  showNotif('NovEdit', name+' geöffnet 📝');
+}
+
+function editorSave() {
+  const area = document.getElementById('editor-area'); if(!area) return;
+  const tab = editorTabs.find(t=>t.id===editorActiveTab); if(!tab) return;
+  tab.content = area.value;
+  tab.unsaved = false;
+  // Save back to VFS if linked
+  if(tab.vfsPath) {
+    vfsContents[tab.vfsPath] = area.value;
+    showNotif('NovEdit', tab.name+' gespeichert ✓', '#6affca');
+  } else {
+    // Download as real file
+    const blob = new Blob([area.value],{type:'text/plain'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=tab.name; a.click();
+    showNotif('NovEdit', tab.name+' heruntergeladen 💾', '#6affca');
+  }
+  renderTabs();
+}
+
+function editorSaveAs() {
+  const area = document.getElementById('editor-area'); if(!area) return;
+  const tab = editorTabs.find(t=>t.id===editorActiveTab); if(!tab) return;
+  const newName = prompt('Speichern als:', tab.name) || tab.name;
+  tab.content = area.value;
+  const blob = new Blob([area.value],{type:'text/plain'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=newName; a.click();
+  showNotif('NovEdit', newName+' heruntergeladen 💾', '#6affca');
+}
+
+function editorUndo() { document.getElementById('editor-area')?.focus(); document.execCommand('undo'); }
+function editorRedo() { document.getElementById('editor-area')?.focus(); document.execCommand('redo'); }
+
+let editorWrapOn = true;
+function editorToggleWrap() {
+  editorWrapOn = !editorWrapOn;
+  const area = document.getElementById('editor-area');
+  if(area) area.style.whiteSpace = editorWrapOn ? 'pre-wrap' : 'pre';
+  const btn = document.getElementById('editor-wrap-btn');
+  if(btn) btn.style.color = editorWrapOn ? 'var(--accent)' : 'var(--text2)';
+}
+function editorChangeFontSize(v) {
+  const area = document.getElementById('editor-area');
+  if(area) area.style.fontSize = v;
+}
+
+// Find & Replace
+let findMatches=[], findIdx=0;
+function editorFindOpen() {
+  const bar = document.getElementById('editor-find-bar');
+  if(bar) { bar.style.display='flex'; document.getElementById('editor-find-inp')?.focus(); }
+}
+function editorFindClose() {
+  const bar = document.getElementById('editor-find-bar');
+  if(bar) bar.style.display='none';
+  document.getElementById('editor-find-count').textContent='';
+}
+function editorFindHighlight() {
+  const term = document.getElementById('editor-find-inp')?.value;
+  const area = document.getElementById('editor-area'); if(!area) return;
+  const cnt = document.getElementById('editor-find-count');
+  if(!term) { if(cnt) cnt.textContent=''; return; }
+  const text = area.value;
+  const regex = new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi');
+  const matches = [...text.matchAll(regex)];
+  findMatches = matches.map(m=>m.index);
+  if(cnt) cnt.textContent = findMatches.length ? findMatches.length+' Treffer' : 'Kein Treffer';
+}
+function editorFindNext() {
+  editorFindHighlight();
+  if(!findMatches.length) return;
+  findIdx = (findIdx+1) % findMatches.length;
+  const area = document.getElementById('editor-area'); if(!area) return;
+  const term = document.getElementById('editor-find-inp')?.value||'';
+  area.focus();
+  area.setSelectionRange(findMatches[findIdx], findMatches[findIdx]+term.length);
+  // scroll to selection
+  const lineH = parseInt(getComputedStyle(area).lineHeight)||18;
+  const line = area.value.slice(0,findMatches[findIdx]).split('\n').length;
+  area.scrollTop = Math.max(0,(line-3)*lineH);
+}
+function editorReplaceOne() {
+  const find = document.getElementById('editor-find-inp')?.value; if(!find) return;
+  const rep  = document.getElementById('editor-replace-inp')?.value||'';
+  const area = document.getElementById('editor-area'); if(!area) return;
+  const start=area.selectionStart, end=area.selectionEnd;
+  if(area.value.slice(start,end).toLowerCase()===find.toLowerCase()) {
+    area.setRangeText(rep,start,end,'end');
+    editorMarkUnsaved(); updateEditorStatus();
+  }
+  editorFindNext();
+}
+function editorReplaceAll() {
+  const find = document.getElementById('editor-find-inp')?.value; if(!find) return;
+  const rep  = document.getElementById('editor-replace-inp')?.value||'';
+  const area = document.getElementById('editor-area'); if(!area) return;
+  const regex = new RegExp(find.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi');
+  const before = area.value;
+  area.value = before.replace(regex, rep);
+  const cnt = (before.match(regex)||[]).length;
+  editorMarkUnsaved(); updateEditorStatus();
+  showNotif('NovEdit', cnt+' Ersetzungen vorgenommen ✓', '#6affca');
+  editorFindHighlight();
+}
+
+function updateEditorStatus() {
+  const area = document.getElementById('editor-area'); if(!area) return;
+  const text = area.value||'';
+  const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+  const chars = text.length;
+  const lines = text.slice(0,area.selectionStart).split('\n');
+  const lineNum = lines.length;
+  const col = lines[lines.length-1].length+1;
+  const wc = document.getElementById('editor-words');
+  const pos = document.getElementById('editor-pos');
+  if(wc) wc.textContent = `${words} Wö · ${chars} Z`;
+  if(pos) pos.textContent = `Zeile ${lineNum}, Sp ${col}`;
+}
+
+function editorWordCount() {
+  const area = document.getElementById('editor-area'); if(!area) return;
+  const text = area.value||'';
+  const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+  const lines = text.split('\n').length;
+  const chars = text.length;
+  showNotif('NovEdit',`${words} Wörter · ${chars} Zeichen · ${lines} Zeilen`);
+}
+
+// ══════════════════════════════════════
+// GALLERY
+// ══════════════════════════════════════
+const galleryImages = [
+  {ico:'🌅',name:'Sonnenuntergang.png',bg:'linear-gradient(135deg,#ff6a00,#ee0979)'},
+  {ico:'🌊',name:'Ozean.jpg',bg:'linear-gradient(135deg,#00b4db,#0083b0)'},
+  {ico:'🏔️',name:'Berge.png',bg:'linear-gradient(135deg,#a8edea,#fed6e3)'},
+  {ico:'🌸',name:'Kirschblüte.jpg',bg:'linear-gradient(135deg,#f093fb,#f5576c)'},
+  {ico:'🌃',name:'Nachtstadt.png',bg:'linear-gradient(135deg,#0f0c29,#302b63)'},
+  {ico:'🦋',name:'Schmetterling.jpg',bg:'linear-gradient(135deg,#43e97b,#38f9d7)'},
+  {ico:'🌺',name:'Blume.png',bg:'linear-gradient(135deg,#fa709a,#fee140)'},
+  {ico:'🦅',name:'Adler.jpg',bg:'linear-gradient(135deg,#4facfe,#00f2fe)'},
+];
+function buildGallery() {
+  return `
+    <div class="gallery-toolbar">
+      <button class="editor-btn">📂 Importieren</button>
+      <button class="editor-btn" onclick="showNotif('Galerie','Diashow gestartet 🎞️')">▶ Diashow</button>
+      <span style="flex:1"></span>
+      <button class="editor-btn" onclick="showNotif('Galerie','Sortiert nach Datum')">🗂️ Sortieren</button>
+    </div>
+    <div class="gallery-grid">
+      ${galleryImages.map((img,i)=>`
+        <div class="gallery-item" style="background:${img.bg}" onclick="openImageViewer(${i})" title="${img.name}">
+          <span style="font-size:44px">${img.ico}</span>
+          <div class="label">${img.name}</div>
+        </div>`).join('')}
+    </div>`;
+}
+function openImageViewer(i) {
+  const img=galleryImages[i];
+  const existing=document.getElementById('img-viewer');
+  if(existing) existing.remove();
+  const viewer=document.createElement('div');
+  viewer.id='img-viewer';
+  viewer.style.cssText='position:fixed;inset:0;z-index:5000;background:rgba(0,0,0,0.85);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;cursor:pointer;backdrop-filter:blur(8px)';
+  viewer.innerHTML=`<div style="font-size:120px">${img.ico}</div><div style="font-size:16px;color:#fff;font-weight:600">${img.name}</div><div style="font-size:12px;color:rgba(255,255,255,0.5)">Klicken zum Schließen</div>`;
+  viewer.onclick=()=>viewer.remove();
+  document.getElementById('desktop').appendChild(viewer);
+}
+
+// ══════════════════════════════════════
+// WEATHER
+// ══════════════════════════════════════
+function buildWeather() {
+  return `
+    <div class="weather-body">
+      <div class="weather-main">
+        <div class="weather-icon">⛅</div>
+        <div class="weather-temp">18°</div>
+        <div class="weather-desc">Teilweise bewölkt</div>
+        <div class="weather-city">📍 Nova City, NovOS</div>
+      </div>
+      <div class="weather-details">
+        <div class="weather-detail"><div class="wd-val">68%</div><div class="wd-label">Luftfeuchte</div></div>
+        <div class="weather-detail"><div class="wd-val">12 km/h</div><div class="wd-label">Wind</div></div>
+        <div class="weather-detail"><div class="wd-val">8 km</div><div class="wd-label">Sicht</div></div>
+      </div>
+      <div class="weather-forecast">
+        <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">7-Tage-Vorhersage</div>
+        ${[['Mo','🌤','22°','14°'],['Di','🌧','17°','12°'],['Mi','⛈','15°','10°'],['Do','🌤','20°','13°'],['Fr','☀️','25°','16°'],['Sa','☀️','27°','17°'],['So','🌤','23°','15°']].map(([d,i,h,l])=>`
+        <div class="forecast-row">
+          <span class="forecast-day">${d}</span>
+          <span class="forecast-ico">${i}</span>
+          <span class="forecast-temps">${h} <span>${l}</span></span>
+        </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+// ══════════════════════════════════════
+// SYSTEM MONITOR
+// ══════════════════════════════════════
+let sysmonInterval=null;
+function buildSysmon() {
+  return `
+    <div class="sysmon-body" id="sysmon-body">
+      <div class="sysmon-grid">
+        <div class="sysmon-card">
+          <div class="sysmon-title">CPU-Auslastung</div>
+          <div class="sysmon-val" id="sm-cpu">0% <span>nova-core i9</span></div>
+          <div class="bar-track"><div class="bar-fill" id="sm-cpu-bar" style="background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%"></div></div>
+        </div>
+        <div class="sysmon-card">
+          <div class="sysmon-title">Arbeitsspeicher</div>
+          <div class="sysmon-val" id="sm-ram">0 GB <span>von 16 GB</span></div>
+          <div class="bar-track"><div class="bar-fill" id="sm-ram-bar" style="background:linear-gradient(90deg,var(--accent3),#00b4db);width:0%"></div></div>
+        </div>
+        <div class="sysmon-card">
+          <div class="sysmon-title">Speicher</div>
+          <div class="sysmon-val">128 GB <span>von 512 GB (25%)</span></div>
+          <div class="bar-track"><div class="bar-fill" style="background:linear-gradient(90deg,#f7971e,#ffd200);width:25%"></div></div>
+        </div>
+        <div class="sysmon-card">
+          <div class="sysmon-title">Netzwerk ↑↓</div>
+          <div class="sysmon-val" id="sm-net">0 / 0 <span>MB/s</span></div>
+          <div class="bar-track"><div class="bar-fill" id="sm-net-bar" style="background:linear-gradient(90deg,#6affca,#00b4db);width:30%"></div></div>
+        </div>
+      </div>
+      <div class="sysmon-card">
+        <div class="sysmon-title">Prozesse</div>
+        <div class="proc-list">
+          <div class="proc-row" style="font-size:10px;color:var(--text2)">
+            <span class="proc-name">Name</span><span class="proc-cpu">CPU %</span><span class="proc-mem">RAM MB</span>
+          </div>
+          ${[['novshell','2.1','184'],['Xorg','3.4','256'],['NovBrowser','8.2','512'],['novd','0.8','64'],['audio-srv','1.2','48'],['net-mgr','0.4','32'],['update-srv','0.2','28']].map(([n,c,m])=>`
+          <div class="proc-row"><span class="proc-name">${n}</span><span class="proc-cpu">${c}%</span><span class="proc-mem">${m}</span></div>`).join('')}
+        </div>
+      </div>
+    </div>`;
+}
+function initSysmon() {
+  updateSysmon();
+  sysmonInterval=setInterval(updateSysmon, 2000);
+}
+function updateSysmon() {
+  const cpu=Math.floor(Math.random()*40+5);
+  const ram=(Math.random()*4+2).toFixed(1);
+  const netU=(Math.random()*5).toFixed(1);
+  const netD=(Math.random()*20).toFixed(1);
+  const setT=(id,v)=>{const e=document.getElementById(id);if(e)e.innerHTML=v;};
+  const setW=(id,v)=>{const e=document.getElementById(id);if(e)e.style.width=v+'%';};
+  setT('sm-cpu',`${cpu}% <span>nova-core i9</span>`); setW('sm-cpu-bar',cpu);
+  setT('sm-ram',`${ram} GB <span>von 16 GB</span>`); setW('sm-ram-bar',(ram/16*100).toFixed(0));
+  setT('sm-net',`${netU} / ${netD} <span>MB/s</span>`); setW('sm-net-bar',Math.min(netD*4,100));
+}
+
+// Settings UI
+function buildSettings() {
+  return `
+    <div style="display:flex;flex:1;overflow:hidden">
+      <div class="settings-sidebar">
+        <div class="fm-section">System</div>
+        ${[['design','🎨 Design'],['sound','🔊 Ton'],['network','📶 Netzwerk'],['security','🔒 Sicherheit'],['storage','💾 Speicher']].map(([k,l])=>`
+        <div class="fm-item ${k==='design'?'active':''}" id="si-${k}" onclick="loadSettings('${k}')">${l}</div>`).join('')}
+        <div class="fm-section">Anpassung</div>
+        ${[['notifs','🔔 Benachrichtigungen'],['privacy','🕵️ Datenschutz'],['browser_set','🌐 Browser']].map(([k,l])=>`
+        <div class="fm-item" id="si-${k}" onclick="loadSettings('${k}')">${l}</div>`).join('')}
+        <div class="fm-section">Info</div>
+        <div class="fm-item" id="si-about" onclick="loadSettings('about')">ℹ️ Über NovOS</div>
+      </div>
+      <div class="settings-content" id="settings-pane"></div>
+    </div>`;
+}
+function initSettingsSidebar() { loadSettings('design'); }
+
+function settingToggle(key, label, small='') {
+  return `<div class="setting-row">
+    <div class="setting-label">${label}${small?`<small>${small}</small>`:''}
+    </div>
+    <div class="toggle ${NovSettings[key]?'on':''}" onclick="setSetting('${key}',!NovSettings['${key}']);this.classList.toggle('on');"></div>
+  </div>`;
+}
+
+const settingsBuilders = {
+  design: () => `<div class="setting-group">
+    <h3>🎨 Erscheinungsbild</h3>
+    ${settingToggle('darkMode','Dunkles Design','Systemweites dunkles Farbschema')}
+    ${settingToggle('transparency','Transparenz-Effekte','Glasmorphismus & Blur')}
+    ${settingToggle('animations','Animationen','Fenster- & UI-Übergänge')}
+    <div class="setting-row">
+      <div class="setting-label">Akzentfarbe</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        ${Object.entries(ACCENT_PRESETS).map(([k,v])=>`
+          <div onclick="setSetting('accentPreset','${k}');renderSettingsAccents()" title="${k}" style="
+            width:22px;height:22px;border-radius:50%;background:${v.accent};cursor:pointer;
+            border:2px solid ${NovSettings.accentPreset===k?'white':'transparent'};
+            box-shadow:0 0 0 1px rgba(255,255,255,0.2);transition:transform 0.1s;"
+            id="accent-dot-${k}"
+            onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">
+          </div>`).join('')}
+      </div>
+    </div>
+    <div class="setting-row">
+      <div class="setting-label">UI-Schriftgröße</div>
+      <select class="setting-select" onchange="setSetting('uiScale',this.value)">
+        ${['11px','12px','13px','14px','15px'].map(s=>`<option ${NovSettings.uiScale===s?'selected':''}>${s}</option>`).join('')}
+      </select>
+    </div>
+    <div class="setting-row">
+      <div class="setting-label">Hintergrund</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        ${WALLPAPER_PRESETS.slice(0,8).map((wp,i)=>`
+          <div onclick="setSetting('wallpaperIdx',${i});renderSettingsWP()" title="Hintergrund ${i+1}" style="
+            width:28px;height:20px;border-radius:4px;background:${wp};cursor:pointer;
+            border:2px solid ${NovSettings.wallpaperIdx===i?'white':'transparent'};
+            box-shadow:0 0 0 1px rgba(255,255,255,0.15);" id="wp-thumb-${i}">
+          </div>`).join('')}
+      </div>
+    </div>
+  </div>`,
+
+  sound: () => `<div class="setting-group">
+    <h3>🔊 Ton & Audio</h3>
+    <div class="setting-row">
+      <div class="setting-label">Lautstärke</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <input type="range" style="width:120px" min="0" max="100" value="${NovSettings.volume}"
+          oninput="setSetting('volume',+this.value);document.getElementById('vol-display').textContent=this.value+'%'">
+        <span id="vol-display" style="font-size:11px;color:var(--text2);width:32px">${NovSettings.volume}%</span>
+      </div>
+    </div>
+    ${settingToggle('systemSounds','Systemklänge','Benachrichtigungs- und UI-Töne')}
+    <div class="setting-row"><div class="setting-label">Ausgabegerät</div>
+      <select class="setting-select"><option>NovSound HD</option><option>HDMI Audio</option><option>Bluetooth LE Audio</option></select>
+    </div>
+  </div>`,
+
+  network: () => `<div class="setting-group">
+    <h3>📶 Netzwerk</h3>
+    ${settingToggle('wifiEnabled','WLAN','Verbunden mit: NovNet-5G')}
+    ${settingToggle('bluetooth','Bluetooth','')}
+    ${settingToggle('vpn','VPN','Sicheres Tunneling')}
+    <div class="setting-row"><div class="setting-label">IP-Adresse</div><span style="font-size:12px;color:var(--text2)">192.168.1.42</span></div>
+    <div class="setting-row"><div class="setting-label">MAC-Adresse</div><span style="font-size:12px;color:var(--text2)">A4:C3:F0:12:34:56</span></div>
+    <div class="setting-row"><div class="setting-label">DNS</div><span style="font-size:12px;color:var(--text2)">1.1.1.1 (Cloudflare)</span></div>
+  </div>`,
+
+  security: () => `<div class="setting-group">
+    <h3>🔒 Sicherheit</h3>
+    <div class="setting-row">
+      <div class="setting-label">Benutzername<small>Wird auf dem Login-Bildschirm angezeigt</small></div>
+      <div style="display:flex;gap:6px">
+        <input id="username-inp" class="sm-search" style="width:120px;margin:0;padding:4px 8px" value="${NovSettings.userName}">
+        <button class="setting-btn" onclick="setSetting('userName',document.getElementById('username-inp').value);showNotif('Einstellungen','Name gespeichert ✓','#6affca')">✓</button>
+      </div>
+    </div>
+    <div class="setting-row"><div class="setting-label">Bildschirmsperre</div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+    <div class="setting-row"><div class="setting-label">Zwei-Faktor-Auth</div><div class="toggle" onclick="this.classList.toggle('on')"></div></div>
+    <div class="setting-row"><div class="setting-label">Firewall</div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+    <div class="setting-row"><div class="setting-label">Virenscanner</div>
+      <button class="setting-btn" onclick="this.textContent='Scannt…';setTimeout(()=>{this.textContent='Jetzt scannen';showNotif('Sicherheit','Scan abgeschlossen – Keine Bedrohungen ✓','#6affca')},1800)">Jetzt scannen</button>
+    </div>
+  </div>`,
+
+  storage: () => {
+    const used = Object.values(vfsContents).join('').length;
+    const lsUsed = JSON.stringify(localStorage).length;
+    return `<div class="setting-group">
+    <h3>💾 Speicher</h3>
+    <div class="setting-row"><div class="setting-label">Systemlaufwerk</div><span style="font-size:12px;color:var(--text2)">128 GB / 512 GB (25%)</span></div>
+    <div style="margin:8px 0"><div class="bar-track" style="height:10px"><div class="bar-fill" style="background:linear-gradient(90deg,var(--accent),var(--accent2));width:25%;height:100%"></div></div></div>
+    <div class="setting-row"><div class="setting-label">Einstellungen (localStorage)</div><span style="font-size:12px;color:var(--accent3)">${lsUsed} Bytes</span></div>
+    <div class="setting-row"><div class="setting-label">VFS-Inhalt</div><span style="font-size:12px;color:var(--accent3)">${used} Bytes</span></div>
+    <div class="setting-row"><div class="setting-label">Einstellungen zurücksetzen</div>
+      <button class="setting-btn danger" onclick="if(confirm('Alle Einstellungen zurücksetzen?')){localStorage.removeItem('novos_settings');NovSettings={...DEFAULT_SETTINGS};applyAllSettings();loadSettings('design');showNotif('Einstellungen','Zurückgesetzt ✓','#ff6a8a')}">↺ Reset</button>
+    </div>
+    <div class="setting-row"><div class="setting-label">Cache leeren</div>
+      <button class="setting-btn" onclick="showNotif('Speicher','Cache geleert – 840 MB freigegeben')">🧹 Bereinigen</button>
+    </div>
+  </div>`;
+  },
+
+  notifs: () => `<div class="setting-group">
+    <h3>🔔 Benachrichtigungen</h3>
+    ${settingToggle('doNotDisturb','Nicht stören','Alle Benachrichtigungen stumm')}
+    ${settingToggle('notifBrowser','NovBrowser','')}
+    ${settingToggle('notifMusic','NovMusic','')}
+    ${settingToggle('notifMail','NovMail','')}
+    <div class="setting-row"><div class="setting-label">NovUpdate</div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+    <div class="setting-row"><div class="setting-label">Testbenachrichtigung</div>
+      <button class="setting-btn" onclick="showNotif('Test','Das ist eine Testbenachrichtigung 🔔')">Senden</button>
+    </div>
+  </div>`,
+
+  privacy: () => `<div class="setting-group">
+    <h3>🕵️ Datenschutz</h3>
+    ${settingToggle('telemetry','Telemetrie','Anonyme Nutzungsdaten senden')}
+    ${settingToggle('locationServices','Standortdienste','')}
+    <div class="setting-row"><div class="setting-label">Kamera</div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+    <div class="setting-row"><div class="setting-label">Gespeicherte Daten</div>
+      <button class="setting-btn danger" onclick="if(confirm('Alle gespeicherten Daten löschen?')){localStorage.clear();showNotif('Datenschutz','Alle Daten gelöscht','#ff6a8a')}">🗑️ Alle löschen</button>
+    </div>
+  </div>`,
+
+  browser_set: () => `<div class="setting-group">
+    <h3>🌐 Browser-Einstellungen</h3>
+    <div class="setting-row">
+      <div class="setting-label">Startseite</div>
+      <div style="display:flex;gap:6px">
+        <input id="homepage-inp" class="sm-search" style="width:150px;margin:0;padding:4px 8px" value="${NovSettings.browserHomepage}">
+        <button class="setting-btn" onclick="setSetting('browserHomepage',document.getElementById('homepage-inp').value);showNotif('Browser','Startseite gespeichert ✓','#6affca')">✓</button>
+      </div>
+    </div>
+    <div class="setting-row">
+      <div class="setting-label">Suchmaschine</div>
+      <select class="setting-select" onchange="setSetting('browserSearch',this.value)">
+        ${['DuckDuckGo','Google','Bing','Ecosia','Startpage'].map(s=>`<option ${NovSettings.browserSearch===s?'selected':''}>${s}</option>`).join('')}
+      </select>
+    </div>
+    <div class="setting-row"><div class="setting-label">Verlauf löschen</div>
+      <button class="setting-btn danger" onclick="browserTabsData=[{id:'t1',url:NovSettings.browserHomepage,title:'Neuer Tab',history:[NovSettings.browserHomepage],histPos:0}];browserActiveTab='t1';if(windows.browser)browserRebuildTabs();showNotif('Browser','Verlauf gelöscht 🗑️','#ff6a8a')">🗑️ Löschen</button>
+    </div>
+    <div class="setting-row"><div class="setting-label">Lesezeichen</div>
+      <button class="setting-btn" onclick="openApp('browser');browserGo('nov://bookmarks')">📚 Öffnen</button>
+    </div>
+  </div>`,
+
+  about: () => `<div class="setting-group">
+    <h3>ℹ️ Über NovOS</h3>
+    <div class="about-box">
+      <div class="about-logo">✦</div>
+      <div><div class="about-name">NovOS</div><div class="about-ver">Version 3.1.0 – nova-6.4.2</div></div>
+    </div>
+    <div class="setting-row"><div class="setting-label">Gerätename</div><span style="font-size:12px;color:var(--text2)">nova-machine</span></div>
+    <div class="setting-row"><div class="setting-label">Prozessor</div><span style="font-size:12px;color:var(--text2)">nova-core i9 (16 Kerne)</span></div>
+    <div class="setting-row"><div class="setting-label">Arbeitsspeicher</div><span style="font-size:12px;color:var(--text2)">16 GB DDR5</span></div>
+    <div class="setting-row"><div class="setting-label">localStorage-Einstellungen</div><span style="font-size:11px;color:var(--accent3)">✓ Aktiv – Einstellungen bleiben beim Neuladen erhalten</span></div>
+    <div class="setting-row"><div class="setting-label">Updates</div>
+      <button class="setting-btn" onclick="this.textContent='Prüfe…';setTimeout(()=>{this.textContent='🔄 Prüfen';showNotif('NovUpdate','Alle Updates installiert ✓','#6affca')},1200)">🔄 Prüfen</button>
+    </div>
+  </div>`,
+};
+
+function loadSettings(key) {
+  document.querySelectorAll('[id^="si-"]').forEach(i=>i.classList.remove('active'));
+  document.getElementById('si-'+key)?.classList.add('active');
+  const pane = document.getElementById('settings-pane');
+  if(!pane) return;
+  const builder = settingsBuilders[key];
+  pane.innerHTML = builder ? builder() : '<div style="padding:20px;color:var(--text2)">Seite nicht gefunden</div>';
+}
+function renderSettingsAccents() {
+  Object.keys(ACCENT_PRESETS).forEach(k=>{
+    const el=document.getElementById('accent-dot-'+k);
+    if(el) el.style.border=`2px solid ${NovSettings.accentPreset===k?'white':'transparent'}`;
+  });
+}
+function renderSettingsWP() {
+  WALLPAPER_PRESETS.forEach((_,i)=>{
+    const el=document.getElementById('wp-thumb-'+i);
+    if(el) el.style.border=`2px solid ${NovSettings.wallpaperIdx===i?'white':'transparent'}`;
+  });
+}
+</script>
+</body>
+</html>
