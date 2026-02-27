@@ -2060,31 +2060,56 @@ async function fmNewFolder() {
 function fmImportFile() {
   const input = document.createElement('input');
   input.type = 'file';
-  input.accept = '.txt,.md,.json,.csv,.log,.xml,.html,.js,.py,.css,.ts,.sh,.yaml,.toml';
+  input.accept = '.txt,.md,.json,.csv,.log,.xml,.html,.js,.py,.css,.ts,.sh,.yaml,.toml,.pdf';
   input.multiple = true;
   input.onchange = e => {
     const files = Array.from(e.target.files);
-    let imported = 0;
+    let done = 0;
+    let lastPdf = null;
+
     files.forEach(file => {
-      const reader = new FileReader();
-      reader.onload = ev => {
-        const content = ev.target.result;
-        const name = file.name;
-        const isTxt = /\.(txt|md|json|csv|log|xml|html|js|py|css|ts|sh|yaml|toml)$/i.test(name);
-        const type  = isTxt ? 'txt' : 'file';
+      const name = file.name;
+      const isPdf = /\.pdf$/i.test(name);
+      const isTxt = !isPdf && /\.(txt|md|json|csv|log|xml|html|js|py|css|ts|sh|yaml|toml)$/i.test(name);
+      const type  = isPdf ? 'pdf' : isTxt ? 'txt' : 'file';
+
+      const finish = content => {
         if(!vfs[fmCurrentDir].find(f => f.n === name)) {
           vfs[fmCurrentDir].push({ico: getFileIcon(name, type), n:name, type});
+        } else {
+          // update existing entry type in case it was 'file' before
+          const f = vfs[fmCurrentDir].find(f => f.n === name);
+          if(f) { f.type = type; f.ico = getFileIcon(name, type); }
         }
-        if(isTxt) vfsContents[fmCurrentDir + '/' + name] = content;
-        imported++;
-        if(imported === files.length) {
+        if(isTxt || isPdf) vfsContents[fmCurrentDir + '/' + name] = content;
+        if(isPdf) lastPdf = name;
+        done++;
+        if(done === files.length) {
           fmRender();
           vfsSave();
-          showNotif('Dateien', imported + ' Datei(en) importiert ✓', '#6affca');
-          if(files.length === 1 && isTxt) setTimeout(() => fmOpenTxt(fmCurrentDir, files[0].name), 120);
+          showNotif('Dateien', done + ' Datei(en) importiert ✓', '#6affca');
+          // Auto-open: single txt in editor, single pdf in NovPDF
+          if(files.length === 1 && isTxt)  setTimeout(() => fmOpenTxt(fmCurrentDir, name), 120);
+          if(files.length === 1 && lastPdf) setTimeout(() => pdfOpenFromVFS(fmCurrentDir, lastPdf), 120);
         }
       };
-      reader.readAsText(file);
+
+      if(isPdf) {
+        // Read as ArrayBuffer, convert to base64 for storage
+        const reader = new FileReader();
+        reader.onload = ev => {
+          const ab = ev.target.result;
+          const bytes = new Uint8Array(ab);
+          let binary = '';
+          for(let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+          finish('data:application/pdf;base64,' + btoa(binary));
+        };
+        reader.readAsArrayBuffer(file);
+      } else {
+        const reader = new FileReader();
+        reader.onload = ev => finish(ev.target.result);
+        reader.readAsText(file);
+      }
     });
   };
   input.click();
@@ -3255,6 +3280,7 @@ function buildPDF() {
   return `
     <div class="pdf-toolbar">
       <button class="editor-btn" onclick="pdfOpenFromVFSPicker()">📂 Öffnen</button>
+      <button class="editor-btn" onclick="pdfImportFromPC()" title="PDF vom PC importieren">📥 Importieren</button>
       <div class="editor-sep"></div>
       <button class="editor-btn" id="pdf-btn-prev" onclick="pdfGoPage(-1)" disabled>◀</button>
       <span id="pdf-page-info" style="font-size:11px;color:var(--text2);min-width:70px;text-align:center">–</span>
@@ -3291,38 +3317,82 @@ function initPDF() {
 }
 
 function pdfOpenFromVFSPicker() {
-  // Show picker: all PDF files in VFS
   const pdfs = [];
   for(const [dir, files] of Object.entries(vfs)) {
     for(const f of files) {
-      if(f.type === 'pdf') pdfs.push({key: dir+'/'+f.n, name: f.n, dir});
+      if(f.type === 'pdf') {
+        const key = dir+'/'+f.n;
+        const isImported = !pdfDocs[key] && vfsContents[key]?.startsWith('data:application/pdf');
+        const isBuiltin  = !!pdfDocs[key];
+        pdfs.push({key, name: f.n, dir, isImported, isBuiltin});
+      }
     }
   }
-  if(pdfs.length === 0) {
-    showNotif('NovPDF', 'Keine PDF-Dateien im Dateisystem', '#ff6a8a'); return;
-  }
-  // Build a quick picker overlay inside the window
+
   const main = document.getElementById('pdf-main');
   if(!main) return;
-  main.innerHTML = `
-    <div style="max-width:400px;width:100%;margin-top:32px">
-      <div style="font-size:15px;font-weight:700;margin-bottom:16px;color:var(--text)">📂 PDF öffnen</div>
-      ${pdfs.map(p => `
+
+  const listHtml = pdfs.length === 0
+    ? '<div style="color:var(--text2);font-size:12px;padding:16px 0">Keine PDF-Dateien im Dateisystem.<br>Importiere eine PDF über den Datei-Manager oder die Schaltfläche unten.</div>'
+    : pdfs.map(p => `
         <div onclick="pdfOpenDoc('${p.key}')" style="
           display:flex;align-items:center;gap:12px;padding:12px;
           background:var(--panel2);border:1px solid var(--border);border-radius:10px;
           margin-bottom:8px;cursor:pointer;transition:all 0.15s"
           onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
           <span style="font-size:28px">📋</span>
-          <div>
-            <div style="font-size:12px;font-weight:600;color:var(--text)">${p.name}</div>
-            <div style="font-size:10px;color:var(--text2)">~/${p.dir}/</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.name}</div>
+            <div style="font-size:10px;color:var(--text2)">~/${p.dir}/ · ${p.isImported ? '📥 Importiert' : '📦 Eingebaut'}</div>
           </div>
-        </div>`).join('')}
-      <button class="setting-btn" style="margin-top:8px" onclick="pdfShowEmpty()">✕ Abbrechen</button>
+        </div>`).join('');
+
+  main.innerHTML = `
+    <div style="max-width:420px;width:100%;margin-top:24px">
+      <div style="font-size:15px;font-weight:700;margin-bottom:16px;color:var(--text)">📂 PDF öffnen</div>
+      ${listHtml}
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+        <button class="setting-btn" onclick="pdfImportFromPC()" style="background:var(--accent);color:white;border-color:var(--accent)">📥 Von PC importieren</button>
+        <button class="setting-btn" onclick="pdfShowEmpty()">✕ Abbrechen</button>
+      </div>
     </div>`;
-  const empty = document.getElementById('pdf-empty');
-  if(empty) empty.style.display = 'none';
+}
+
+function pdfImportFromPC() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.pdf';
+  input.multiple = true;
+  input.onchange = e => {
+    const files = Array.from(e.target.files);
+    let done = 0;
+    files.forEach(file => {
+      const name = file.name;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const ab = ev.target.result;
+        const bytes = new Uint8Array(ab);
+        let binary = '';
+        for(let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+        const dataUri = 'data:application/pdf;base64,' + btoa(binary);
+        const dir = 'home'; // import PDFs to home dir
+        const key = dir + '/' + name;
+        if(!vfs[dir].find(f => f.n === name)) {
+          vfs[dir].push({ico:'📋', n:name, type:'pdf'});
+        }
+        vfsContents[key] = dataUri;
+        vfsSave();
+        done++;
+        if(done === files.length) {
+          showNotif('NovPDF', files.length + ' PDF(s) importiert ✓', '#6affca');
+          // Open last imported
+          pdfOpenDoc(dir + '/' + files[files.length-1].name);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    });
+  };
+  input.click();
 }
 
 function pdfOpenFromVFS(dir, name) {
@@ -3332,18 +3402,57 @@ function pdfOpenFromVFS(dir, name) {
 
 function pdfOpenDoc(key) {
   const doc = pdfDocs[key];
-  if(!doc) {
-    showNotif('NovPDF', 'Dieses Dokument enthält keine Vorschau', '#ffca6a');
-    // Still open the app and show a placeholder
+  const stored = vfsContents[key]; // base64 data URI for imported PDFs
+
+  if(!doc && !stored) {
+    showNotif('NovPDF', 'Dieses Dokument kann nicht angezeigt werden', '#ff6a8a');
     pdfCurrentDoc = null;
     pdfRender();
     return;
   }
+
   pdfCurrentDoc = key;
   pdfCurrentPage = 0;
   pdfZoom = 1.0;
+
+  // If it's an imported PDF (base64 in vfsContents), show in iframe
+  if(!doc && stored && stored.startsWith('data:application/pdf')) {
+    pdfRenderImported(key, stored);
+    return;
+  }
+
   pdfRender();
   showNotif('NovPDF', '"' + doc.title + '" geöffnet 📋', '#6affca');
+}
+
+function pdfRenderImported(key, dataUri) {
+  const main = document.getElementById('pdf-main');
+  const thumbs = document.getElementById('pdf-thumbs');
+  const titleEl = document.getElementById('pdf-doc-title');
+  const pageInfo = document.getElementById('pdf-page-info');
+  const btnPrev = document.getElementById('pdf-btn-prev');
+  const btnNext = document.getElementById('pdf-btn-next');
+  const zoomLabel = document.getElementById('pdf-zoom-label');
+  if(!main) return;
+
+  const name = key.split('/').pop();
+  if(titleEl) titleEl.textContent = name;
+  if(pageInfo) pageInfo.textContent = 'Importiert';
+  if(btnPrev) btnPrev.disabled = true;
+  if(btnNext) btnNext.disabled = true;
+  if(zoomLabel) zoomLabel.textContent = '100%';
+  if(thumbs) thumbs.innerHTML = `<div style="padding:8px;text-align:center">
+    <div style="font-size:28px;margin-bottom:4px">📋</div>
+    <div style="font-size:9px;color:var(--text2);word-break:break-all">${name}</div>
+  </div>`;
+
+  main.innerHTML = `<iframe
+    src="${dataUri}"
+    style="width:100%;height:100%;border:none;flex:1;display:block;background:white"
+    title="${name}">
+  </iframe>`;
+
+  showNotif('NovPDF', '"' + name + '" geöffnet 📋', '#6affca');
 }
 
 function pdfRender() {
@@ -3424,11 +3533,15 @@ function pdfShowEmpty() {
     <div class="pdf-empty" id="pdf-empty">
       <div style="font-size:64px">📋</div>
       <div style="font-size:16px;font-weight:600;color:var(--text)">NovPDF</div>
-      <div style="font-size:12px">Öffne ein Dokument aus dem Dateisystem</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:8px">
+      <div style="font-size:12px">Öffne oder importiere ein PDF-Dokument</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px">
         ${Object.entries(pdfDocs).map(([k,d]) =>
           '<button class="setting-btn" onclick="pdfOpenDoc(\'' + k + '\')">' + d.title + '</button>'
         ).join('')}
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="setting-btn" onclick="pdfOpenFromVFSPicker()">📂 Aus Dateisystem</button>
+        <button class="setting-btn" style="background:var(--accent);color:white;border-color:var(--accent)" onclick="pdfImportFromPC()">📥 Von PC importieren</button>
       </div>
     </div>`;
 }
