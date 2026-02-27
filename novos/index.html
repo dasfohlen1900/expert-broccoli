@@ -314,6 +314,45 @@
   .notif-title { font-size:12px; font-weight:600; color:var(--text); margin-bottom:3px; }
   .notif-msg { font-size:11px; color:var(--text2); }
 
+  /* ══════════════════ DIALOGS ══════════════════ */
+  #nov-dialog-overlay {
+    position:fixed; inset:0; z-index:9000;
+    background:rgba(0,0,0,0.45); backdrop-filter:blur(4px);
+    display:flex; align-items:center; justify-content:center;
+    animation:fadeIn 0.12s ease;
+  }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+  #nov-dialog {
+    background:var(--panel); border:1px solid var(--border);
+    border-radius:16px; padding:28px 28px 22px;
+    box-shadow:0 24px 80px rgba(0,0,0,0.55);
+    min-width:320px; max-width:440px; width:90%;
+    animation:dialogPop 0.15s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes dialogPop { from{opacity:0;transform:scale(0.88)} to{opacity:1;transform:scale(1)} }
+  .dlg-icon   { font-size:36px; text-align:center; margin-bottom:10px; }
+  .dlg-title  { font-size:15px; font-weight:700; color:var(--text); margin-bottom:6px; }
+  .dlg-msg    { font-size:13px; color:var(--text2); margin-bottom:18px; line-height:1.5; white-space:pre-wrap; }
+  .dlg-input  {
+    width:100%; box-sizing:border-box;
+    background:var(--panel2); border:1px solid var(--border);
+    border-radius:9px; padding:9px 12px; color:var(--text);
+    font-family:'Inter',sans-serif; font-size:13px; outline:none;
+    margin-bottom:18px; transition:border-color 0.15s;
+  }
+  .dlg-input:focus { border-color:var(--accent); }
+  .dlg-btns   { display:flex; gap:8px; justify-content:flex-end; }
+  .dlg-btn {
+    padding:8px 20px; border-radius:8px; font-size:13px; font-weight:600;
+    cursor:pointer; border:none; font-family:'Inter',sans-serif; transition:all 0.15s;
+  }
+  .dlg-btn-primary { background:var(--accent); color:white; }
+  .dlg-btn-primary:hover { filter:brightness(1.12); }
+  .dlg-btn-secondary { background:var(--panel2); color:var(--text2); border:1px solid var(--border); }
+  .dlg-btn-secondary:hover { color:var(--text); border-color:var(--text2); }
+  .dlg-btn-danger { background:var(--accent2); color:white; }
+  .dlg-btn-danger:hover { filter:brightness(1.12); }
+
   /* ══════════════════ SCROLLBAR ══════════════════ */
   ::-webkit-scrollbar { width:5px; }
   ::-webkit-scrollbar-track { background:transparent; }
@@ -342,28 +381,60 @@
   }
 
   /* ══════════════════ FILE MANAGER ══════════════════ */
-  .fm-sidebar { width:150px; flex-shrink:0; border-right:1px solid var(--border); padding:12px 8px; background:var(--panel2); }
-  .fm-section { font-size:10px; color:var(--text2); text-transform:uppercase; letter-spacing:1px; margin:10px 0 6px; padding:0 8px; }
+  .fm-sidebar { width:160px; flex-shrink:0; border-right:1px solid var(--border); padding:10px 8px; background:var(--panel2); overflow-y:auto; }
+  .fm-section { font-size:10px; color:var(--text2); text-transform:uppercase; letter-spacing:1px; margin:10px 0 4px; padding:0 6px; font-weight:700; }
   .fm-item {
     display:flex; align-items:center; gap:8px;
-    padding:7px 8px; border-radius:6px;
+    padding:7px 8px; border-radius:7px;
     cursor:pointer; font-size:12px; color:var(--text2); transition:all 0.1s;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   }
   .fm-item:hover { background:var(--border); color:var(--text); }
-  .fm-item.active { background:rgba(124,106,255,0.2); color:var(--accent); }
-  .fm-content { flex:1; padding:14px; overflow-y:auto; background:var(--panel); }
-  .fm-toolbar { display:flex; align-items:center; gap:8px; padding:8px 14px; border-bottom:1px solid var(--border); background:var(--panel2); flex-shrink:0; }
-  .fm-path { font-size:11px; color:var(--text2); flex:1; }
-  .fm-grid { display:grid; grid-template-columns:repeat(auto-fill,80px); gap:10px; }
-  .fm-file {
-    display:flex; flex-direction:column; align-items:center; gap:5px;
-    padding:10px 6px; border-radius:8px; cursor:pointer; transition:background 0.1s;
+  .fm-item.active { background:rgba(124,106,255,0.18); color:var(--accent); font-weight:600; }
+  .fm-toolbar {
+    display:flex; align-items:center; gap:6px; padding:8px 12px;
+    border-bottom:1px solid var(--border); background:var(--panel2); flex-shrink:0; flex-wrap:wrap;
   }
-  .fm-file:hover { background:rgba(124,106,255,0.12); }
-  .fm-file:active { background:rgba(124,106,255,0.2); }
-  .fm-file .ico { font-size:28px; }
-  .fm-file .name { font-size:10px; color:var(--text2); text-align:center; word-break:break-word; line-height:1.3; }
-  .fm-file.selected { background:rgba(124,106,255,0.2); }
+  .fm-breadcrumb {
+    display:flex; align-items:center; gap:4px; flex:1;
+    font-size:11px; color:var(--text2); overflow:hidden;
+  }
+  .fm-crumb {
+    cursor:pointer; color:var(--text2); padding:2px 4px; border-radius:4px; transition:all 0.1s;
+    white-space:nowrap;
+  }
+  .fm-crumb:hover { color:var(--accent); background:rgba(124,106,255,0.1); }
+  .fm-crumb.current { color:var(--text); font-weight:600; cursor:default; }
+  .fm-crumb.current:hover { background:none; color:var(--text); }
+  .fm-sep { color:var(--border); }
+  .fm-content { flex:1; padding:14px; overflow-y:auto; background:var(--panel); min-height:0; }
+  .fm-grid { display:grid; grid-template-columns:repeat(auto-fill,82px); gap:6px; }
+  .fm-file {
+    display:flex; flex-direction:column; align-items:center; gap:4px;
+    padding:10px 6px 8px; border-radius:10px; cursor:pointer; transition:all 0.12s;
+    border:2px solid transparent; position:relative;
+  }
+  .fm-file:hover { background:rgba(124,106,255,0.10); }
+  .fm-file.selected { background:rgba(124,106,255,0.18); border-color:rgba(124,106,255,0.4); }
+  .fm-file .ico { font-size:30px; line-height:1.2; }
+  .fm-file .name {
+    font-size:10px; color:var(--text); text-align:center;
+    word-break:break-word; line-height:1.3; max-width:74px;
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+  }
+  .fm-file .name.text2 { color:var(--text2); }
+  .fm-empty {
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:10px; height:100%; color:var(--text2); padding:40px;
+  }
+  /* FM context menu */
+  #fm-ctx {
+    position:fixed; z-index:9900;
+    background:var(--panel); border:1px solid var(--border);
+    border-radius:10px; padding:5px; box-shadow:0 12px 40px rgba(0,0,0,0.35);
+    min-width:180px; display:none;
+    backdrop-filter:blur(12px);
+  }
 
   /* ══════════════════ BROWSER ══════════════════ */
   .browser-bar {
@@ -813,6 +884,122 @@ window.addEventListener('resize', updateIconGrid);
 // Will be called once desktop becomes visible (after login)
 
 // ══════════════════════════════════════
+// DIALOG SYSTEM (replaces prompt/confirm/alert)
+// ══════════════════════════════════════
+let _dlgResolve = null;
+
+function novDialog({ icon='', title, msg='', input=false, inputDefault='', inputPlaceholder='',
+                     confirmLabel='OK', cancelLabel='Abbrechen',
+                     danger=false, alertOnly=false }) {
+  return new Promise(resolve => {
+    _dlgResolve = resolve;
+
+    // Remove existing overlay
+    document.getElementById('nov-dialog-overlay')?.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'nov-dialog-overlay';
+
+    const inputHtml = input
+      ? `<input class="dlg-input" id="dlg-input" type="text"
+           value="${inputDefault.replace(/"/g,'&quot;')}"
+           placeholder="${inputPlaceholder.replace(/"/g,'&quot;')}"
+           onkeydown="if(event.key==='Enter')novDlgConfirm();if(event.key==='Escape')novDlgCancel()">`
+      : '';
+
+    const cancelBtn = alertOnly ? '' :
+      `<button class="dlg-btn dlg-btn-secondary" onclick="novDlgCancel()">${cancelLabel}</button>`;
+
+    const confirmBtn = `<button class="dlg-btn ${danger?'dlg-btn-danger':'dlg-btn-primary'}" id="dlg-confirm-btn" onclick="novDlgConfirm()">${confirmLabel}</button>`;
+
+    overlay.innerHTML = `
+      <div id="nov-dialog">
+        ${icon ? `<div class="dlg-icon">${icon}</div>` : ''}
+        <div class="dlg-title">${title}</div>
+        ${msg ? `<div class="dlg-msg">${msg}</div>` : ''}
+        ${inputHtml}
+        <div class="dlg-btns">${cancelBtn}${confirmBtn}</div>
+      </div>`;
+
+    // Close on backdrop click (only for alert/non-destructive)
+    overlay.addEventListener('click', e => {
+      if(e.target === overlay) alertOnly ? novDlgConfirm() : novDlgCancel();
+    });
+
+    document.getElementById('desktop').appendChild(overlay);
+
+    if(input) {
+      setTimeout(() => {
+        const inp = document.getElementById('dlg-input');
+        if(inp) { inp.focus(); inp.select(); }
+      }, 60);
+    } else {
+      setTimeout(() => document.getElementById('dlg-confirm-btn')?.focus(), 60);
+    }
+  });
+}
+
+function novDlgConfirm() {
+  const inp = document.getElementById('dlg-input');
+  const val = inp ? inp.value : true;
+  document.getElementById('nov-dialog-overlay')?.remove();
+  if(_dlgResolve) { _dlgResolve(val); _dlgResolve = null; }
+}
+function novDlgCancel() {
+  document.getElementById('nov-dialog-overlay')?.remove();
+  if(_dlgResolve) { _dlgResolve(null); _dlgResolve = null; }
+}
+
+// Keyboard ESC closes dialog
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape' && document.getElementById('nov-dialog-overlay')) novDlgCancel();
+});
+
+// ── Dialog helpers for inline-onclick calls ──────────
+async function novDlgLogout() {
+  const ok = await novDialog({
+    icon:'🔒', title:'NovOS sperren',
+    msg:'Möchtest du dich wirklich abmelden?',
+    confirmLabel:'Abmelden', danger:true
+  });
+  if(!ok) return;
+  doLogout(); toggleCC();
+}
+async function novDlgResetSettings() {
+  const ok = await novDialog({
+    icon:'⚙️', title:'Einstellungen zurücksetzen',
+    msg:'Alle Einstellungen auf Standard zurücksetzen?',
+    confirmLabel:'Zurücksetzen', danger:true
+  });
+  if(!ok) return;
+  localStorage.removeItem('novos_settings');
+  NovSettings = {...DEFAULT_SETTINGS};
+  applyAllSettings();
+  loadSettings('design');
+  showNotif('Einstellungen','Zurückgesetzt ✓','#ff6a8a');
+}
+async function novDlgResetVFS() {
+  const ok = await novDialog({
+    icon:'🗑️', title:'Dateisystem zurücksetzen',
+    msg:'Alle eigenen Dateien und Ordner gehen verloren.\nDiese Aktion kann nicht rückgängig gemacht werden.',
+    confirmLabel:'Zurücksetzen', danger:true
+  });
+  if(!ok) return;
+  localStorage.removeItem('novos_vfs');
+  location.reload();
+}
+async function novDlgClearAll() {
+  const ok = await novDialog({
+    icon:'⚠️', title:'Alle Daten löschen',
+    msg:'Alle gespeicherten Daten (Einstellungen, Dateien, Verlauf) löschen?\nDiese Aktion kann nicht rückgängig gemacht werden.',
+    confirmLabel:'Alles löschen', danger:true
+  });
+  if(!ok) return;
+  localStorage.clear();
+  showNotif('Datenschutz','Alle Daten gelöscht','#ff6a8a');
+}
+
+// ══════════════════════════════════════
 // CONTROL CENTER
 // ══════════════════════════════════════
 let ccOpen = false;
@@ -952,7 +1139,7 @@ function renderCC() {
 
     <div style="display:flex;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
       <button onclick="openApp('settings');toggleCC()" style="flex:1;padding:8px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;color:var(--text2);font-family:inherit;font-size:11px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">⚙️ Einstellungen</button>
-      <button onclick="if(confirm('NovOS abmelden?')){document.getElementById('desktop').classList.remove('visible');document.getElementById('login-screen').classList.remove('out');toggleCC()}" style="flex:1;padding:8px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;color:var(--text2);font-family:inherit;font-size:11px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.borderColor='var(--accent2)'" onmouseout="this.style.borderColor='var(--border)'">🔒 Sperren</button>
+      <button onclick="novDlgLogout()" style="flex:1;padding:8px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;color:var(--text2);font-family:inherit;font-size:11px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.borderColor='var(--accent2)'" onmouseout="this.style.borderColor='var(--border)'">🔒 Sperren</button>
     </div>`;
 }
 
@@ -1228,7 +1415,7 @@ function openApp(app) {
   if(app==='browser')  setTimeout(()=>browserInit(),10);
   if(app==='terminal') setTimeout(()=>initTerminal(),10);
   if(app==='music')    setTimeout(()=>initMusic(),10);
-  if(app==='files')    setTimeout(()=>{ loadDir('home'); },50);
+  if(app==='files')    setTimeout(()=>{ fmRebuildMeta(); fmNavStack=['home']; fmNavPos=0; fmNavTo('home'); },50);
   if(app==='sysmon')   setTimeout(()=>initSysmon(),10);
   if(app==='editor')   setTimeout(()=>initEditor(),10);
   if(app==='settings') setTimeout(()=>initSettingsSidebar(),10);
@@ -1463,7 +1650,7 @@ const VFS_DEFAULT = {
     {ico:'📝',n:'Tagebuch.txt',type:'txt'},
     {ico:'📄',n:'Brief.docx',type:'file'},
     {ico:'📊',n:'Statistik.xlsx',type:'file'},
-    {ico:'📋',n:'Bericht.pdf',type:'file'},
+    {ico:'📋',n:'Bericht.pdf',type:'pdf'},
   ],
   pics: [
     {ico:'🖼️',n:'Urlaub.png',type:'file'},
@@ -1494,7 +1681,6 @@ function vfsLoad() {
   try {
     const saved = JSON.parse(localStorage.getItem('novos_vfs') || 'null');
     if(saved && saved.dirs && saved.contents) {
-      // Merge saved dirs into vfs (deep copy)
       Object.assign(vfs, saved.dirs);
       Object.assign(vfsContents, saved.contents);
     }
@@ -1506,235 +1692,420 @@ function vfsSave() {
   } catch(e) {}
 }
 
+// Rebuild fmDirMeta for any custom dirs found in VFS after load
+function fmRebuildMeta() {
+  // Walk all known dirs and find custom entries
+  const knownBuiltin = new Set(['home','docs','pics','dl','vids']);
+  for(const [parentKey, files] of Object.entries(vfs)) {
+    for(const f of files) {
+      if(f.type === 'dir' && f.key && !knownBuiltin.has(f.key)) {
+        if(!fmDirMeta[f.key]) {
+          fmDirMeta[f.key] = { label: f.n, icon: '📂', parent: parentKey };
+        }
+      }
+    }
+  }
+}
+
 // Initialize with defaults, then load saved state on top
 const vfs = JSON.parse(JSON.stringify(VFS_DEFAULT)); // deep copy
 const vfsContents = Object.assign({}, VFS_CONTENTS_DEFAULT);
 vfsLoad(); // overlay with any saved data
-let fmCurrentDir = 'home';
-let fmSelectedFile = null;
 
 // FILE MANAGER
 function buildFiles() {
   return `
     <div class="fm-toolbar">
-      <button class="editor-btn" onclick="fmBack()">← Zurück</button>
-      <span class="fm-path" id="fm-path-bar">~/</span>
-      <span style="flex:1"></span>
-      <button class="editor-btn" onclick="fmNewTxt()">📝 Neue .txt</button>
-      <button class="editor-btn" onclick="fmNewFolder()">📂 Neuer Ordner</button>
-      <button class="editor-btn" onclick="fmImportFile()">📥 Importieren</button>
+      <button class="editor-btn" id="fm-btn-back" onclick="fmBack()" title="Zurück">←</button>
+      <button class="editor-btn" id="fm-btn-fwd"  onclick="fmFwd()"  title="Vor">→</button>
+      <div class="fm-breadcrumb" id="fm-breadcrumb"></div>
+      <button class="editor-btn" onclick="fmNewTxt()" title="Neue Textdatei">📝</button>
+      <button class="editor-btn" onclick="fmNewFolder()" title="Neuer Ordner">📁</button>
+      <button class="editor-btn" onclick="fmImportFile()" title="Datei importieren">📥</button>
     </div>
-    <div style="display:flex;flex:1;overflow:hidden">
-      <div class="fm-sidebar">
+    <div style="display:flex;flex:1;overflow:hidden;min-height:0">
+      <div class="fm-sidebar" id="fm-sidebar">
         <div class="fm-section">Orte</div>
-        <div class="fm-item active" id="fmi-home" onclick="fmNav('home',this)">🏠 Privat</div>
-        <div class="fm-item" id="fmi-docs" onclick="fmNav('docs',this)">📄 Dokumente</div>
-        <div class="fm-item" id="fmi-pics" onclick="fmNav('pics',this)">🖼️ Bilder</div>
-        <div class="fm-item" id="fmi-dl" onclick="fmNav('dl',this)">⬇️ Downloads</div>
-        <div class="fm-item" id="fmi-vids" onclick="fmNav('vids',this)">🎬 Videos</div>
-        <div class="fm-section">Geräte</div>
-        <div class="fm-item" onclick="showNotif('Dateien','Laufwerk C: 512GB – 73% belegt 💾')">💾 Laufwerk C:</div>
-        <div class="fm-item" onclick="fmImportFile()">🖥️ Vom PC öffnen</div>
-        <div class="fm-item" onclick="showNotif('Netzwerk','NovCloud verbunden ☁️','#6affca')">☁️ NovCloud</div>
+        <div class="fm-item" data-fmkey="home"  onclick="fmNavTo('home')">🏠 Privat</div>
+        <div class="fm-item" data-fmkey="docs"  onclick="fmNavTo('docs')">📄 Dokumente</div>
+        <div class="fm-item" data-fmkey="pics"  onclick="fmNavTo('pics')">🖼️ Bilder</div>
+        <div class="fm-item" data-fmkey="dl"    onclick="fmNavTo('dl')">⬇️ Downloads</div>
+        <div class="fm-item" data-fmkey="vids"  onclick="fmNavTo('vids')">🎬 Videos</div>
+        <div class="fm-section">Aktionen</div>
+        <div class="fm-item" onclick="fmImportFile()">📥 Importieren</div>
+        <div class="fm-item" onclick="showNotif('NovCloud','Verbunden – 12,4 GB frei ☁️','#6affca')">☁️ NovCloud</div>
       </div>
-      <div class="fm-content" id="fm-content-area" oncontextmenu="fmBgContext(event)">
+      <div class="fm-content" id="fm-content" oncontextmenu="fmBgCtx(event)">
         <div class="fm-grid" id="fm-grid"></div>
       </div>
     </div>
-    <!-- File context menu -->
-    <div id="fm-ctx" style="position:fixed;z-index:9000;background:rgba(14,14,24,0.97);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:10px;padding:6px;box-shadow:0 16px 48px rgba(0,0,0,0.7);min-width:180px;display:none;">
-      <div class="ctx-item" id="fm-ctx-open">📂 Öffnen</div>
-      <div class="ctx-item" id="fm-ctx-edit">✏️ Bearbeiten</div>
+    <div id="fm-ctx">
+      <div class="ctx-item" id="fmctx-open">📂 Öffnen</div>
+      <div class="ctx-item" id="fmctx-rename">🏷️ Umbenennen</div>
+      <div class="ctx-item" id="fmctx-download">💾 Herunterladen</div>
       <div class="ctx-sep"></div>
-      <div class="ctx-item" id="fm-ctx-rename">🏷️ Umbenennen</div>
-      <div class="ctx-item" id="fm-ctx-download">💾 Herunterladen</div>
-      <div class="ctx-sep"></div>
-      <div class="ctx-item danger" id="fm-ctx-delete">🗑️ Löschen</div>
+      <div class="ctx-item danger" id="fmctx-delete">🗑️ Löschen</div>
     </div>`;
 }
-function fmNav(key, el) {
-  document.querySelectorAll('#body-files .fm-item').forEach(i=>i.classList.remove('active'));
-  el.classList.add('active');
-  fmCurrentDir = key;
-  loadDir(key);
+
+// ── Navigation history ──────────────────────────────
+let fmCurrentDir  = 'home';
+let fmSelectedFile= null;
+let fmHistory     = ['home'];   // breadcrumb trail of keys
+let fmNavStack    = ['home'];   // back/forward stack
+let fmNavPos      = 0;          // current position in stack
+
+// Human-readable names & parent map
+const fmDirMeta = {
+  home: { label:'Privat',    icon:'🏠', parent:null },
+  docs: { label:'Dokumente', icon:'📄', parent:'home' },
+  pics: { label:'Bilder',    icon:'🖼️', parent:'home' },
+  dl:   { label:'Downloads', icon:'⬇️', parent:'home' },
+  vids: { label:'Videos',    icon:'🎬', parent:'home' },
+};
+
+function fmGetMeta(key) {
+  return fmDirMeta[key] || { label: key, icon:'📂', parent: fmCurrentDir };
 }
+
+// Navigate to a dir key, push onto history
+function fmNavTo(key, pushStack=true) {
+  if(!vfs[key]) return;
+  fmCurrentDir  = key;
+  fmSelectedFile= null;
+  if(pushStack) {
+    // Truncate forward history
+    fmNavStack = fmNavStack.slice(0, fmNavPos+1);
+    fmNavStack.push(key);
+    fmNavPos = fmNavStack.length - 1;
+  }
+  // Build breadcrumb trail (guard against cycles)
+  fmHistory = [];
+  let k = key;
+  const seen = new Set();
+  while(k && !seen.has(k)) {
+    seen.add(k);
+    fmHistory.unshift(k);
+    k = fmGetMeta(k).parent;
+  }
+  fmRender();
+}
+
 function fmBack() {
-  const el = document.getElementById('fmi-home');
-  if(el) {
-    document.querySelectorAll('#body-files .fm-item').forEach(i=>i.classList.remove('active'));
-    el.classList.add('active');
-    fmCurrentDir = 'home';
-    loadDir('home');
+  if(fmNavPos > 0) {
+    fmNavPos--;
+    fmNavTo(fmNavStack[fmNavPos], false);
   }
 }
-const pathMap = {home:'~/',docs:'~/Dokumente/',pics:'~/Bilder/',dl:'~/Downloads/',vids:'~/Videos/'};
-function loadDir(key) {
-  const grid=document.getElementById('fm-grid');
-  const pathBar=document.getElementById('fm-path-bar');
+function fmFwd() {
+  if(fmNavPos < fmNavStack.length-1) {
+    fmNavPos++;
+    fmNavTo(fmNavStack[fmNavPos], false);
+  }
+}
+
+function fmRender() {
+  // Update sidebar active state
+  document.querySelectorAll('#fm-sidebar .fm-item[data-fmkey]').forEach(el => {
+    el.classList.toggle('active', el.dataset.fmkey === fmCurrentDir);
+  });
+
+  // Update back/forward buttons
+  const btnBack = document.getElementById('fm-btn-back');
+  const btnFwd  = document.getElementById('fm-btn-fwd');
+  if(btnBack) btnBack.disabled = fmNavPos <= 0;
+  if(btnFwd)  btnFwd.disabled  = fmNavPos >= fmNavStack.length-1;
+
+  // Update breadcrumb
+  const bc = document.getElementById('fm-breadcrumb');
+  if(bc) {
+    bc.innerHTML = fmHistory.map((k, i) => {
+      const meta = fmGetMeta(k);
+      const isLast = i === fmHistory.length-1;
+      return (i > 0 ? '<span class="fm-sep">›</span>' : '') +
+        '<span class="fm-crumb' + (isLast?' current':'') + '"' +
+        (isLast ? '' : ' onclick="fmNavTo(\'' + k + '\')"') + '>' +
+        meta.icon + ' ' + meta.label + '</span>';
+    }).join('');
+  }
+
+  // Render file grid
+  const grid = document.getElementById('fm-grid');
   if(!grid) return;
-  fmCurrentDir = key;
-  if(pathBar) pathBar.textContent = pathMap[key]||'~/';
-  const files = vfs[key]||[];
-  grid.innerHTML = files.map((f,i) => {
-    const isSelected = fmSelectedFile === f.n;
-    return `<div class="fm-file${isSelected?' selected':''}" id="fmf-${i}"
-      ondblclick="fmDblClick('${key}','${f.n}','${f.type}')"
-      onclick="fmSelectFile('${f.n}','${key}',${i})"
-      oncontextmenu="fmFileContext(event,'${key}','${f.n}','${f.type}')"
-      title="${f.n}">
-      <div class="ico">${f.ico}</div>
-      <div class="name">${f.n}</div>
-    </div>`;
+  const files = vfs[fmCurrentDir] || [];
+
+  if(files.length === 0) {
+    grid.innerHTML = '<div class="fm-empty"><div style="font-size:48px">📂</div><div>Dieser Ordner ist leer</div><div style="font-size:11px">Rechtsklick zum Erstellen einer neuen Datei</div></div>';
+    return;
+  }
+
+  // Sort: dirs first, then alphabetical
+  const sorted = [...files].sort((a,b) => {
+    if(a.type==='dir' && b.type!=='dir') return -1;
+    if(a.type!=='dir' && b.type==='dir') return 1;
+    return a.n.localeCompare(b.n);
+  });
+
+  grid.innerHTML = sorted.map((f, i) => {
+    const sel = fmSelectedFile === f.n;
+    return '<div class="fm-file' + (sel?' selected':'') + '" data-name="' + f.n + '" data-type="' + f.type + '"' +
+      ' onclick="fmSelect(this)"' +
+      ' ondblclick="fmOpen(\'' + f.n + '\',\'' + f.type + '\')"' +
+      ' oncontextmenu="fmFileCtx(event,\'' + f.n + '\',\'' + f.type + '\')"' +
+      ' title="' + f.n + '">' +
+      '<div class="ico">' + f.ico + '</div>' +
+      '<div class="name">' + f.n + '</div>' +
+      '</div>';
   }).join('');
 }
-function fmSelectFile(name, key, idx) {
-  fmSelectedFile = name;
-  document.querySelectorAll('#fm-grid .fm-file').forEach((el,i) => el.classList.toggle('selected', i===idx));
+
+// loadDir is an alias kept for backward compat (editor, terminal call it)
+function loadDir(key) { fmNavTo(key); }
+
+function fmSelect(el) {
+  document.querySelectorAll('#fm-grid .fm-file').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+  fmSelectedFile = el.dataset.name;
 }
-function fmDblClick(key, name, type) {
-  if(type === 'dir') { fmOpenDir(name); return; }
-  if(type === 'txt') { fmOpenTxt(key, name); return; }
-  if(type === 'pdf') { pdfOpenFromVFS(key, name); return; }
-  showNotif('Dateien', name + ' kann nicht geöffnet werden (kein Viewer)', '#ff6a8a');
-}
-function fmOpenDir(name) {
-  const entry = (vfs[fmCurrentDir]||[]).find(f=>f.n===name && f.type==='dir');
-  const key = entry?.key || name.toLowerCase();
-  if(vfs[key]) {
-    fmCurrentDir = key;
-    document.querySelectorAll('#body-files .fm-item').forEach(i=>i.classList.remove('active'));
-    const sidebar = document.getElementById('fmi-'+key);
-    if(sidebar) sidebar.classList.add('active');
-    loadDir(key);
+
+function fmOpen(name, type) {
+  if(type === 'dir') {
+    // Find the key for this dir entry
+    const entry = (vfs[fmCurrentDir]||[]).find(f => f.n===name && f.type==='dir');
+    const key = (entry && entry.key) ? entry.key : null;
+    // Register in fmDirMeta if not known
+    if(key && !fmDirMeta[key]) {
+      fmDirMeta[key] = { label:name, icon:'📂', parent:fmCurrentDir };
+    }
+    if(key && vfs[key]) { fmNavTo(key); return; }
+    showNotif('Dateien', '"' + name + '" kann nicht geöffnet werden', '#ff6a8a');
+    return;
   }
+  if(type === 'txt') { fmOpenTxt(fmCurrentDir, name); return; }
+  if(type === 'pdf') { pdfOpenFromVFS(fmCurrentDir, name); return; }
+  if(/\.(png|jpg|jpeg|gif|svg|webp)$/i.test(name)) {
+    showNotif('Galerie', '"' + name + '" – Bild öffnet sich in NovGalerie (bald)', '#ffca6a'); return;
+  }
+  if(/\.(mp3|wav|ogg|flac|aac)$/i.test(name)) {
+    openApp('music'); showNotif('NovMusic', '"' + name + '" – Wiedergabe aus VFS bald verfügbar', '#6affca'); return;
+  }
+  showNotif('Dateien', '"' + name + '" – Kein Viewer für diesen Dateityp', '#ffca6a');
 }
+
 function fmOpenTxt(dirKey, name) {
-  const path = dirKey+'/'+name;
+  const path = dirKey + '/' + name;
   const content = vfsContents[path] || '';
   editorOpenFile(name, content, path);
 }
 
-// File context menu
-function fmFileContext(e, key, name, type) {
+// ── Context menu ──────────────────────────────────
+let fmCtxTarget = null;
+
+function fmFileCtx(e, name, type) {
   e.preventDefault(); e.stopPropagation();
-  fmSelectFile(name, key, -1);
-  const ctx = document.getElementById('fm-ctx'); if(!ctx) return;
-  ctx.style.left = Math.min(e.clientX, window.innerWidth-200)+'px';
-  ctx.style.top  = Math.min(e.clientY, window.innerHeight-180)+'px';
+  // Select the file (e.currentTarget is null in inline handlers — use closest)
+  const el = e.target.closest('.fm-file');
+  if(el) fmSelect(el);
+  fmCtxTarget = { name, type, dir: fmCurrentDir };
+
+  const ctx = document.getElementById('fm-ctx');
+  if(!ctx) return;
+
+  // Position
+  const x = Math.min(e.clientX, window.innerWidth  - 200);
+  const y = Math.min(e.clientY, window.innerHeight - 160);
+  ctx.style.left    = x + 'px';
+  ctx.style.top     = y + 'px';
   ctx.style.display = 'block';
-  document.getElementById('fm-ctx-open').onclick = () => { closeFmCtx(); fmDblClick(key, name, type); };
-  document.getElementById('fm-ctx-edit').style.display = type==='txt'?'flex':'none';
-  document.getElementById('fm-ctx-edit').onclick = () => { closeFmCtx(); fmOpenTxt(key, name); };
-  document.getElementById('fm-ctx-rename').onclick = () => { closeFmCtx(); fmRename(key, name); };
-  document.getElementById('fm-ctx-download').onclick = () => { closeFmCtx(); fmDownload(key, name, type); };
-  document.getElementById('fm-ctx-delete').onclick = () => { closeFmCtx(); fmDelete(key, name); };
+
+  // Wire up items
+  document.getElementById('fmctx-open').onclick   = () => { fmCtxClose(); fmOpen(name, type); };
+  document.getElementById('fmctx-rename').onclick  = () => { fmCtxClose(); fmRename(fmCurrentDir, name); };
+  document.getElementById('fmctx-download').onclick= () => { fmCtxClose(); fmDownload(fmCurrentDir, name, type); };
+  document.getElementById('fmctx-delete').onclick  = () => { fmCtxClose(); fmDelete(fmCurrentDir, name); };
 }
-function fmBgContext(e) {
+
+function fmBgCtx(e) {
   if(e.target.closest('.fm-file')) return;
   e.preventDefault();
-  closeFmCtx();
+  fmCtxClose();
+  // Deselect
+  document.querySelectorAll('#fm-grid .fm-file').forEach(el => el.classList.remove('selected'));
+  fmSelectedFile = null;
 }
-function closeFmCtx() {
-  const ctx=document.getElementById('fm-ctx'); if(ctx) ctx.style.display='none';
-}
-document.addEventListener('click', () => closeFmCtx());
 
-function fmRename(key, oldName) {
-  const newName = prompt('Umbenennen:', oldName);
-  if(!newName || newName===oldName) return;
-  const arr = vfs[key];
-  const f = arr.find(x=>x.n===oldName);
+function fmCtxClose() {
+  const ctx = document.getElementById('fm-ctx');
+  if(ctx) ctx.style.display = 'none';
+}
+// Register only once at top level
+if(!window._fmCtxListenerSet) {
+  window._fmCtxListenerSet = true;
+  document.addEventListener('click', e => {
+    if(!e.target.closest('#fm-ctx')) fmCtxClose();
+  });
+}
+
+// ── File operations ──────────────────────────────
+async function fmRename(key, oldName) {
+  const newName = await novDialog({
+    icon: '🏷️', title: 'Umbenennen',
+    msg: 'Neuer Name für "' + oldName + '":',
+    input: true, inputDefault: oldName,
+    confirmLabel: 'Umbenennen'
+  });
+  if(!newName || newName === oldName) return;
+  if(vfs[key].find(f => f.n === newName)) {
+    showNotif('Dateien', '"' + newName + '" existiert bereits', '#ff6a8a'); return;
+  }
+  const f = vfs[key].find(x => x.n === oldName);
   if(!f) return;
-  // rename content key
-  const oldPath = key+'/'+oldName;
-  const newPath = key+'/'+newName;
-  if(vfsContents[oldPath] !== undefined) { vfsContents[newPath]=vfsContents[oldPath]; delete vfsContents[oldPath]; }
-  f.n = newName;
+  const oldPath = key + '/' + oldName;
+  const newPath = key + '/' + newName;
+  if(vfsContents[oldPath] !== undefined) {
+    vfsContents[newPath] = vfsContents[oldPath];
+    delete vfsContents[oldPath];
+  }
+  // If dir entry, update key label
+  if(f.key && fmDirMeta[f.key]) fmDirMeta[f.key].label = newName;
+  f.n   = newName;
   f.ico = getFileIcon(newName, f.type);
-  loadDir(key);
+  fmSelectedFile = newName;
+  fmRender();
   vfsSave();
   showNotif('Dateien', '"' + oldName + '" → "' + newName + '" ✓', '#6affca');
 }
-function fmDelete(key, name) {
-  if(!confirm(`"${name}" wirklich löschen?`)) return;
+
+async function fmDelete(key, name) {
+  const ok = await novDialog({
+    icon: '🗑️', title: 'Löschen bestätigen',
+    msg: '"' + name + '" wirklich löschen?\nDiese Aktion kann nicht rückgängig gemacht werden.',
+    confirmLabel: 'Löschen', danger: true
+  });
+  if(!ok) return;
   const arr = vfs[key];
-  const idx = arr.findIndex(x=>x.n===name);
-  if(idx>=0) arr.splice(idx,1);
-  delete vfsContents[key+'/'+name];
-  loadDir(key);
+  const idx = arr.findIndex(x => x.n === name);
+  if(idx >= 0) {
+    const entry = arr[idx];
+    // If it's a dir, also clean up its key
+    if(entry.type === 'dir' && entry.key) {
+      delete vfs[entry.key];
+      delete fmDirMeta[entry.key];
+    }
+    arr.splice(idx, 1);
+  }
+  delete vfsContents[key + '/' + name];
+  if(fmSelectedFile === name) fmSelectedFile = null;
+  fmRender();
   vfsSave();
   showNotif('Dateien', '"' + name + '" gelöscht 🗑️', '#ff6a8a');
 }
+
 function fmDownload(key, name, type) {
-  const path = key+'/'+name;
-  if(type==='txt' && vfsContents[path]!==undefined) {
-    const blob = new Blob([vfsContents[path]], {type:'text/plain'});
-    const a = document.createElement('a'); a.href=URL.createObjectURL(blob);
-    a.download=name; a.click();
-    showNotif('Dateien', name+' wird heruntergeladen 💾', '#6affca');
+  const path = key + '/' + name;
+  const content = vfsContents[path];
+  if(content !== undefined) {
+    const blob = new Blob([content], {type:'text/plain'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name; a.click();
+    showNotif('Dateien', '"' + name + '" wird heruntergeladen 💾', '#6affca');
   } else {
-    showNotif('Dateien', 'Nur .txt-Dateien können heruntergeladen werden', '#ff6a8a');
+    showNotif('Dateien', 'Kein Inhalt zum Herunterladen (Binärdatei)', '#ffca6a');
   }
 }
-function fmNewTxt() {
-  const name = prompt('Dateiname (.txt):', 'Neue Datei.txt');
+
+async function fmNewTxt() {
+  const name = await novDialog({
+    icon: '📝', title: 'Neue Textdatei',
+    msg: 'Dateiname:',
+    input: true, inputDefault: 'Neue Datei.txt', inputPlaceholder: 'dateiname.txt',
+    confirmLabel: 'Erstellen'
+  });
   if(!name) return;
-  const safeName = name.endsWith('.txt') ? name : name+'.txt';
-  if(vfs[fmCurrentDir].find(f=>f.n===safeName)) { showNotif('Dateien','Datei existiert bereits','#ff6a8a'); return; }
-  vfs[fmCurrentDir].push({ico:'📝', n:safeName, type:'txt'});
-  vfsContents[fmCurrentDir+'/'+safeName] = '';
-  loadDir(fmCurrentDir);
+  const safeName = name.includes('.') ? name : name + '.txt';
+  if(vfs[fmCurrentDir].find(f => f.n === safeName)) {
+    showNotif('Dateien', '"' + safeName + '" existiert bereits', '#ff6a8a'); return;
+  }
+  vfs[fmCurrentDir].push({ico: getFileIcon(safeName, 'txt'), n:safeName, type:'txt'});
+  vfsContents[fmCurrentDir + '/' + safeName] = '';
+  fmSelectedFile = safeName;
+  fmRender();
   vfsSave();
-  showNotif('Dateien', safeName+' erstellt ✓', '#6affca');
-  // immediately open in editor
-  setTimeout(()=>fmOpenTxt(fmCurrentDir, safeName), 100);
+  showNotif('Dateien', '"' + safeName + '" erstellt ✓', '#6affca');
+  setTimeout(() => fmOpenTxt(fmCurrentDir, safeName), 80);
 }
-function fmNewFolder() {
-  const name = prompt('Ordnername:', 'Neuer Ordner');
+
+async function fmNewFolder() {
+  const name = await novDialog({
+    icon: '📁', title: 'Neuer Ordner',
+    msg: 'Ordnername:',
+    input: true, inputDefault: 'Neuer Ordner', inputPlaceholder: 'Ordnername',
+    confirmLabel: 'Erstellen'
+  });
   if(!name) return;
-  if(vfs[fmCurrentDir].find(f=>f.n===name)) { showNotif('Dateien','Ordner existiert bereits','#ff6a8a'); return; }
-  const key = 'custom_'+Date.now();
+  if(vfs[fmCurrentDir].find(f => f.n === name)) {
+    showNotif('Dateien', '"' + name + '" existiert bereits', '#ff6a8a'); return;
+  }
+  const key = 'dir_' + Date.now();
   vfs[key] = [];
+  fmDirMeta[key] = { label:name, icon:'📂', parent:fmCurrentDir };
   vfs[fmCurrentDir].push({ico:'📂', n:name, type:'dir', key});
-  loadDir(fmCurrentDir);
+  fmSelectedFile = name;
+  fmRender();
   vfsSave();
-  showNotif('Dateien', 'Ordner "'+name+'" erstellt 📂', '#6affca');
+  showNotif('Dateien', 'Ordner "' + name + '" erstellt 📂', '#6affca');
 }
+
 function fmImportFile() {
   const input = document.createElement('input');
-  input.type='file'; input.accept='.txt,.md,.json,.csv,.log,.xml,.html,.js,.py,.css';
+  input.type = 'file';
+  input.accept = '.txt,.md,.json,.csv,.log,.xml,.html,.js,.py,.css,.ts,.sh,.yaml,.toml';
+  input.multiple = true;
   input.onchange = e => {
-    const file = e.target.files[0]; if(!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      const content = ev.target.result;
-      const name = file.name;
-      const isTxt = /\.(txt|md|json|csv|log|xml|html|js|py|css)$/i.test(name);
-      const type = isTxt ? 'txt' : 'file';
-      // Add to current dir
-      if(!vfs[fmCurrentDir].find(f=>f.n===name)) {
-        vfs[fmCurrentDir].push({ico: getFileIcon(name, type), n:name, type});
-      }
-      if(isTxt) vfsContents[fmCurrentDir+'/'+name] = content;
-      loadDir(fmCurrentDir);
-      vfsSave();
-      showNotif('Dateien', '"' + name + '" importiert ✓', '#6affca');
-      if(isTxt) setTimeout(()=>fmOpenTxt(fmCurrentDir, name), 150);
-    };
-    reader.readAsText(file);
+    const files = Array.from(e.target.files);
+    let imported = 0;
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const content = ev.target.result;
+        const name = file.name;
+        const isTxt = /\.(txt|md|json|csv|log|xml|html|js|py|css|ts|sh|yaml|toml)$/i.test(name);
+        const type  = isTxt ? 'txt' : 'file';
+        if(!vfs[fmCurrentDir].find(f => f.n === name)) {
+          vfs[fmCurrentDir].push({ico: getFileIcon(name, type), n:name, type});
+        }
+        if(isTxt) vfsContents[fmCurrentDir + '/' + name] = content;
+        imported++;
+        if(imported === files.length) {
+          fmRender();
+          vfsSave();
+          showNotif('Dateien', imported + ' Datei(en) importiert ✓', '#6affca');
+          if(files.length === 1 && isTxt) setTimeout(() => fmOpenTxt(fmCurrentDir, files[0].name), 120);
+        }
+      };
+      reader.readAsText(file);
+    });
   };
   input.click();
 }
+
 function getFileIcon(name, type) {
-  if(type==='dir') return '📂';
-  if(type==='txt'||/\.(txt|md|log)$/i.test(name)) return '📝';
-  if(/\.(json|xml|html|css|js|py)$/i.test(name)) return '⚙️';
-  if(/\.(png|jpg|jpeg|svg|gif|webp)$/i.test(name)) return '🖼️';
-  if(/\.(mp3|wav|ogg|flac)$/i.test(name)) return '🎵';
-  if(/\.(mp4|mkv|webm|avi)$/i.test(name)) return '🎬';
-  if(/\.(pdf)$/i.test(name)) return '📋';
-  if(/\.(zip|rar|tar|gz)$/i.test(name)) return '🗜️';
-  if(/\.(exe|msi)$/i.test(name)) return '📦';
+  if(type==='dir')  return '📂';
+  const n = name.toLowerCase();
+  if(/\.(txt|md|log|readme)$/.test(n)) return '📝';
+  if(/\.(json|xml|yaml|toml|ini|cfg|conf)$/.test(n)) return '⚙️';
+  if(/\.(html|htm|css|js|ts|jsx|tsx|vue)$/.test(n)) return '🌐';
+  if(/\.(py|rb|php|java|c|cpp|cs|go|rs|sh|bat)$/.test(n)) return '💻';
+  if(/\.(png|jpg|jpeg|gif|svg|webp|ico|bmp)$/.test(n)) return '🖼️';
+  if(/\.(mp3|wav|ogg|flac|aac|m4a)$/.test(n)) return '🎵';
+  if(/\.(mp4|mkv|webm|avi|mov|wmv)$/.test(n)) return '🎬';
+  if(/\.(pdf)$/.test(n)) return '📋';
+  if(/\.(zip|rar|tar|gz|7z)$/.test(n)) return '🗜️';
+  if(/\.(exe|msi|dmg|appimage)$/.test(n)) return '📦';
+  if(/\.(doc|docx)$/.test(n)) return '📃';
+  if(/\.(xls|xlsx|csv)$/.test(n)) return '📊';
+  if(/\.(ppt|pptx)$/.test(n)) return '📑';
   return '📄';
 }
 
@@ -2546,10 +2917,17 @@ function editorSwitchTab(id) {
   loadActiveTab();
 }
 
-function editorCloseTab(e, id) {
+async function editorCloseTab(e, id) {
   e.stopPropagation();
   const tab = editorTabs.find(t=>t.id===id);
-  if(tab?.unsaved && !confirm(`"${tab.name}" hat ungespeicherte Änderungen. Trotzdem schließen?`)) return;
+  if(tab?.unsaved) {
+    const ok = await novDialog({
+      icon:'⚠️', title:'Ungespeicherte Änderungen',
+      msg:'"' + tab.name + '" hat ungespeicherte Änderungen.\nTrotzdem schließen?',
+      confirmLabel:'Schließen', danger:true
+    });
+    if(!ok) return;
+  }
   editorTabs = editorTabs.filter(t=>t.id!==id);
   if(editorActiveTab===id) {
     editorActiveTab = editorTabs.length ? editorTabs[editorTabs.length-1].id : null;
@@ -2573,9 +2951,14 @@ function editorMarkUnsaved() {
   if(tab && !tab.unsaved) { tab.unsaved=true; renderTabs(); }
 }
 
-function editorNew() {
-  const name = prompt('Dateiname:', 'Unbenannt.txt') || 'Unbenannt.txt';
-  editorNewTab(name, '', null);
+async function editorNew() {
+  const name = await novDialog({
+    icon:'📄', title:'Neue Datei',
+    msg:'Dateiname:',
+    input:true, inputDefault:'Unbenannt.txt', inputPlaceholder:'datei.txt',
+    confirmLabel:'Erstellen'
+  });
+  editorNewTab(name || 'Unbenannt.txt', '', null);
 }
 
 function editorOpenFromPC() {
@@ -2625,10 +3008,16 @@ function editorSave() {
   renderTabs();
 }
 
-function editorSaveAs() {
+async function editorSaveAs() {
   const area = document.getElementById('editor-area'); if(!area) return;
   const tab = editorTabs.find(t=>t.id===editorActiveTab); if(!tab) return;
-  const newName = prompt('Speichern als:', tab.name) || tab.name;
+  const newName = await novDialog({
+    icon:'💾', title:'Speichern als',
+    msg:'Dateiname:',
+    input:true, inputDefault:tab.name,
+    confirmLabel:'Herunterladen'
+  });
+  if(!newName) return;
   tab.content = area.value;
   const blob = new Blob([area.value],{type:'text/plain'});
   const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=newName; a.click();
@@ -3310,10 +3699,10 @@ const settingsBuilders = {
     <div class="setting-row"><div class="setting-label">Einstellungen (localStorage)</div><span style="font-size:12px;color:var(--accent3)">${lsUsed} Bytes</span></div>
     <div class="setting-row"><div class="setting-label">VFS-Inhalt</div><span style="font-size:12px;color:var(--accent3)">${used} Bytes</span></div>
     <div class="setting-row"><div class="setting-label">Einstellungen zurücksetzen</div>
-      <button class="setting-btn danger" onclick="if(confirm('Alle Einstellungen zurücksetzen?')){localStorage.removeItem('novos_settings');NovSettings={...DEFAULT_SETTINGS};applyAllSettings();loadSettings('design');showNotif('Einstellungen','Zurückgesetzt ✓','#ff6a8a')}">↺ Reset</button>
+      <button class="setting-btn danger" onclick="novDlgResetSettings()">↺ Reset</button>
     </div>
     <div class="setting-row"><div class="setting-label">Dateisystem zurücksetzen</div>
-      <button class="setting-btn danger" onclick="if(confirm('Alle Dateien zurücksetzen? Eigene Dateien gehen verloren!')){localStorage.removeItem('novos_vfs');location.reload()}">🗑️ Reset</button>
+      <button class="setting-btn danger" onclick="novDlgResetVFS()">🗑️ Reset</button>
     </div>
   </div>`;
   },
@@ -3336,7 +3725,7 @@ const settingsBuilders = {
     ${settingToggle('locationServices','Standortdienste','')}
     <div class="setting-row"><div class="setting-label">Kamera</div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
     <div class="setting-row"><div class="setting-label">Gespeicherte Daten</div>
-      <button class="setting-btn danger" onclick="if(confirm('Alle gespeicherten Daten löschen?')){localStorage.clear();showNotif('Datenschutz','Alle Daten gelöscht','#ff6a8a')}">🗑️ Alle löschen</button>
+      <button class="setting-btn danger" onclick="novDlgClearAll()">🗑️ Alle löschen</button>
     </div>
   </div>`,
 
