@@ -102,23 +102,44 @@
       radial-gradient(1px 1px at 10% 50%,rgba(255,255,255,0.4) 0%,transparent 100%);
   }
 
-  /* Desktop icons */
+  /* Desktop icon grid — responsive, respects taskbar */
   .icon-grid {
-    position:absolute; top:16px; left:16px;
-    display:flex; flex-direction:column; gap:4px;
+    position:absolute;
+    top:12px;
+    left:12px;
+    bottom:calc(var(--taskbar-h) + 12px); /* never overlap taskbar */
+    right:12px;
+    display:grid;
+    /* columns fill left-to-right, each 80px wide */
+    grid-template-columns:repeat(auto-fill,80px);
+    grid-template-rows:repeat(auto-fill,88px);
+    grid-auto-flow:column;  /* fill column by column, top to bottom */
+    align-content:start;
+    justify-content:start;
+    gap:4px;
+    overflow:hidden; /* no scrollbar — grid itself defines capacity */
+    pointer-events:none; /* let clicks fall through to desktop */
   }
   .desk-icon {
     display:flex; flex-direction:column; align-items:center;
-    gap:5px; width:72px; cursor:pointer; padding:8px 4px;
-    border-radius:10px; transition:background 0.15s;
+    gap:5px; width:80px; height:88px; cursor:pointer; padding:8px 4px 6px;
+    border-radius:12px; transition:background 0.15s;
+    pointer-events:all; /* re-enable on icons */
+    user-select:none;
   }
-  .desk-icon:hover { background:rgba(124,106,255,0.15); }
-  .desk-icon:active { background:rgba(124,106,255,0.25); }
+  .desk-icon:hover  { background:rgba(124,106,255,0.18); }
+  .desk-icon:active { background:rgba(124,106,255,0.30); transform:scale(0.95); }
   .desk-icon .ico {
-    width:44px; height:44px; border-radius:10px;
-    display:flex; align-items:center; justify-content:center; font-size:22px;
+    width:48px; height:48px; border-radius:12px;
+    display:flex; align-items:center; justify-content:center; font-size:24px;
+    flex-shrink:0;
   }
-  .desk-icon span { font-size:11px; color:var(--text); text-align:center; text-shadow:0 1px 4px #000; line-height:1.2; }
+  .desk-icon span {
+    font-size:11px; color:var(--text); text-align:center;
+    text-shadow:0 1px 3px rgba(0,0,0,0.6);
+    line-height:1.2; max-width:72px;
+    overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
+  }
 
   /* ══════════════════ TASKBAR ══════════════════ */
   #taskbar {
@@ -532,6 +553,55 @@
   .proc-cpu { width:50px; text-align:right; color:var(--text2); }
   .proc-mem { width:50px; text-align:right; color:var(--text2); }
 
+  /* ══════════════════ PDF VIEWER ══════════════════ */
+  .pdf-toolbar {
+    display:flex; align-items:center; gap:6px; padding:6px 12px;
+    border-bottom:1px solid var(--border); background:var(--panel2);
+    flex-shrink:0; flex-wrap:wrap;
+  }
+  .pdf-body {
+    flex:1; display:flex; overflow:hidden; background:var(--bg);
+  }
+  .pdf-sidebar {
+    width:180px; flex-shrink:0; border-right:1px solid var(--border);
+    background:var(--panel2); overflow-y:auto; padding:8px;
+  }
+  .pdf-sidebar-title {
+    font-size:10px; font-weight:700; text-transform:uppercase;
+    letter-spacing:0.5px; color:var(--text2); margin-bottom:8px; padding:4px 2px;
+  }
+  .pdf-thumb {
+    background:white; border:1px solid var(--border); border-radius:6px;
+    margin-bottom:6px; cursor:pointer; overflow:hidden; transition:all 0.15s;
+    position:relative;
+  }
+  .pdf-thumb:hover { border-color:var(--accent); box-shadow:0 2px 8px rgba(124,106,255,0.2); }
+  .pdf-thumb.active { border-color:var(--accent); box-shadow:0 0 0 2px rgba(124,106,255,0.3); }
+  .pdf-thumb-page { height:100px; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; }
+  .pdf-thumb-num { font-size:10px; color:var(--text2); text-align:center; padding:4px; background:var(--panel2); border-top:1px solid var(--border); }
+  .pdf-main {
+    flex:1; overflow-y:auto; padding:24px; display:flex; flex-direction:column;
+    align-items:center; gap:20px; min-height:0;
+  }
+  .pdf-page {
+    background:white; box-shadow:0 4px 24px rgba(0,0,0,0.15);
+    border-radius:4px; width:100%; max-width:600px;
+    min-height:800px; position:relative; overflow:hidden;
+    transition:transform 0.15s;
+  }
+  .pdf-page-content {
+    padding:48px 56px; color:#1a1a2e; font-family:'Georgia',serif;
+    font-size:13px; line-height:1.8;
+  }
+  .pdf-page-num {
+    position:absolute; bottom:16px; left:0; right:0;
+    text-align:center; font-size:10px; color:#888;
+  }
+  .pdf-empty {
+    flex:1; display:flex; flex-direction:column; align-items:center;
+    justify-content:center; gap:16px; color:var(--text2);
+  }
+
   /* ══════════════════ GALLERY ══════════════════ */
   .gallery-toolbar { display:flex; align-items:center; gap:8px; padding:8px 12px; border-bottom:1px solid var(--border); background:var(--panel2); flex-shrink:0; }
   .gallery-grid { flex:1; padding:14px; overflow-y:auto; display:grid; grid-template-columns:repeat(auto-fill,120px); gap:10px; }
@@ -625,6 +695,10 @@
       <div class="ico" style="background:linear-gradient(135deg,#222,#111)">⚙️</div>
       <span>Einstellungen</span>
     </div>
+    <div class="desk-icon" ondblclick="openApp('pdf')">
+      <div class="ico" style="background:linear-gradient(135deg,#3a0a0a,#1f0505)">📋</div>
+      <span>NovPDF</span>
+    </div>
   </div>
 
   <!-- Notifications -->
@@ -657,6 +731,7 @@
       <div class="sm-app" data-app="weather"  onclick="openApp('weather');closeStartMenu()"><span class="ico">🌤️</span><span class="name">Wetter</span></div>
       <div class="sm-app" data-app="sysmon"   onclick="openApp('sysmon');closeStartMenu()"><span class="ico">📊</span><span class="name">Monitor</span></div>
       <div class="sm-app" data-app="settings" onclick="openApp('settings');closeStartMenu()"><span class="ico">⚙️</span><span class="name">Einstellungen</span></div>
+      <div class="sm-app" data-app="pdf"      onclick="openApp('pdf');closeStartMenu()"><span class="ico">📋</span><span class="name">NovPDF</span></div>
     </div>
     <div class="sm-footer">
       <div class="sm-footer-btn" onclick="closeStartMenu();showNotif('NovOS','Energie-Optionen...')">⚡ Energie</div>
@@ -720,6 +795,22 @@ function updateClock() {
 }
 setInterval(updateClock, 1000);
 updateClock();
+
+// ── Desktop icon grid: recalc row count on resize ──
+function updateIconGrid() {
+  const grid = document.querySelector('.icon-grid');
+  if(!grid) return;
+  // grid height is set by CSS (bottom: taskbar + 12px), so just
+  // let CSS handle it — but we update --taskbar-h if needed
+  const tbH = parseInt(getComputedStyle(document.documentElement)
+    .getPropertyValue('--taskbar-h')) || 48;
+  const avail = window.innerHeight - tbH - 24; // top 12 + bottom 12
+  const rowH = 92; // 88px icon + 4px gap
+  const rows = Math.max(1, Math.floor(avail / rowH));
+  grid.style.gridTemplateRows = 'repeat(' + rows + ', 88px)';
+}
+window.addEventListener('resize', updateIconGrid);
+// Will be called once desktop becomes visible (after login)
 
 // ══════════════════════════════════════
 // CONTROL CENTER
@@ -1022,6 +1113,7 @@ function doLogin() {
   setTimeout(() => {
     ls.style.display = 'none';
     desktop.classList.add('visible');
+    updateIconGrid();
     setTimeout(() => showNotif('NovOS 3.1', 'Willkommen, Nova User! 👋'), 400);
     setTimeout(() => showNotif('NovUpdate', '3 Updates verfügbar', '#6affca'), 2000);
   }, 600);
@@ -1108,6 +1200,7 @@ const appDefs = {
   weather:  { title:'Wetter',      icon:'🌤️', w:380, h:520 },
   sysmon:   { title:'Systemmonitor',icon:'📊',w:500, h:440 },
   settings: { title:'Einstellungen',icon:'⚙️',w:560, h:440 },
+  pdf:      { title:'NovPDF',      icon:'📋', w:680, h:520 },
 };
 
 function openApp(app) {
@@ -1139,6 +1232,7 @@ function openApp(app) {
   if(app==='sysmon')   setTimeout(()=>initSysmon(),10);
   if(app==='editor')   setTimeout(()=>initEditor(),10);
   if(app==='settings') setTimeout(()=>initSettingsSidebar(),10);
+  if(app==='pdf')      setTimeout(()=>initPDF(),10);
 }
 
 function buildAppBody(id) {
@@ -1153,6 +1247,7 @@ function buildAppBody(id) {
     case 'weather':  return buildWeather();
     case 'sysmon':   return buildSysmon();
     case 'settings': return buildSettings();
+    case 'pdf':      return buildPDF();
     default: return '<div style="padding:20px;color:var(--text2)">Laden...</div>';
   }
 }
@@ -1499,6 +1594,7 @@ function fmSelectFile(name, key, idx) {
 function fmDblClick(key, name, type) {
   if(type === 'dir') { fmOpenDir(name); return; }
   if(type === 'txt') { fmOpenTxt(key, name); return; }
+  if(type === 'pdf') { pdfOpenFromVFS(key, name); return; }
   showNotif('Dateien', name + ' kann nicht geöffnet werden (kein Viewer)', '#ff6a8a');
 }
 function fmOpenDir(name) {
@@ -2650,6 +2746,320 @@ const galleryImages = [
   {ico:'🌺',name:'Blume.png',bg:'linear-gradient(135deg,#fa709a,#fee140)'},
   {ico:'🦅',name:'Adler.jpg',bg:'linear-gradient(135deg,#4facfe,#00f2fe)'},
 ];
+// ══════════════════════════════════════
+// PDF VIEWER
+// ══════════════════════════════════════
+
+// Built-in PDF documents stored in VFS as structured data
+const pdfDocs = {
+  'docs/Bericht.pdf': {
+    title: 'Quartalsbericht Q4',
+    author: 'Nova Corp Analytics',
+    pages: [
+      {
+        heading: 'Quartalsbericht Q4 – Zusammenfassung',
+        body: `Dieser Bericht fasst die wichtigsten Kennzahlen und Entwicklungen des vierten Quartals zusammen.
+
+Umsatz: 4.820.000 €  (+12% gegenüber Vorquartal)
+Betriebsergebnis: 940.000 €  (+8%)
+Neue Kunden: 347
+Kundenbindungsrate: 94,2%
+
+Das Quartal verlief insgesamt positiv. Besonders der Bereich Cloud-Services verzeichnete ein starkes Wachstum von 23%. Die Produktlinie NovOS erreichte mit Version 3.1 einen Marktanteil von 4,7% im Segment der Web-Betriebssysteme.`
+      },
+      {
+        heading: 'Umsatzentwicklung nach Segmenten',
+        body: `Software-Lizenzen:       1.920.000 €   (40%)
+Cloud-Services:          1.448.000 €   (30%)
+Support & Wartung:         964.000 €   (20%)
+Beratungsleistungen:       482.000 €   (10%)
+
+──────────────────────────────────────
+Gesamt:                  4.820.000 €
+
+Im Vergleich zum Vorjahr (Q4) konnte der Gesamtumsatz um 31% gesteigert werden. Treiber war vor allem die Expansion in den europäischen Märkten sowie die gestiegene Nachfrage nach KI-integrierten Lösungen.`
+      },
+      {
+        heading: 'Ausblick Q1 – Planungsziele',
+        body: `Für das erste Quartal des kommenden Jahres werden folgende Ziele angestrebt:
+
+1. Einführung von NovOS 3.2 mit verbessertem KI-Assistenten
+2. Erweiterung des Partner-Netzwerks auf 50+ Integrationen
+3. Zielumsatz: 5.400.000 € (+12% gegenüber Q4)
+4. Einstieg in den US-amerikanischen Markt (Beta-Phase)
+5. Erhöhung der Entwicklerkapazitäten um 20%
+
+Das Team ist gut aufgestellt. Risiken bestehen hauptsächlich durch regulatorische Änderungen im Bereich Datenschutz sowie durch den zunehmenden Wettbewerb im Cloud-Segment.`
+      }
+    ]
+  },
+  'home/NovOS_Handbuch.pdf': {
+    title: 'NovOS 3.1 – Benutzerhandbuch',
+    author: 'Nova Corp Dokumentation',
+    pages: [
+      {
+        heading: 'Willkommen bei NovOS 3.1',
+        body: `NovOS ist ein modernes Web-Betriebssystem, das vollständig im Browser läuft. Es bietet eine vertraute Desktop-Umgebung mit Fenstern, Apps und einem virtuellen Dateisystem.
+
+Systemvoraussetzungen:
+– Moderner Browser (Chrome, Firefox, Edge, Safari)
+– Keine Installation erforderlich
+– Alle Daten werden lokal gespeichert
+
+Erste Schritte:
+Doppelklick auf Desktop-Icons öffnet Apps.
+Das ✦ Start-Symbol öffnet das Startmenü.
+Klick auf die Uhrzeit öffnet das Kontrollzentrum.`
+      },
+      {
+        heading: 'Apps & Funktionen',
+        body: `NovOS enthält folgende integrierte Apps:
+
+📂  Dateien – Virtuelles Dateisystem mit Ordnern
+📝  TextEditor – Mehrtabben-Editor mit VFS-Integration
+🌐  NovBrowser – Browser mit internen nov://-Seiten
+📋  NovPDF – PDF-Betrachter mit VFS-Unterstützung
+🧮  Rechner – Wissenschaftlicher Taschenrechner
+🎵  NovMusic – Musik-Player mit Playlist
+🖼️  Galerie – Bildverwaltung
+🌤️  Wetter – Wettervorhersage
+📊  Systemmonitor – Ressourcen-Überwachung
+⚙️  Einstellungen – Design, Themes, Speicher`
+      },
+      {
+        heading: 'Dateisystem & Persistenz',
+        body: `Das virtuelle Dateisystem (VFS) von NovOS speichert alle Daten im localStorage des Browsers.
+
+Ordnerstruktur:
+~/              (Heimordner)
+~/Dokumente/    (Texte, PDFs, Tabellen)
+~/Bilder/       (Bilder und Grafiken)
+~/Downloads/    (Heruntergeladene Dateien)
+~/Videos/       (Videodateien)
+
+Unterstützte Aktionen:
+– Neue Dateien und Ordner erstellen
+– Dateien umbenennen und löschen
+– Textdateien importieren (vom PC)
+– Dateien herunterladen
+– Änderungen bleiben über Sitzungen erhalten`
+      }
+    ]
+  }
+};
+
+// Add built-in PDFs to VFS on first load
+(function initPdfVFS() {
+  if(!vfs.docs.find(f => f.n === 'Bericht.pdf')) {
+    vfs.docs.push({ico:'📋', n:'Bericht.pdf', type:'pdf'});
+  }
+  if(!vfs.home.find(f => f.n === 'NovOS_Handbuch.pdf')) {
+    vfs.home.push({ico:'📋', n:'NovOS_Handbuch.pdf', type:'pdf'});
+  }
+})();
+
+let pdfCurrentDoc = null;   // key into pdfDocs
+let pdfCurrentPage = 0;
+let pdfZoom = 1.0;
+
+function buildPDF() {
+  return `
+    <div class="pdf-toolbar">
+      <button class="editor-btn" onclick="pdfOpenFromVFSPicker()">📂 Öffnen</button>
+      <div class="editor-sep"></div>
+      <button class="editor-btn" id="pdf-btn-prev" onclick="pdfGoPage(-1)" disabled>◀</button>
+      <span id="pdf-page-info" style="font-size:11px;color:var(--text2);min-width:70px;text-align:center">–</span>
+      <button class="editor-btn" id="pdf-btn-next" onclick="pdfGoPage(1)" disabled>▶</button>
+      <div class="editor-sep"></div>
+      <button class="editor-btn" onclick="pdfZoomOut()">🔍−</button>
+      <button class="editor-btn" onclick="pdfZoomIn()">🔍+</button>
+      <span id="pdf-zoom-label" style="font-size:11px;color:var(--text2);min-width:38px;text-align:center">100%</span>
+      <div class="editor-sep"></div>
+      <span id="pdf-doc-title" style="font-size:11px;color:var(--text2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+    </div>
+    <div class="pdf-body">
+      <div class="pdf-sidebar" id="pdf-sidebar">
+        <div class="pdf-sidebar-title">Seiten</div>
+        <div id="pdf-thumbs"></div>
+      </div>
+      <div class="pdf-main" id="pdf-main">
+        <div class="pdf-empty" id="pdf-empty">
+          <div style="font-size:64px">📋</div>
+          <div style="font-size:16px;font-weight:600;color:var(--text)">NovPDF</div>
+          <div style="font-size:12px">Öffne ein Dokument aus dem Dateisystem</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:8px">
+            ${Object.entries(pdfDocs).map(([k,d]) =>
+              '<button class="setting-btn" onclick="pdfOpenDoc(\'' + k + '\')">' + d.title + '</button>'
+            ).join('')}
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function initPDF() {
+  // nothing needed on open — wait for user to pick a doc
+}
+
+function pdfOpenFromVFSPicker() {
+  // Show picker: all PDF files in VFS
+  const pdfs = [];
+  for(const [dir, files] of Object.entries(vfs)) {
+    for(const f of files) {
+      if(f.type === 'pdf') pdfs.push({key: dir+'/'+f.n, name: f.n, dir});
+    }
+  }
+  if(pdfs.length === 0) {
+    showNotif('NovPDF', 'Keine PDF-Dateien im Dateisystem', '#ff6a8a'); return;
+  }
+  // Build a quick picker overlay inside the window
+  const main = document.getElementById('pdf-main');
+  if(!main) return;
+  main.innerHTML = `
+    <div style="max-width:400px;width:100%;margin-top:32px">
+      <div style="font-size:15px;font-weight:700;margin-bottom:16px;color:var(--text)">📂 PDF öffnen</div>
+      ${pdfs.map(p => `
+        <div onclick="pdfOpenDoc('${p.key}')" style="
+          display:flex;align-items:center;gap:12px;padding:12px;
+          background:var(--panel2);border:1px solid var(--border);border-radius:10px;
+          margin-bottom:8px;cursor:pointer;transition:all 0.15s"
+          onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          <span style="font-size:28px">📋</span>
+          <div>
+            <div style="font-size:12px;font-weight:600;color:var(--text)">${p.name}</div>
+            <div style="font-size:10px;color:var(--text2)">~/${p.dir}/</div>
+          </div>
+        </div>`).join('')}
+      <button class="setting-btn" style="margin-top:8px" onclick="pdfShowEmpty()">✕ Abbrechen</button>
+    </div>`;
+  const empty = document.getElementById('pdf-empty');
+  if(empty) empty.style.display = 'none';
+}
+
+function pdfOpenFromVFS(dir, name) {
+  openApp('pdf');
+  setTimeout(() => pdfOpenDoc(dir+'/'+name), 80);
+}
+
+function pdfOpenDoc(key) {
+  const doc = pdfDocs[key];
+  if(!doc) {
+    showNotif('NovPDF', 'Dieses Dokument enthält keine Vorschau', '#ffca6a');
+    // Still open the app and show a placeholder
+    pdfCurrentDoc = null;
+    pdfRender();
+    return;
+  }
+  pdfCurrentDoc = key;
+  pdfCurrentPage = 0;
+  pdfZoom = 1.0;
+  pdfRender();
+  showNotif('NovPDF', '"' + doc.title + '" geöffnet 📋', '#6affca');
+}
+
+function pdfRender() {
+  const main = document.getElementById('pdf-main');
+  const thumbs = document.getElementById('pdf-thumbs');
+  const empty = document.getElementById('pdf-empty');
+  const pageInfo = document.getElementById('pdf-page-info');
+  const titleEl = document.getElementById('pdf-doc-title');
+  const btnPrev = document.getElementById('pdf-btn-prev');
+  const btnNext = document.getElementById('pdf-btn-next');
+  const zoomLabel = document.getElementById('pdf-zoom-label');
+  if(!main) return;
+
+  if(!pdfCurrentDoc || !pdfDocs[pdfCurrentDoc]) {
+    pdfShowEmpty(); return;
+  }
+
+  const doc = pdfDocs[pdfCurrentDoc];
+  const totalPages = doc.pages.length;
+
+  if(empty) empty.style.display = 'none';
+  if(titleEl) titleEl.textContent = doc.title + ' — ' + doc.author;
+  if(pageInfo) pageInfo.textContent = (pdfCurrentPage+1) + ' / ' + totalPages;
+  if(zoomLabel) zoomLabel.textContent = Math.round(pdfZoom*100) + '%';
+  if(btnPrev) btnPrev.disabled = pdfCurrentPage <= 0;
+  if(btnNext) btnNext.disabled = pdfCurrentPage >= totalPages-1;
+
+  // Render thumbnails
+  if(thumbs) {
+    thumbs.innerHTML = doc.pages.map((p,i) => `
+      <div class="pdf-thumb ${i===pdfCurrentPage?'active':''}" onclick="pdfGoTo(${i})">
+        <div class="pdf-thumb-page" style="background:white;padding:8px">
+          <div style="font-size:7px;color:#333;line-height:1.4;overflow:hidden;max-height:80px;text-align:left;width:100%">
+            <strong style="display:block;margin-bottom:3px;font-size:6px">${p.heading}</strong>
+            ${p.body.slice(0,200)}
+          </div>
+        </div>
+        <div class="pdf-thumb-num">Seite ${i+1}</div>
+      </div>`).join('');
+  }
+
+  // Render current page
+  const page = doc.pages[pdfCurrentPage];
+  const scale = pdfZoom;
+
+  // Find or create page container (keep scroll pos)
+  let pageContainer = document.getElementById('pdf-page-container');
+  if(!pageContainer) {
+    // Clear main and rebuild
+    main.innerHTML = '';
+    pageContainer = document.createElement('div');
+    pageContainer.id = 'pdf-page-container';
+    pageContainer.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:0;width:100%;';
+    main.appendChild(pageContainer);
+  }
+
+  pageContainer.innerHTML = `
+    <div class="pdf-page" style="transform:scale(${scale});transform-origin:top center;margin-bottom:${(scale-1)*800+20}px">
+      <div class="pdf-page-content">
+        <h2 style="font-size:16px;font-weight:700;color:#1a1a2e;margin-bottom:20px;padding-bottom:12px;border-bottom:2px solid #e0e0f0">${page.heading}</h2>
+        <div style="white-space:pre-wrap;color:#2c2c3e">${page.body}</div>
+      </div>
+      <div class="pdf-page-num">— ${pdfCurrentPage+1} —</div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:16px;justify-content:center;flex-shrink:0">
+      <button class="setting-btn" onclick="pdfGoPage(-1)" ${pdfCurrentPage<=0?'disabled':''}>◀ Zurück</button>
+      <button class="setting-btn" onclick="pdfGoPage(1)"  ${pdfCurrentPage>=totalPages-1?'disabled':''}>Weiter ▶</button>
+    </div>`;
+
+  main.scrollTop = 0;
+}
+
+function pdfShowEmpty() {
+  const main = document.getElementById('pdf-main');
+  if(!main) return;
+  pdfCurrentDoc = null;
+  main.innerHTML = `
+    <div class="pdf-empty" id="pdf-empty">
+      <div style="font-size:64px">📋</div>
+      <div style="font-size:16px;font-weight:600;color:var(--text)">NovPDF</div>
+      <div style="font-size:12px">Öffne ein Dokument aus dem Dateisystem</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:8px">
+        ${Object.entries(pdfDocs).map(([k,d]) =>
+          '<button class="setting-btn" onclick="pdfOpenDoc(\'' + k + '\')">' + d.title + '</button>'
+        ).join('')}
+      </div>
+    </div>`;
+}
+
+function pdfGoPage(delta) {
+  if(!pdfCurrentDoc) return;
+  const total = pdfDocs[pdfCurrentDoc].pages.length;
+  pdfCurrentPage = Math.max(0, Math.min(total-1, pdfCurrentPage + delta));
+  pdfRender();
+}
+function pdfGoTo(idx) {
+  pdfCurrentPage = idx;
+  pdfRender();
+}
+function pdfZoomIn()  { pdfZoom = Math.min(2.0, pdfZoom + 0.15); pdfRender(); }
+function pdfZoomOut() { pdfZoom = Math.max(0.5, pdfZoom - 0.15); pdfRender(); }
+
+// ══════════════════════════════════════
+// GALLERY
+// ══════════════════════════════════════
 function buildGallery() {
   return `
     <div class="gallery-toolbar">
