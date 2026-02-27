@@ -20,6 +20,8 @@
     --radius: 12px;
   }
   * { margin:0; padding:0; box-sizing:border-box; user-select:none; }
+  input, textarea, select { user-select:text; }
+  iframe { user-select:auto; pointer-events:auto; }
   body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); width:100vw; height:100vh; overflow:hidden; font-size:13px; }
 
   /* ══════════════════ LOGIN SCREEN ══════════════════ */
@@ -224,7 +226,7 @@
   .btn-min   { background:#febc2e; }
   .btn-max   { background:#28c840; }
   .win-title { font-size:12px; color:var(--text2); margin-left:4px; flex:1; display:flex; align-items:center; gap:6px; }
-  .win-body { flex:1; overflow:hidden; display:flex; flex-direction:column; }
+  .win-body { flex:1; overflow:hidden; display:flex; flex-direction:column; min-height:0; }
   .resize-handle { position:absolute; bottom:0; right:0; width:16px; height:16px; cursor:nw-resize; opacity:0.4; }
   .resize-handle::after {
     content:''; position:absolute; bottom:4px; right:4px;
@@ -409,7 +411,7 @@
 
   /* ══════════════════ SETTINGS ══════════════════ */
   .settings-sidebar { width:170px; flex-shrink:0; border-right:1px solid var(--border); padding:12px 8px; background:var(--panel2); overflow-y:auto; }
-  .settings-content { flex:1; padding:20px; overflow-y:auto; }
+  .settings-content { flex:1; padding:20px; overflow-y:auto; min-height:0; }
   .setting-group { margin-bottom:24px; }
   .setting-group h3 { font-size:14px; font-weight:700; margin-bottom:12px; color:var(--text); padding-bottom:6px; border-bottom:1px solid var(--border); }
   .setting-row { display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid rgba(42,42,58,0.5); }
@@ -682,6 +684,112 @@ function updateClock() {
 setInterval(updateClock, 1000);
 updateClock();
 
+// ══════════════════════════════════════════════════════
+// PERSISTENT SETTINGS (localStorage) — defined early so
+// loadNovSettings() can be called right after clock init
+// ══════════════════════════════════════════════════════
+const ACCENT_PRESETS = {
+  lila:  { accent:'#7c6aff', accent2:'#ff6a8a', accent3:'#6affca' },
+  blau:  { accent:'#3a8fff', accent2:'#6affca', accent3:'#ffca6a' },
+  gruen: { accent:'#2ecc71', accent2:'#6affca', accent3:'#a78bfa' },
+  pink:  { accent:'#ff6ab0', accent2:'#ff9f6a', accent3:'#6affca' },
+  orange:{ accent:'#ff8c42', accent2:'#ff6a8a', accent3:'#6affca' },
+  cyan:  { accent:'#00d4ff', accent2:'#ff6a8a', accent3:'#ffca6a' },
+};
+const WALLPAPER_PRESETS = [
+  'radial-gradient(ellipse 80% 60% at 20% 80%,#1a0d3a 0%,transparent 60%),radial-gradient(ellipse 60% 80% at 80% 20%,#0d1f3a 0%,transparent 60%),#07060f',
+  'radial-gradient(ellipse 80% 60% at 80% 20%,#0d3a1a 0%,transparent 60%),radial-gradient(ellipse 60% 80% at 20% 80%,#1a3a0d 0%,transparent 60%),#060f07',
+  'radial-gradient(ellipse 80% 60% at 50% 10%,#3a0d1a 0%,transparent 60%),radial-gradient(ellipse 60% 80% at 50% 90%,#0d1a3a 0%,transparent 60%),#0f0607',
+  'radial-gradient(ellipse 80% 60% at 0% 50%,#1a1a0d 0%,transparent 60%),radial-gradient(ellipse 60% 80% at 100% 50%,#0d0d3a 0%,transparent 60%),#09090f',
+  'radial-gradient(ellipse 80% 60% at 50% 0%,#001a2e 0%,transparent 60%),radial-gradient(ellipse 60% 80% at 50% 100%,#002e1a 0%,transparent 60%),#060c0a',
+  'linear-gradient(135deg,#0a0a0f 0%,#1a0a2e 50%,#0a1a2e 100%)',
+  'radial-gradient(ellipse at center,#1a1a2e 0%,#0a0a0f 100%)',
+  'linear-gradient(160deg,#0d0d1a 0%,#1a0d2e 40%,#0d1a1a 100%)',
+];
+const DEFAULT_SETTINGS = {
+  accentPreset: 'lila',
+  wallpaperIdx: 0,
+  darkMode: true,
+  userName: 'Nova User',
+  uiScale: '13px',
+  animations: true,
+  transparency: true,
+  systemSounds: true,
+  volume: 70,
+  doNotDisturb: false,
+  showClock: true,
+  taskbarPos: 'bottom',
+  notifBrowser: true,
+  notifMusic: true,
+  notifMail: true,
+  wifiEnabled: true,
+  bluetooth: false,
+  vpn: false,
+  telemetry: false,
+  locationServices: true,
+  browserHomepage: 'nov://start',
+  browserSearch: 'DuckDuckGo',
+};
+let NovSettings = {};
+function loadNovSettings() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('novos_settings') || '{}');
+    NovSettings = Object.assign({}, DEFAULT_SETTINGS, saved);
+  } catch(e) { NovSettings = {...DEFAULT_SETTINGS}; }
+  applyAllSettings();
+}
+function saveNovSettings() {
+  try { localStorage.setItem('novos_settings', JSON.stringify(NovSettings)); } catch(e) {}
+}
+function setSetting(key, value) {
+  NovSettings[key] = value;
+  saveNovSettings();
+  applyAllSettings();
+}
+function applyAllSettings() {
+  const preset = ACCENT_PRESETS[NovSettings.accentPreset] || ACCENT_PRESETS.lila;
+  const root = document.documentElement;
+  root.style.setProperty('--accent', preset.accent);
+  root.style.setProperty('--accent2', preset.accent2);
+  root.style.setProperty('--accent3', preset.accent3);
+  if(!NovSettings.darkMode) {
+    root.style.setProperty('--bg','#f0f0f7');
+    root.style.setProperty('--panel','#ffffff');
+    root.style.setProperty('--panel2','#e8e8f0');
+    root.style.setProperty('--border','#d0d0e0');
+    root.style.setProperty('--text','#1a1a2e');
+    root.style.setProperty('--text2','#5a5a7a');
+  } else {
+    root.style.setProperty('--bg','#0a0a0f');
+    root.style.setProperty('--panel','#111118');
+    root.style.setProperty('--panel2','#16161f');
+    root.style.setProperty('--border','#2a2a3a');
+    root.style.setProperty('--text','#e8e8f0');
+    root.style.setProperty('--text2','#8888aa');
+  }
+  const wpEl = document.getElementById('desktop');
+  if(wpEl) wpEl.style.background = WALLPAPER_PRESETS[NovSettings.wallpaperIdx % WALLPAPER_PRESETS.length];
+  document.body.style.fontSize = NovSettings.uiScale;
+  document.querySelectorAll('.login-name').forEach(el => el.textContent = NovSettings.userName);
+  if(!NovSettings.animations) {
+    const s = document.getElementById('anim-disable-style') || document.createElement('style');
+    s.id = 'anim-disable-style';
+    s.textContent = '* { animation:none!important; transition:none!important; }';
+    document.head.appendChild(s);
+  } else {
+    document.getElementById('anim-disable-style')?.remove();
+  }
+}
+function cycleWallpaper() {
+  NovSettings.wallpaperIdx = (NovSettings.wallpaperIdx + 1) % WALLPAPER_PRESETS.length;
+  saveNovSettings();
+  applyAllSettings();
+  showNotif('Desktop', 'Hintergrund geändert 🖼️');
+}
+
+// Load persistent settings immediately
+loadNovSettings();
+
 // ══════════════════════════════════════
 // LOGIN
 // ══════════════════════════════════════
@@ -722,21 +830,7 @@ function showNotif(title, msg, color) {
   setTimeout(() => { el.classList.add('out'); setTimeout(()=>el.remove(),300); }, 3500);
 }
 
-// ══════════════════════════════════════
-// WALLPAPER CYCLE
-// ══════════════════════════════════════
-const wallpapers = [
-  'radial-gradient(ellipse 80% 60% at 20% 80%,#1a0d3a 0%,transparent 60%),radial-gradient(ellipse 60% 80% at 80% 20%,#0d1f3a 0%,transparent 60%),#07060f',
-  'radial-gradient(ellipse 80% 60% at 80% 20%,#0d3a1a 0%,transparent 60%),radial-gradient(ellipse 60% 80% at 20% 80%,#1a3a0d 0%,transparent 60%),#060f07',
-  'radial-gradient(ellipse 80% 60% at 50% 10%,#3a0d1a 0%,transparent 60%),radial-gradient(ellipse 60% 80% at 50% 90%,#0d1a3a 0%,transparent 60%),#0f0607',
-  'radial-gradient(ellipse 80% 60% at 0% 50%,#1a1a0d 0%,transparent 60%),radial-gradient(ellipse 60% 80% at 100% 50%,#0d0d3a 0%,transparent 60%),#09090f',
-];
-let wpIdx = 0;
-function cycleWallpaper() {
-  wpIdx = (wpIdx + 1) % wallpapers.length;
-  document.getElementById('desktop').style.background = wallpapers[wpIdx];
-  showNotif('Desktop', 'Hintergrund geändert 🖼️');
-}
+// cycleWallpaper and wallpapers are defined in the SETTINGS section below
 
 // ══════════════════════════════════════
 // START MENU
@@ -816,6 +910,7 @@ function openApp(app) {
   document.getElementById('desktop').appendChild(el);
   windows[app] = { el, def, minimized:false };
   setupDrag(app); setupResize(app); addTaskbarBtn(app); focusWindow(app);
+  if(app==='browser')  setTimeout(()=>browserInit(),10);
   if(app==='terminal') setTimeout(()=>initTerminal(),10);
   if(app==='music')    setTimeout(()=>initMusic(),10);
   if(app==='files')    setTimeout(()=>{ loadDir('home'); },50);
@@ -894,6 +989,7 @@ function setupDrag(id) {
   document.getElementById('tb-'+id).addEventListener('mousedown', e => {
     if(e.target.classList.contains('win-btn')) return;
     focusWindow(id); isDragging=true;
+    document.querySelectorAll('iframe').forEach(f=>f.style.pointerEvents='none');
     const r=document.getElementById('win-'+id).getBoundingClientRect();
     dragData={id, ox:e.clientX-r.left, oy:e.clientY-r.top}; e.preventDefault();
   });
@@ -911,7 +1007,14 @@ document.addEventListener('mousemove', e => {
     w.style.height=Math.max(200,e.clientY-r.top)+'px';
   }
 });
-document.addEventListener('mouseup',()=>{isDragging=false;isResizing=false;});
+document.addEventListener('mousedown', ()=>{
+  // Disable iframes during any potential drag start so they don't steal events
+  if(isDragging||isResizing) document.querySelectorAll('iframe').forEach(f=>f.style.pointerEvents='none');
+});
+document.addEventListener('mouseup',()=>{
+  isDragging=false; isResizing=false;
+  document.querySelectorAll('iframe').forEach(f=>f.style.pointerEvents='auto');
+});
 
 function setupResize(id) {
   document.getElementById('rh-'+id).addEventListener('mousedown', e=>{
@@ -1289,122 +1392,523 @@ function getFileIcon(name, type) {
 }
 
 // ══════════════════════════════════════
-// BROWSER
 // ══════════════════════════════════════
-let browserHistory = ['nov://start'], browserPos = 0;
+// BROWSER (MULTI-TAB + REAL IFRAME)
+// ══════════════════════════════════════
+let browserTabsData = [];
+let browserActiveTab = null;
+let browserBookmarks = [];
+let browserNextTabId = 1;
+
+function browserLoadState() {
+  try {
+    const s = JSON.parse(localStorage.getItem('novos_browser') || '{}');
+    browserBookmarks = s.bookmarks || [
+      {title:'NovOS Start', url:'nov://start'},
+      {title:'Nachrichten', url:'nov://news'},
+      {title:'NovStore', url:'nov://store'},
+    ];
+    browserTabsData = s.tabs || [];
+    if(!browserTabsData.length) {
+      browserTabsData = [{id:'t1', url:'nov://start', title:'NovBrowser', favicon:'✦', history:['nov://start'], histPos:0}];
+    }
+    browserActiveTab = s.activeTab || browserTabsData[0].id;
+    // Ensure activeTab actually exists
+    if(!browserTabsData.find(t=>t.id===browserActiveTab)) browserActiveTab = browserTabsData[0].id;
+    browserNextTabId = Math.max(...browserTabsData.map(t=>parseInt(t.id.replace('t',''))||0), 1) + 1;
+  } catch(e) {
+    browserTabsData = [{id:'t1', url:'nov://start', title:'NovBrowser', favicon:'✦', history:['nov://start'], histPos:0}];
+    browserActiveTab = 't1'; browserBookmarks = []; browserNextTabId = 2;
+  }
+}
+
+function browserSaveState() {
+  try {
+    // Don't persist iframe-loaded tabs (security/size), just mark them
+    const saveTabs = browserTabsData.map(t => ({...t, history: t.history.slice(-10)}));
+    localStorage.setItem('novos_browser', JSON.stringify({tabs: saveTabs, activeTab: browserActiveTab, bookmarks: browserBookmarks}));
+  } catch(e) {}
+}
+
 function buildBrowser() {
+  browserLoadState();
   return `
+    <div id="br-tabs-bar" style="display:flex;align-items:center;background:var(--panel2);border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0;min-height:36px;scrollbar-width:none;"></div>
     <div class="browser-bar">
-      <button class="browser-nav-btn" onclick="browserBack()">←</button>
-      <button class="browser-nav-btn" onclick="browserFwd()">→</button>
-      <button class="browser-nav-btn" onclick="browserRefresh()">↻</button>
-      <input class="browser-url" id="browser-url" value="nov://start" onkeydown="if(event.key==='Enter')browserGo(this.value)">
-      <button class="browser-nav-btn" onclick="showNotif('NovBrowser','Lesezeichen gespeichert 🔖')">🔖</button>
+      <button class="browser-nav-btn" id="br-back-btn" onclick="browserBack()" title="Zurück (Alt+←)">‹</button>
+      <button class="browser-nav-btn" id="br-fwd-btn"  onclick="browserFwd()"  title="Vor (Alt+→)">›</button>
+      <button class="browser-nav-btn" id="br-reload-btn" onclick="browserRefresh()" title="Neu laden (F5)">↻</button>
+      <button class="browser-nav-btn" onclick="browserHome()" title="Startseite">⌂</button>
+      <div style="display:flex;align-items:center;flex:1;background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:0 10px;gap:6px;transition:border-color 0.15s" id="br-url-wrap"
+           onfocusin="this.style.borderColor='var(--accent)'" onfocusout="this.style.borderColor='var(--border)'">
+        <span id="br-security-icon" style="font-size:11px;color:var(--accent3);flex-shrink:0;cursor:default" title="Verbindungsstatus">✦</span>
+        <input class="browser-url" id="browser-url" style="border:none;background:transparent;border-radius:0;padding:5px 0;flex:1;outline:none;font-size:12px;color:var(--text);" value="nov://start"
+          onkeydown="if(event.key==='Enter'){browserGo(this.value.trim())}"
+          onfocus="this.select()">
+      </div>
+      <button class="browser-nav-btn" onclick="browserAddBookmark()" title="Lesezeichen hinzufügen">🔖</button>
+      <button class="browser-nav-btn" onclick="browserGo('nov://bookmarks')" title="Alle Lesezeichen">📚</button>
+      <button class="browser-nav-btn" onclick="browserNewTab()" title="Neuer Tab">+</button>
     </div>
-    <div class="browser-content" id="browser-content">${browserPage('nov://start')}</div>`;
+    <div id="browser-main" style="flex:1;overflow:hidden;display:flex;flex-direction:column;min-height:0;">
+      <div id="browser-novpage" style="flex:1;overflow-y:auto;min-height:0;"></div>
+      <div id="browser-iframe-wrap" style="flex:1;min-height:0;position:relative;display:none;">
+        <div id="browser-loading-bar" style="position:absolute;top:0;left:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%;transition:width 0.4s ease;z-index:5;pointer-events:none;"></div>
+        <iframe id="browser-iframe" style="width:100%;height:100%;border:none;" referrerpolicy="no-referrer"></iframe>
+      </div>
+      <div id="browser-error-page" style="flex:1;overflow-y:auto;min-height:0;display:none;"></div>
+    </div>`;
 }
-function browserGo(url) {
-  browserHistory=browserHistory.slice(0,browserPos+1);
-  browserHistory.push(url); browserPos=browserHistory.length-1;
-  const el=document.getElementById('browser-url'); if(el) el.value=url;
-  const c=document.getElementById('browser-content'); if(c) c.innerHTML=browserPage(url);
+
+function browserInit() {
+  browserRebuildTabs();
+  const tab = browserTabsData.find(t=>t.id===browserActiveTab) || browserTabsData[0];
+  browserNavigateTo(tab.url, false);
 }
+
+function browserRebuildTabs() {
+  const bar = document.getElementById('br-tabs-bar');
+  if(!bar) return;
+  bar.innerHTML = browserTabsData.map(tab => {
+    const active = tab.id === browserActiveTab;
+    const title = (tab.favicon||'') + ' ' + (tab.title||'Neuer Tab');
+    return `<div onclick="browserSwitchTab('${tab.id}')" title="${tab.title||''}" style="
+        display:inline-flex;align-items:center;gap:5px;padding:0 10px;height:36px;cursor:pointer;
+        white-space:nowrap;border-right:1px solid var(--border);flex-shrink:0;
+        min-width:80px;max-width:160px;
+        background:${active?'var(--panel)':'transparent'};
+        color:${active?'var(--text)':'var(--text2)'};
+        border-bottom:2px solid ${active?'var(--accent)':'transparent'};
+        font-size:11px;transition:background 0.1s;">
+      <span style="overflow:hidden;text-overflow:ellipsis;flex:1;pointer-events:none">${title}</span>
+      <span onclick="browserCloseTab(event,'${tab.id}')"
+        style="flex-shrink:0;width:14px;height:14px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:10px;opacity:0.4;transition:opacity 0.1s,background 0.1s;"
+        onmouseover="this.style.opacity=1;this.style.background='rgba(255,255,255,0.15)'"
+        onmouseout="this.style.opacity=0.4;this.style.background='none'">✕</span>
+    </div>`;
+  }).join('');
+}
+
+function browserGetActiveTab() {
+  return browserTabsData.find(t=>t.id===browserActiveTab);
+}
+
+function browserNewTab(url) {
+  const id = 't' + (browserNextTabId++);
+  const u = url || NovSettings.browserHomepage || 'nov://start';
+  browserTabsData.push({id, url:u, title:'Neuer Tab', favicon:'', history:[u], histPos:0});
+  browserActiveTab = id;
+  browserRebuildTabs();
+  browserNavigateTo(u, false);
+  browserSaveState();
+}
+
+function browserSwitchTab(id) {
+  if(browserActiveTab === id) return;
+  browserActiveTab = id;
+  browserRebuildTabs();
+  const tab = browserTabsData.find(t=>t.id===id);
+  if(tab) browserNavigateTo(tab.url, false);
+}
+
+function browserCloseTab(e, id) {
+  e.stopPropagation();
+  if(browserTabsData.length <= 1) {
+    // Keep one tab but go to start
+    const tab = browserTabsData[0];
+    tab.url = 'nov://start'; tab.title = 'NovBrowser'; tab.favicon = '✦';
+    tab.history = ['nov://start']; tab.histPos = 0;
+    browserNavigateTo('nov://start', false);
+    browserRebuildTabs();
+    return;
+  }
+  const idx = browserTabsData.findIndex(t=>t.id===id);
+  browserTabsData.splice(idx, 1);
+  if(browserActiveTab === id) {
+    const next = browserTabsData[Math.min(idx, browserTabsData.length-1)];
+    browserActiveTab = next.id;
+    browserNavigateTo(next.url, false);
+  }
+  browserRebuildTabs();
+  browserSaveState();
+}
+
+function browserGo(raw) {
+  let url = (raw||'').trim();
+  if(!url) return;
+  // nov:// → internal
+  if(url.startsWith('nov://')) { /* keep */ }
+  // has :// already
+  else if(url.includes('://')) { /* keep */ }
+  // looks like a domain (contains dot, no spaces)
+  else if(/^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}/.test(url) && !url.includes(' ')) {
+    url = 'https://' + url;
+  }
+  // search
+  else {
+    const engines = {
+      'DuckDuckGo':'https://duckduckgo.com/?q=',
+      'Google':'https://www.google.com/search?q=',
+      'Bing':'https://www.bing.com/search?q=',
+      'Ecosia':'https://www.ecosia.org/search?q=',
+      'Startpage':'https://www.startpage.com/search?q=',
+    };
+    const base = engines[NovSettings.browserSearch] || engines.DuckDuckGo;
+    url = base + encodeURIComponent(url);
+  }
+  const tab = browserGetActiveTab();
+  if(tab) {
+    tab.history = tab.history.slice(0, tab.histPos+1);
+    tab.history.push(url);
+    tab.histPos = tab.history.length - 1;
+    tab.url = url;
+  }
+  browserNavigateTo(url, true);
+  browserSaveState();
+}
+
+function browserNavigateTo(url, pushState) {
+  // Update address bar
+  const urlInp = document.getElementById('browser-url');
+  if(urlInp) urlInp.value = url;
+  // Security icon
+  const sec = document.getElementById('br-security-icon');
+  if(sec) {
+    if(url.startsWith('https://'))    { sec.textContent='🔒'; sec.style.color='var(--accent3)'; sec.title='Sichere Verbindung'; }
+    else if(url.startsWith('http://')) { sec.textContent='⚠️'; sec.style.color='var(--accent2)'; sec.title='Nicht sicher'; }
+    else                               { sec.textContent='✦'; sec.style.color='var(--accent)'; sec.title='NovOS Intern'; }
+  }
+
+  const novpage   = document.getElementById('browser-novpage');
+  const iframeWrap= document.getElementById('browser-iframe-wrap');
+  const iframe    = document.getElementById('browser-iframe');
+  const errPage   = document.getElementById('browser-error-page');
+  if(!novpage) return;
+
+  const isInternal = url.startsWith('nov://') || !url.includes('://');
+
+  if(isInternal) {
+    novpage.style.display = 'block';
+    if(iframeWrap) iframeWrap.style.display = 'none';
+    if(errPage)    errPage.style.display = 'none';
+    if(iframe)     iframe.src = 'about:blank';
+    novpage.innerHTML = browserPage(url);
+    browserSetTabMeta(url);
+    return;
+  }
+
+  // External URL — many sites block iframes via X-Frame-Options.
+  // Strategy: show a "blocked" page immediately with option to open in real tab.
+  // For sites that DO work in iframes, we still try and show them.
+  novpage.style.display = 'none';
+  if(errPage) errPage.style.display = 'none';
+
+  browserSetTabMeta(url);
+
+  // Show blocked page right away for known frame-blocking sites
+  const knownBlocked = ['bing.com','google.com','google.de','youtube.com','twitter.com','x.com',
+    'facebook.com','instagram.com','linkedin.com','amazon.de','amazon.com','netflix.com',
+    'ebay.com','ebay.de','paypal.com','apple.com','microsoft.com','github.com'];
+  const hostname = (() => { try { return new URL(url).hostname; } catch(e) { return ''; } })();
+  const isKnownBlocked = knownBlocked.some(d => hostname.endsWith(d));
+
+  if(isKnownBlocked) {
+    if(iframeWrap) iframeWrap.style.display = 'none';
+    browserShowBlocked(url, hostname);
+    return;
+  }
+
+  // For unknown sites, try iframe with timeout fallback
+  if(!iframeWrap || !iframe) return;
+  iframeWrap.style.display = 'block';
+
+  const bar = document.getElementById('browser-loading-bar');
+  if(bar) { bar.style.transition='none'; bar.style.width='0%'; requestAnimationFrame(()=>{ bar.style.transition='width 0.6s ease'; bar.style.width='75%'; }); }
+
+  let handled = false;
+  const onBlocked = () => {
+    if(handled) return; handled = true;
+    iframeWrap.style.display = 'none';
+    if(bar) { bar.style.width='0%'; }
+    browserShowBlocked(url, hostname);
+  };
+  const onLoaded = () => {
+    if(handled) return; handled = true;
+    if(bar) { bar.style.width='100%'; setTimeout(()=>bar.style.width='0%', 600); }
+    try { const t=iframe.contentDocument?.title; if(t){const tab=browserGetActiveTab();if(tab){tab.title=t.slice(0,30);tab.favicon='🌐';browserRebuildTabs();}}} catch(e){}
+  };
+
+  iframe.onload = onLoaded;
+  iframe.onerror = onBlocked;
+  const timer = setTimeout(onBlocked, 5000);
+  iframe.addEventListener('load', ()=>clearTimeout(timer), {once:true});
+  try { iframe.src = url; } catch(ex) { onBlocked(); }
+}
+
+function browserShowBlocked(url, hostname) {
+  const errPage = document.getElementById('browser-error-page');
+  const iframeWrap = document.getElementById('browser-iframe-wrap');
+  const novpage = document.getElementById('browser-novpage');
+  if(novpage) novpage.style.display = 'none';
+  if(iframeWrap) iframeWrap.style.display = 'none';
+  if(!errPage) return;
+  errPage.style.display = 'block';
+
+  const siteInfo = {
+    'bing.com':      ['🔍','Bing','Microsofts Suchmaschine & KI-Chat'],
+    'google.com':    ['🔍','Google','Websuche, Bilder, Maps'],
+    'google.de':     ['🔍','Google Deutschland','Websuche auf Deutsch'],
+    'youtube.com':   ['▶️','YouTube','Videos, Musik & Livestreams'],
+    'twitter.com':   ['🐦','Twitter / X','Nachrichten & Trends'],
+    'x.com':         ['𝕏','X (Twitter)','Nachrichten & Trends'],
+    'facebook.com':  ['👥','Facebook','Soziales Netzwerk'],
+    'instagram.com': ['📷','Instagram','Fotos & Videos'],
+    'github.com':    ['💻','GitHub','Code-Hosting & Open Source'],
+    'reddit.com':    ['🧡','Reddit','Communities & Diskussionen'],
+    'netflix.com':   ['🎬','Netflix','Serien, Filme & Dokumentationen'],
+    'amazon.de':     ['📦','Amazon','Online-Shopping'],
+    'amazon.com':    ['📦','Amazon','Online-Shopping'],
+    'microsoft.com': ['🪟','Microsoft','Software, Cloud, Windows'],
+    'apple.com':     ['🍎','Apple','Hardware, Software, Store'],
+    'paypal.com':    ['💳','PayPal','Online-Zahlungen'],
+    'ebay.de':       ['🛒','eBay Deutschland','Online-Marktplatz'],
+    'duckduckgo.com':['🦆','DuckDuckGo','Privatsphäre-freundliche Suche'],
+    'ecosia.org':    ['🌱','Ecosia','Suche die Bäume pflanzt'],
+    'wikipedia.org': ['📖','Wikipedia','Freie Enzyklopädie'],
+  };
+
+  let icon = '🌐', name = hostname || 'Externe Website', desc = '';
+  for(const [d,[i,n,de]] of Object.entries(siteInfo)) {
+    if(hostname && hostname.endsWith(d)) { icon=i; name=n; desc=de; break; }
+  }
+
+  errPage.innerHTML = `
+  <div class="browser-page" style="max-width:500px;padding-top:32px">
+    <div style="text-align:center;margin-bottom:28px">
+      <div style="font-size:52px;margin-bottom:12px">${icon}</div>
+      <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px">${name}</div>
+      ${desc ? `<div style="font-size:12px;color:var(--text2)">${desc}</div>` : ''}
+    </div>
+
+    <div style="background:rgba(124,106,255,0.08);border:1px solid rgba(124,106,255,0.2);border-radius:12px;padding:14px 16px;margin-bottom:20px">
+      <div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:6px">🔒 Iframe-Einbettung blockiert</div>
+      <div style="font-size:11px;color:var(--text2);line-height:1.8">
+        Diese Website erlaubt aus Sicherheitsgründen keine Einbettung in Frames
+        (<code style="background:var(--panel);padding:1px 5px;border-radius:3px">X-Frame-Options: DENY</code>).
+        Das ist branchenüblich und schützt vor Clickjacking.
+      </div>
+    </div>
+
+    <button onclick="window.open('${url}','_blank','noopener')" style="
+      width:100%;padding:13px;margin-bottom:10px;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      border:none;border-radius:10px;color:white;
+      font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;
+      box-shadow:0 4px 20px rgba(124,106,255,0.35);transition:filter 0.15s"
+      onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='none'">
+      🔗 In echtem Browser-Tab öffnen
+    </button>
+
+    <div style="display:flex;gap:8px">
+      <button class="setting-btn" style="flex:1" onclick="browserHome()">⌂ Startseite</button>
+      <button class="setting-btn" style="flex:1" onclick="browserBack()">← Zurück</button>
+      <button class="setting-btn" style="flex:1" onclick="browserAddBookmark();showNotif('NovBrowser','🔖 Gespeichert','#6affca')">🔖 Merken</button>
+    </div>
+  </div>`;
+}
+
+function browserSetTabMeta(url) {
+  const tab = browserGetActiveTab(); if(!tab) return;
+  const pageNames = {'nov://start':'NovBrowser','nov://news':'NovNews','nov://store':'NovStore',
+    'nov://maps':'NovMaps','nov://mail':'NovMail','nov://docs':'NovDocs','nov://games':'NovGames','nov://bookmarks':'Lesezeichen'};
+  if(pageNames[url]) {
+    tab.title = pageNames[url]; tab.favicon = '✦';
+  } else if(url.startsWith('nov://search')) {
+    const q = decodeURIComponent(url.split('?q=')[1]||'');
+    tab.title = '🔍 ' + q.slice(0,20); tab.favicon = '';
+  } else {
+    try { tab.title = new URL(url).hostname.replace(/^www\./,''); tab.favicon = '🌐'; } catch(e) { tab.title = url.slice(0,20); }
+  }
+  browserRebuildTabs();
+}
+
+
 function browserBack() {
-  if(browserPos>0){ browserPos--; const u=browserHistory[browserPos]; document.getElementById('browser-url').value=u; document.getElementById('browser-content').innerHTML=browserPage(u); }
+  const tab = browserGetActiveTab(); if(!tab||tab.histPos<=0) return;
+  tab.histPos--; tab.url = tab.history[tab.histPos];
+  browserNavigateTo(tab.url, false);
 }
 function browserFwd() {
-  if(browserPos<browserHistory.length-1){ browserPos++; const u=browserHistory[browserPos]; document.getElementById('browser-url').value=u; document.getElementById('browser-content').innerHTML=browserPage(u); }
+  const tab = browserGetActiveTab(); if(!tab||tab.histPos>=tab.history.length-1) return;
+  tab.histPos++; tab.url = tab.history[tab.histPos];
+  browserNavigateTo(tab.url, false);
 }
 function browserRefresh() {
-  const u=document.getElementById('browser-url')?.value||'nov://start';
-  document.getElementById('browser-content').innerHTML=`<div style="padding:40px;text-align:center;color:var(--text2)">Laden...</div>`;
-  setTimeout(()=>{ const c=document.getElementById('browser-content'); if(c) c.innerHTML=browserPage(u); },400);
+  const tab = browserGetActiveTab(); if(!tab) return;
+  if(tab.url.startsWith('nov://')) browserNavigateTo(tab.url, false);
+  else { const f=document.getElementById('browser-iframe'); if(f) f.src=tab.url; }
 }
+function browserHome() { browserGo(NovSettings.browserHomepage||'nov://start'); }
+
+function browserAddBookmark() {
+  const tab = browserGetActiveTab(); if(!tab) return;
+  const bm = {title: tab.title||tab.url, url: tab.url};
+  if(browserBookmarks.find(b=>b.url===bm.url)) { showNotif('NovBrowser','Bereits als Lesezeichen gespeichert','#ff6a8a'); return; }
+  browserBookmarks.push(bm);
+  browserSaveState();
+  showNotif('NovBrowser', '"' + bm.title + '" gespeichert 🔖', '#6affca');
+}
+
+// ══════════════════════════════════════
+// BROWSER PAGE RENDERER (internal nov:// pages)
+// ══════════════════════════════════════
 function browserPage(url) {
-  const nav=(u)=>`onclick="browserGo('${u}')"`;
+  const nav = u => 'style="cursor:pointer" onclick="browserGo(\'' + u + '\')';
+
+  if(url==='nov://bookmarks') return `<div class="browser-page">
+    <h1>📚 Lesezeichen</h1>
+    <p>${browserBookmarks.length} gespeichert · <span style="color:var(--accent);cursor:pointer" onclick="browserGo('nov://start')">+ Neu hinzufügen</span></p>
+    <div style="margin-top:16px">
+    ${browserBookmarks.length ? browserBookmarks.map((bm,i)=>`
+      <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
+        <span style="font-size:20px">🔖</span>
+        <div style="flex:1;overflow:hidden;cursor:pointer" onclick="browserGo('${bm.url}')">
+          <div style="font-weight:600;color:var(--text);margin-bottom:2px">${bm.title}</div>
+          <div style="font-size:10px;color:var(--accent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${bm.url}</div>
+        </div>
+        <button class="setting-btn danger" onclick="browserBookmarks.splice(${i},1);browserSaveState();browserNavigateTo('nov://bookmarks',false)" style="flex-shrink:0">✕</button>
+      </div>`).join('')
+    : '<p style="color:var(--text2)">Noch keine Lesezeichen. Klicke 🔖 in der Adressleiste beim Besuch einer Seite.</p>'}
+    </div></div>`;
+
   if(url==='nov://start') return `<div class="browser-page">
-    <h1>✦ NovBrowser</h1>
-    <p>Schnell, sicher, privat. Willkommen im NovBrowser.</p>
-    <div style="display:flex;gap:8px;margin:16px 0;align-items:center">
-      <input style="flex:1;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-family:Inter,sans-serif;font-size:13px;outline:none" placeholder="Im Web suchen..." onkeydown="if(event.key==='Enter')browserGo('nov://search?q='+encodeURIComponent(this.value))">
-      <button class="browser-nav-btn" style="background:var(--accent);color:white;width:36px;border-radius:8px" onclick="const v=this.previousElementSibling.value;if(v)browserGo('nov://search?q='+encodeURIComponent(v))">↵</button>
+    <h1 style="margin-bottom:4px">✦ NovBrowser</h1>
+    <p style="margin-bottom:20px">Schnell · Sicher · Privat</p>
+    <div style="display:flex;gap:8px;margin-bottom:24px">
+      <input id="br-search-inp" style="flex:1;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-family:inherit;font-size:13px;outline:none;transition:border-color 0.15s"
+        placeholder="Suchen oder Adresse eingeben…"
+        onfocus="this.style.borderColor='var(--accent)'" onfocusout="this.style.borderColor='var(--border)'"
+        onkeydown="if(event.key==='Enter')browserGo(this.value.trim())">
+      <button class="setting-btn" onclick="browserGo(document.getElementById('br-search-inp').value.trim())" style="padding:0 16px;border-radius:10px">→</button>
     </div>
     <div class="browser-quicklinks">
-      <div class="browser-ql" ${nav('nov://news')}><div class="ql-icon">📰</div><div class="ql-title">NovNews</div><div class="ql-url">nov://news</div></div>
-      <div class="browser-ql" ${nav('nov://games')}><div class="ql-icon">🎮</div><div class="ql-title">NovGames</div><div class="ql-url">nov://games</div></div>
-      <div class="browser-ql" ${nav('nov://store')}><div class="ql-icon">🛒</div><div class="ql-title">NovStore</div><div class="ql-url">nov://store</div></div>
-      <div class="browser-ql" ${nav('nov://maps')}><div class="ql-icon">🗺️</div><div class="ql-title">NovMaps</div><div class="ql-url">nov://maps</div></div>
-      <div class="browser-ql" ${nav('nov://mail')}><div class="ql-icon">📧</div><div class="ql-title">NovMail</div><div class="ql-url">nov://mail</div></div>
-      <div class="browser-ql" ${nav('nov://docs')}><div class="ql-icon">📄</div><div class="ql-title">NovDocs</div><div class="ql-url">nov://docs</div></div>
+      <div class="browser-ql" ${nav('nov://news')}><div class="ql-icon">📰</div><div class="ql-title">NovNews</div><div class="ql-url">Aktuelles</div></div>
+      <div class="browser-ql" ${nav('nov://games')}><div class="ql-icon">🎮</div><div class="ql-title">NovGames</div><div class="ql-url">Spielen</div></div>
+      <div class="browser-ql" ${nav('nov://store')}><div class="ql-icon">🛒</div><div class="ql-title">NovStore</div><div class="ql-url">Apps & Software</div></div>
+      <div class="browser-ql" ${nav('nov://maps')}><div class="ql-icon">🗺️</div><div class="ql-title">NovMaps</div><div class="ql-url">Karten</div></div>
+      <div class="browser-ql" ${nav('nov://mail')}><div class="ql-icon">📧</div><div class="ql-title">NovMail</div><div class="ql-url">E-Mails</div></div>
+      <div class="browser-ql" ${nav('nov://bookmarks')}><div class="ql-icon">📚</div><div class="ql-title">Lesezeichen</div><div class="ql-url">${browserBookmarks.length} gespeichert</div></div>
     </div></div>`;
+
+  if(url.startsWith('nov://search')) {
+    const q = decodeURIComponent((url.split('?q=')[1]||''));
+    const engine = NovSettings.browserSearch || 'DuckDuckGo';
+    const engines = {'DuckDuckGo':'https://duckduckgo.com/?q=','Google':'https://www.google.com/search?q=','Bing':'https://www.bing.com/search?q=','Ecosia':'https://www.ecosia.org/search?q='};
+    const realUrl = (engines[engine]||engines.DuckDuckGo) + encodeURIComponent(q);
+    // Redirect to real search engine in iframe immediately
+    setTimeout(()=>{ const tab=browserGetActiveTab(); if(tab){tab.url=realUrl;tab.history[tab.histPos]=realUrl;} browserNavigateTo(realUrl,false); }, 50);
+    return `<div class="browser-page"><p style="color:var(--text2)">Suche nach „${q}" mit ${engine}…</p></div>`;
+  }
+
   if(url==='nov://news') return `<div class="browser-page">
     <h1>📰 NovNews</h1>
-    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
-      ${['Alle','Technik','Wissenschaft','Sport','Wirtschaft'].map(t=>`<span style="padding:4px 10px;border-radius:20px;background:var(--panel2);border:1px solid var(--border);font-size:11px;cursor:pointer;color:var(--text2)">${t}</span>`).join('')}
+    <div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap">
+      ${['Alle','Technik','Wissenschaft','Sport','Wirtschaft'].map(t=>`<span style="padding:4px 12px;border-radius:20px;background:var(--panel2);border:1px solid var(--border);font-size:11px;cursor:pointer;color:var(--text2);transition:all 0.1s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">${t}</span>`).join('')}
     </div>
-    ${[['KI überholt menschliche Entwickler','Neue Studie: Autonome Systeme lösen 94% aller Code-Aufgaben selbstständig. Nova Corp plant Integration in NovOS 4.0.','vor 2 Std.'],
-       ['NovOS 4.0 angekündigt','Nova Corp kündigt nächste Systemgeneration für 2027 an. Neuer KI-Copilot wird in alle Apps integriert.','vor 5 Std.'],
-       ['Mondstation Alpha eröffnet','Erste permanente Menschenbewohnung auf dem Mond nimmt Betrieb auf. 12 Wissenschaftler starten ihre Mission.','vor 1 Tag'],
-       ['Quantencomputer durchbricht 1-Mio-Qubit-Barriere','Historischer Meilenstein in der Quantencomputing-Forschung. Neue Anwendungen in Kryptographie möglich.','vor 2 Tagen']
-      ].map(([h,b,t])=>`<div style="padding:14px 0;border-bottom:1px solid var(--border)"><div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:5px;cursor:pointer">${h}</div><div style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:5px">${b}</div><div style="font-size:10px;color:var(--accent);opacity:0.7">${t}</div></div>`).join('')}
-    </div>`;
-  if(url.startsWith('nov://search')) {
-    const q=decodeURIComponent(url.split('?q=')[1]||'');
-    return `<div class="browser-page"><h1 style="font-size:18px">🔍 Suchergebnisse für „${q}"</h1>
-      ${[`${q} – Wikipedia`,`${q}: Aktuelle Nachrichten – NovNews`,`${q} erklärt – NovWiki`,`Bilder zu: ${q}`,`${q} Forum – NovCommunity`].map((r,i)=>`
-        <div style="padding:12px 0;border-bottom:1px solid var(--border)">
-          <div style="font-size:12px;color:var(--accent3);margin-bottom:2px">nov://wiki/${encodeURIComponent(q)}/${i}</div>
-          <div style="font-size:14px;color:var(--accent);cursor:pointer;margin-bottom:3px">${r}</div>
-          <div style="font-size:11px;color:var(--text2)">Dies ist ein Suchergebnis für „${q}". Klicke um mehr zu erfahren.</div>
-        </div>`).join('')}</div>`;
-  }
+    ${[
+      ['🤖','KI überholt menschliche Entwickler','Neue Studie: Autonome Systeme lösen 94% aller Code-Aufgaben. Nova Corp plant KI-Integration in NovOS 4.0.','vor 2 Std.'],
+      ['🚀','NovOS 4.0 angekündigt','Nova Corp kündigt nächste Systemgeneration für 2027 an. Neuer Copilot in allen Apps.','vor 5 Std.'],
+      ['🌕','Mondstation Alpha eröffnet','Erste permanente Menschenbewohnung auf dem Mond. 12 Wissenschaftler starten Mission.','vor 1 Tag'],
+      ['⚛️','Quantencomputer: 1-Mio-Qubit-Barriere durchbrochen','Historischer Meilenstein. Neue Anwendungen in der Kryptographie.','vor 2 Tagen'],
+      ['🌿','Europas größter Solarpark eröffnet','300 km² Solaranlage deckt 8% des EU-Strombedarfs.','vor 3 Tagen'],
+    ].map(([ico,h,b,t])=>`<div style="display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--border);cursor:pointer" onmouseover="this.style.background='rgba(124,106,255,0.04)'" onmouseout="this.style.background='none'">
+      <div style="font-size:28px;flex-shrink:0;line-height:1">${ico}</div>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">${h}</div>
+        <div style="font-size:11px;color:var(--text2);line-height:1.6;margin-bottom:4px">${b}</div>
+        <div style="font-size:10px;color:var(--accent);opacity:0.7">${t}</div>
+      </div></div>`).join('')}</div>`;
+
   if(url==='nov://games') return `<div class="browser-page"><h1>🎮 NovGames</h1>
-    <p>Entdecke Spiele für NovOS.</p>
-    ${[['⭐','StarRace 3D','Rennspiel','Kostenlos'],['🗡️','DungeonCrawler','RPG','2,99 €'],['🧩','Hexapuzzle','Puzzle','Kostenlos'],['🚀','AstroMiner','Strategie','4,99 €']].map(([i,n,g,p])=>`
+    <h2 style="margin-bottom:12px">Kostenlos spielen</h2>
+    ${[['⭐','StarRace 3D','Rennspiel · 3D','Kostenlos','#7c6aff'],['🧩','Hexapuzzle','Puzzle · Entspannung','Kostenlos','#6affca'],['🏰','Castle Quest','Strategie · Aufbau','Kostenlos','#ffca6a'],['🐍','Nova Snake','Klassiker','Kostenlos','#ff6a8a']].map(([i,n,g,p,c])=>`
     <div style="display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid var(--border)">
-      <div style="width:48px;height:48px;border-radius:10px;background:var(--panel2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:24px">${i}</div>
+      <div style="width:48px;height:48px;border-radius:12px;background:${c}22;border:1px solid ${c}44;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0">${i}</div>
       <div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--text)">${n}</div><div style="font-size:11px;color:var(--text2)">${g}</div></div>
-      <button class="setting-btn" onclick="showNotif('NovStore','${n} wird installiert…')">${p}</button>
+      <button class="setting-btn" onclick="this.textContent='Lädt…';setTimeout(()=>{this.textContent='Spielen';showNotif('NovGames','${n} gestartet 🎮')},900)" style="flex-shrink:0">${p}</button>
     </div>`).join('')}</div>`;
+
   if(url==='nov://store') return `<div class="browser-page"><h1>🛒 NovStore</h1>
-    <h2>Empfohlen</h2>
-    ${[['📊','DataVis Pro','Datenvisualisierung','9,99 €'],['🎨','PixelForge','Bildbearbeitung','14,99 €'],['🔐','VaultPass','Passwortmanager','Kostenlos'],['📡','NetScanner','Netzwerk-Tool','Kostenlos']].map(([i,n,g,p])=>`
+    <h2 style="margin-bottom:12px">Empfohlen für dich</h2>
+    ${[['📊','DataVis Pro','Datenvisualisierung & Charts','9,99 €','#7c6aff'],['🎨','PixelForge','Bild- & Vektorbearbeitung','14,99 €','#ff6a8a'],['🔐','VaultPass','Passwort-Manager','Kostenlos','#6affca'],['📡','NetScanner','Netzwerk-Analyse','Kostenlos','#ffca6a'],['🧠','MindMap Pro','Gedanken organisieren','4,99 €','#a78bfa']].map(([i,n,g,p,c])=>`
     <div style="display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid var(--border)">
-      <div style="width:44px;height:44px;border-radius:10px;background:var(--panel2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:22px">${i}</div>
+      <div style="width:44px;height:44px;border-radius:10px;background:${c}22;border:1px solid ${c}44;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${i}</div>
       <div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--text)">${n}</div><div style="font-size:11px;color:var(--text2)">${g}</div></div>
-      <button class="setting-btn" onclick="showNotif('NovStore','${n} installiert ✓','#6affca')">${p}</button>
+      <button class="setting-btn" onclick="this.textContent='Installiert ✓';this.disabled=true;showNotif('NovStore','${n} installiert ✓','#6affca')" style="flex-shrink:0;min-width:70px">${p}</button>
     </div>`).join('')}</div>`;
+
   if(url==='nov://maps') return `<div class="browser-page"><h1>🗺️ NovMaps</h1>
-    <div style="background:var(--panel2);border:1px solid var(--border);border-radius:12px;height:200px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;margin-bottom:16px">
-      <div style="font-size:40px">🗺️</div>
-      <div style="color:var(--text2);font-size:12px">Karte lädt… (Simulation)</div>
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <input style="flex:1;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-family:inherit;font-size:12px;outline:none" placeholder="Ort suchen…">
+      <button class="setting-btn">Suchen</button>
+    </div>
+    <div style="background:linear-gradient(135deg,#0a1f0a,#0a0f1f);border:1px solid var(--border);border-radius:12px;height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;margin-bottom:16px;position:relative;overflow:hidden">
+      <div style="position:absolute;inset:0;opacity:0.15;background:repeating-linear-gradient(0deg,var(--accent3) 0,var(--accent3) 1px,transparent 0,transparent 40px),repeating-linear-gradient(90deg,var(--accent3) 0,var(--accent3) 1px,transparent 0,transparent 40px)"></div>
+      <div style="font-size:48px;position:relative">🗺️</div>
+      <div style="color:var(--text2);font-size:12px;position:relative">Nova City, 52.5°N 13.4°E</div>
     </div>
     <h2>In der Nähe</h2>
-    ${['☕ NovCafé – 200m','🏪 TechStore – 450m','🏥 Nova-Klinikum – 1.2km','🏋️ FitNova – 800m'].map(p=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--text2)">${p}</div>`).join('')}</div>`;
-  if(url==='nov://mail') return `<div class="browser-page"><h1>📧 NovMail</h1>
-    ${[['Nova Corp','NovOS 4.0 Preview – Einladung','Wir freuen uns, dich zur Beta einzuladen!','vor 1 Std.','📌'],['NovStore','Deine Bestellung #4821','Deine App wurde erfolgreich installiert.','vor 3 Std.',''],['NovNews','Dein täglicher Digest','Top-Meldungen vom heutigen Tag...','vor 5 Std.',''],['NovCloud','Speicher fast voll','Du nutzt 92% deines Cloud-Speichers.','gestern','⚠️']].map(([von,betr,prev,t,badge])=>`
-    <div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer" onclick="showNotif('NovMail','E-Mail wird geöffnet')">
-      <div style="width:36px;height:36px;border-radius:50%;background:var(--panel2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">✉️</div>
+    ${[['☕','NovCafé','200m · Café'],['🏪','TechStore','450m · Elektronik'],['🏥','Nova-Klinikum','1.2km · Krankenhaus'],['🏋️','FitNova','800m · Fitnessstudio'],['🍕','PizzaNova','350m · Restaurant']].map(([i,n,d])=>`
+    <div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer" onmouseover="this.style.background='rgba(124,106,255,0.05)'" onmouseout="this.style.background='none'">
+      <span style="font-size:20px">${i}</span>
+      <div style="flex:1"><div style="font-size:13px;color:var(--text)">${n}</div><div style="font-size:10px;color:var(--text2)">${d}</div></div>
+      <button class="setting-btn" style="font-size:10px;padding:4px 8px" onclick="showNotif('NovMaps','Route zu ${n} gestartet 🧭')">Route</button>
+    </div>`).join('')}</div>`;
+
+  if(url==='nov://mail') {
+    const mails=[
+      ['Nova Corp','📌 NovOS 4.0 Preview – Einladung','Wir freuen uns, dich zur geschlossenen Beta einzuladen!','vor 1 Std.',true,'#7c6aff'],
+      ['NovStore','Deine Bestellung #4821','App erfolgreich installiert. Viel Spaß!','vor 3 Std.',false,'#6affca'],
+      ['NovNews','Dein täglicher Digest','Top-Meldungen von heute: KI, Raumfahrt, Klimaschutz…','vor 5 Std.',false,null],
+      ['NovCloud ⚠️','Speicher fast voll','Du nutzt 92% deines Cloud-Speichers (4.6/5 GB).','gestern',false,'#ff6a8a'],
+      ['team@novacorp.io','Kick-off Meeting morgen 10:00','Bitte Kalender prüfen. Raum A3, Hybridformat.','vor 2 Tagen',false,null],
+    ];
+    return `<div class="browser-page"><h1>📧 NovMail</h1>
+    <div style="display:flex;gap:8px;margin-bottom:16px;align-items:center">
+      <span style="font-size:12px;color:var(--text2)">${mails.filter(m=>m[4]).length} ungelesen</span>
+      <button class="setting-btn" style="font-size:11px;padding:4px 10px" onclick="showNotif('NovMail','Postfach aktualisiert ✓')">↻ Aktualisieren</button>
+      <button class="setting-btn" style="font-size:11px;padding:4px 10px;margin-left:auto" onclick="showNotif('NovMail','Neue E-Mail geöffnet ✉️')">✉️ Neu</button>
+    </div>
+    ${mails.map(([von,betr,prev,t,unread,c])=>`
+    <div style="display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.1s;${unread?'background:rgba(124,106,255,0.05);':''}" onclick="this.style.fontWeight='normal';showNotif('NovMail','${betr.slice(0,30)}…')"
+      onmouseover="this.style.background='rgba(124,106,255,0.08)'" onmouseout="this.style.background='${unread?'rgba(124,106,255,0.05)':'none'}'">
+      <div style="width:36px;height:36px;border-radius:50%;background:${c||'var(--panel2)'};${c?'':'border:1px solid var(--border);'}display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">✉️</div>
       <div style="flex:1;min-width:0">
-        <div style="display:flex;justify-content:space-between;margin-bottom:2px">
-          <span style="font-size:12px;font-weight:600;color:var(--text)">${von} ${badge}</span>
-          <span style="font-size:10px;color:var(--text2)">${t}</span>
+        <div style="display:flex;justify-content:space-between;margin-bottom:2px;gap:8px">
+          <span style="font-size:12px;font-weight:${unread?700:500};color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${von}</span>
+          <span style="font-size:10px;color:var(--text2);flex-shrink:0">${t}</span>
         </div>
-        <div style="font-size:12px;color:var(--text);margin-bottom:2px">${betr}</div>
-        <div style="font-size:11px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${prev}</div>
+        <div style="font-size:12px;color:var(--text);margin-bottom:2px;font-weight:${unread?600:400}">${betr}</div>
+        <div style="font-size:11px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${prev}</div>
       </div>
     </div>`).join('')}</div>`;
+  }
+
   if(url==='nov://docs') return `<div class="browser-page"><h1>📄 NovDocs</h1>
-    <p>Deine zuletzt bearbeiteten Dokumente:</p>
-    ${[['📄','Projektplan.docx','vor 2 Std.'],['📊','Quartalsbericht.xlsx','gestern'],['📝','Ideen.txt','vor 3 Tagen'],['📋','Präsentation.pptx','vor 1 Woche']].map(([i,n,t])=>`
-    <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer" onclick="showNotif('NovDocs','${n} wird geöffnet')">
+    <p>Zuletzt bearbeitet</p>
+    ${[['📄','Projektplan 2027.docx','vor 2 Std.'],['📊','Quartalsbericht Q4.xlsx','gestern'],['📝','Ideen.txt','vor 3 Tagen'],['📋','Präsentation Final.pptx','vor 1 Woche'],['📄','Vertrag NovaCorp.pdf','vor 2 Wochen']].map(([i,n,t])=>`
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.1s" onclick="showNotif('NovDocs','${n} wird geöffnet')" onmouseover="this.style.background='rgba(124,106,255,0.05)'" onmouseout="this.style.background='none'">
       <span style="font-size:24px">${i}</span>
       <div style="flex:1"><div style="font-size:13px;color:var(--text)">${n}</div><div style="font-size:10px;color:var(--text2)">${t}</div></div>
+      <button class="setting-btn" style="font-size:10px;padding:4px 8px" onclick="event.stopPropagation();showNotif('NovDocs','${n} wird heruntergeladen 💾')">↓</button>
     </div>`).join('')}</div>`;
+
   return `<div class="browser-page">
-    <h1 style="color:var(--accent2)">Fehler 404</h1>
-    <p>Seite <strong>${url}</strong> nicht gefunden.</p>
-    <p>Versuche eine andere Adresse wie <a ${nav('nov://start')}>nov://start</a>.</p></div>`;
+    <h1 style="color:var(--accent2)">404 – Nicht gefunden</h1>
+    <p><code style="background:var(--panel2);padding:2px 6px;border-radius:4px;font-size:12px">${url}</code></p>
+    <p style="margin-top:12px">Diese interne Seite existiert nicht.</p>
+    <button class="setting-btn" onclick="browserGo('nov://start')" style="margin-top:16px">⌂ Zur Startseite</button>
+  </div>`;
 }
 
 // ══════════════════════════════════════
@@ -2000,104 +2504,214 @@ function updateSysmon() {
   setT('sm-net',`${netU} / ${netD} <span>MB/s</span>`); setW('sm-net-bar',Math.min(netD*4,100));
 }
 
-// ══════════════════════════════════════
-// SETTINGS
-// ══════════════════════════════════════
-const settingsPages = {
-  design: `
-    <div class="setting-group">
-      <h3>🎨 Erscheinungsbild</h3>
-      <div class="setting-row"><div class="setting-label">Dunkles Design<small>Systemweites dunkles Farbschema</small></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
-      <div class="setting-row"><div class="setting-label">Transparenz-Effekte<small>Glasmorphismus bei Fenstern</small></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
-      <div class="setting-row"><div class="setting-label">Animationen<small>Fenster- und UI-Animationen</small></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
-      <div class="setting-row"><div class="setting-label">Akzentfarbe</div><select class="setting-select"><option>Lila</option><option>Blau</option><option>Grün</option><option>Pink</option></select></div>
-      <div class="setting-row"><div class="setting-label">Hintergrund ändern</div><button class="setting-btn" onclick="cycleWallpaper()">🖼️ Wechseln</button></div>
-    </div>`,
-  sound: `
-    <div class="setting-group">
-      <h3>🔊 Ton & Audio</h3>
-      <div class="setting-row"><div class="setting-label">Lautstärke</div><input type="range" style="width:120px" value="70"></div>
-      <div class="setting-row"><div class="setting-label">Systemklänge<small>Benachrichtigungs- und UI-Töne</small></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
-      <div class="setting-row"><div class="setting-label">Mikrofon</div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
-      <div class="setting-row"><div class="setting-label">Ausgabegerät</div><select class="setting-select"><option>NovSound HD</option><option>HDMI Audio</option></select></div>
-    </div>`,
-  network: `
-    <div class="setting-group">
-      <h3>📶 Netzwerk</h3>
-      <div class="setting-row"><div class="setting-label">WLAN<small>Verbunden mit: NovNet-5G</small></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
-      <div class="setting-row"><div class="setting-label">Bluetooth</div><div class="toggle" onclick="this.classList.toggle('on')"></div></div>
-      <div class="setting-row"><div class="setting-label">VPN</div><div class="toggle" onclick="this.classList.toggle('on')"></div></div>
-      <div class="setting-row"><div class="setting-label">Hotspot</div><div class="toggle" onclick="this.classList.toggle('on')"></div></div>
-      <div class="setting-row"><div class="setting-label">IP-Adresse</div><span style="font-size:12px;color:var(--text2)">192.168.1.42</span></div>
-    </div>`,
-  security: `
-    <div class="setting-group">
-      <h3>🔒 Sicherheit</h3>
-      <div class="setting-row"><div class="setting-label">Bildschirmsperre</div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
-      <div class="setting-row"><div class="setting-label">Zwei-Faktor-Auth</div><div class="toggle" onclick="this.classList.toggle('on')"></div></div>
-      <div class="setting-row"><div class="setting-label">Firewall</div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
-      <div class="setting-row"><div class="setting-label">Virenscanner</div><button class="setting-btn" onclick="showNotif('Sicherheit','Scan abgeschlossen – Keine Bedrohungen ✓','#6affca')">Jetzt scannen</button></div>
-    </div>`,
-  storage: `
-    <div class="setting-group">
-      <h3>💾 Speicher</h3>
-      <div class="setting-row"><div class="setting-label">Systemlaufwerk</div><span style="font-size:12px;color:var(--text2)">128 GB / 512 GB</span></div>
-      <div style="margin:8px 0"><div class="bar-track" style="height:10px"><div class="bar-fill" style="background:linear-gradient(90deg,var(--accent),var(--accent2));width:25%;height:100%"></div></div></div>
-      <div class="setting-row"><div class="setting-label">Papierkorb leeren</div><button class="setting-btn danger" onclick="showNotif('Speicher','Papierkorb geleert – 2.4 GB freigegeben','#ff6a8a')">🗑️ Leeren</button></div>
-      <div class="setting-row"><div class="setting-label">Cache leeren</div><button class="setting-btn" onclick="showNotif('Speicher','Cache geleert – 840 MB freigegeben')">🧹 Bereinigen</button></div>
-    </div>`,
-  notifs: `
-    <div class="setting-group">
-      <h3>🔔 Benachrichtigungen</h3>
-      <div class="setting-row"><div class="setting-label">Nicht stören<small>Alle Benachrichtigungen stumm</small></div><div class="toggle" onclick="this.classList.toggle('on')"></div></div>
-      <div class="setting-row"><div class="setting-label">NovBrowser</div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
-      <div class="setting-row"><div class="setting-label">NovMusic</div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
-      <div class="setting-row"><div class="setting-label">NovMail</div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
-      <div class="setting-row"><div class="setting-label">NovUpdate</div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
-    </div>`,
-  privacy: `
-    <div class="setting-group">
-      <h3>🕵️ Datenschutz</h3>
-      <div class="setting-row"><div class="setting-label">Telemetrie<small>Nutzungsdaten senden</small></div><div class="toggle" onclick="this.classList.toggle('on')"></div></div>
-      <div class="setting-row"><div class="setting-label">Standortdienste</div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
-      <div class="setting-row"><div class="setting-label">Kamera</div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
-      <div class="setting-row"><div class="setting-label">Werbung personalisieren</div><div class="toggle" onclick="this.classList.toggle('on')"></div></div>
-    </div>`,
-  about: `
-    <div class="setting-group">
-      <h3>ℹ️ Über NovOS</h3>
-      <div class="about-box">
-        <div class="about-logo">✦</div>
-        <div><div class="about-name">NovOS</div><div class="about-ver">Version 3.1.0 – nova-6.4.2</div></div>
-      </div>
-      <div class="setting-row"><div class="setting-label">Gerätename</div><span style="font-size:12px;color:var(--text2)">nova-machine</span></div>
-      <div class="setting-row"><div class="setting-label">Prozessor</div><span style="font-size:12px;color:var(--text2)">nova-core i9 (16 Kerne)</span></div>
-      <div class="setting-row"><div class="setting-label">Arbeitsspeicher</div><span style="font-size:12px;color:var(--text2)">16 GB DDR5</span></div>
-      <div class="setting-row"><div class="setting-label">Updates</div><button class="setting-btn" onclick="showNotif('NovUpdate','Alle Updates installiert ✓','#6affca')">🔄 Prüfen</button></div>
-    </div>`,
-};
+// Settings UI
 function buildSettings() {
   return `
-    <div style="display:flex;flex:1;overflow:hidden">
+    <div style="display:flex;flex:1;overflow:hidden;min-height:0;">
       <div class="settings-sidebar">
         <div class="fm-section">System</div>
         ${[['design','🎨 Design'],['sound','🔊 Ton'],['network','📶 Netzwerk'],['security','🔒 Sicherheit'],['storage','💾 Speicher']].map(([k,l])=>`
         <div class="fm-item ${k==='design'?'active':''}" id="si-${k}" onclick="loadSettings('${k}')">${l}</div>`).join('')}
         <div class="fm-section">Anpassung</div>
-        ${[['notifs','🔔 Benachrichtigungen'],['privacy','🕵️ Datenschutz']].map(([k,l])=>`
+        ${[['notifs','🔔 Benachrichtigungen'],['privacy','🕵️ Datenschutz'],['browser_set','🌐 Browser']].map(([k,l])=>`
         <div class="fm-item" id="si-${k}" onclick="loadSettings('${k}')">${l}</div>`).join('')}
         <div class="fm-section">Info</div>
         <div class="fm-item" id="si-about" onclick="loadSettings('about')">ℹ️ Über NovOS</div>
       </div>
-      <div class="settings-content" id="settings-pane">${settingsPages.design}</div>
+      <div class="settings-content" id="settings-pane"></div>
     </div>`;
 }
-function initSettingsSidebar() { /* already loaded */ }
+function initSettingsSidebar() { loadSettings('design'); }
+
+function settingToggle(key, label, small='') {
+  const on = !!NovSettings[key];
+  return `<div class="setting-row">
+    <div class="setting-label">${label}${small ? `<small>${small}</small>` : ''}</div>
+    <div class="toggle ${on?'on':''}" data-key="${key}"
+      onclick="NovSettings['${key}']=!NovSettings['${key}'];saveNovSettings();applyAllSettings();this.classList.toggle('on',!!NovSettings['${key}'])">
+    </div>
+  </div>`;
+}
+
+const settingsBuilders = {
+  design: () => `<div class="setting-group">
+    <h3>🎨 Erscheinungsbild</h3>
+    ${settingToggle('darkMode','Dunkles Design','Systemweites dunkles Farbschema')}
+    ${settingToggle('transparency','Transparenz-Effekte','Glasmorphismus & Blur')}
+    ${settingToggle('animations','Animationen','Fenster- & UI-Übergänge')}
+    <div class="setting-row">
+      <div class="setting-label">Akzentfarbe</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        ${Object.entries(ACCENT_PRESETS).map(([k,v])=>`
+          <div onclick="setSetting('accentPreset','${k}');renderSettingsAccents()" title="${k}" style="
+            width:22px;height:22px;border-radius:50%;background:${v.accent};cursor:pointer;
+            border:2px solid ${NovSettings.accentPreset===k?'white':'transparent'};
+            box-shadow:0 0 0 1px rgba(255,255,255,0.2);transition:transform 0.1s;"
+            id="accent-dot-${k}"
+            onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">
+          </div>`).join('')}
+      </div>
+    </div>
+    <div class="setting-row">
+      <div class="setting-label">UI-Schriftgröße</div>
+      <select class="setting-select" onchange="setSetting('uiScale',this.value)">
+        ${['11px','12px','13px','14px','15px'].map(s=>`<option ${NovSettings.uiScale===s?'selected':''}>${s}</option>`).join('')}
+      </select>
+    </div>
+    <div class="setting-row">
+      <div class="setting-label">Hintergrund</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        ${WALLPAPER_PRESETS.slice(0,8).map((wp,i)=>`
+          <div onclick="setSetting('wallpaperIdx',${i});renderSettingsWP()" title="Hintergrund ${i+1}" style="
+            width:28px;height:20px;border-radius:4px;background:${wp};cursor:pointer;
+            border:2px solid ${NovSettings.wallpaperIdx===i?'white':'transparent'};
+            box-shadow:0 0 0 1px rgba(255,255,255,0.15);" id="wp-thumb-${i}">
+          </div>`).join('')}
+      </div>
+    </div>
+  </div>`,
+
+  sound: () => `<div class="setting-group">
+    <h3>🔊 Ton & Audio</h3>
+    <div class="setting-row">
+      <div class="setting-label">Lautstärke</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <input type="range" style="width:120px" min="0" max="100" value="${NovSettings.volume}"
+          oninput="setSetting('volume',+this.value);document.getElementById('vol-display').textContent=this.value+'%'">
+        <span id="vol-display" style="font-size:11px;color:var(--text2);width:32px">${NovSettings.volume}%</span>
+      </div>
+    </div>
+    ${settingToggle('systemSounds','Systemklänge','Benachrichtigungs- und UI-Töne')}
+    <div class="setting-row"><div class="setting-label">Ausgabegerät</div>
+      <select class="setting-select"><option>NovSound HD</option><option>HDMI Audio</option><option>Bluetooth LE Audio</option></select>
+    </div>
+  </div>`,
+
+  network: () => `<div class="setting-group">
+    <h3>📶 Netzwerk</h3>
+    ${settingToggle('wifiEnabled','WLAN','Verbunden mit: NovNet-5G')}
+    ${settingToggle('bluetooth','Bluetooth','')}
+    ${settingToggle('vpn','VPN','Sicheres Tunneling')}
+    <div class="setting-row"><div class="setting-label">IP-Adresse</div><span style="font-size:12px;color:var(--text2)">192.168.1.42</span></div>
+    <div class="setting-row"><div class="setting-label">MAC-Adresse</div><span style="font-size:12px;color:var(--text2)">A4:C3:F0:12:34:56</span></div>
+    <div class="setting-row"><div class="setting-label">DNS</div><span style="font-size:12px;color:var(--text2)">1.1.1.1 (Cloudflare)</span></div>
+  </div>`,
+
+  security: () => `<div class="setting-group">
+    <h3>🔒 Sicherheit</h3>
+    <div class="setting-row">
+      <div class="setting-label">Benutzername<small>Wird auf dem Login-Bildschirm angezeigt</small></div>
+      <div style="display:flex;gap:6px">
+        <input id="username-inp" class="sm-search" style="width:120px;margin:0;padding:4px 8px" value="${NovSettings.userName}">
+        <button class="setting-btn" onclick="setSetting('userName',document.getElementById('username-inp').value);showNotif('Einstellungen','Name gespeichert ✓','#6affca')">✓</button>
+      </div>
+    </div>
+    <div class="setting-row"><div class="setting-label">Bildschirmsperre</div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+    <div class="setting-row"><div class="setting-label">Zwei-Faktor-Auth</div><div class="toggle" onclick="this.classList.toggle('on')"></div></div>
+    <div class="setting-row"><div class="setting-label">Firewall</div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+    <div class="setting-row"><div class="setting-label">Virenscanner</div>
+      <button class="setting-btn" onclick="this.textContent='Scannt…';setTimeout(()=>{this.textContent='Jetzt scannen';showNotif('Sicherheit','Scan abgeschlossen – Keine Bedrohungen ✓','#6affca')},1800)">Jetzt scannen</button>
+    </div>
+  </div>`,
+
+  storage: () => {
+    const used = Object.values(vfsContents).join('').length;
+    const lsUsed = JSON.stringify(localStorage).length;
+    return `<div class="setting-group">
+    <h3>💾 Speicher</h3>
+    <div class="setting-row"><div class="setting-label">Systemlaufwerk</div><span style="font-size:12px;color:var(--text2)">128 GB / 512 GB (25%)</span></div>
+    <div style="margin:8px 0"><div class="bar-track" style="height:10px"><div class="bar-fill" style="background:linear-gradient(90deg,var(--accent),var(--accent2));width:25%;height:100%"></div></div></div>
+    <div class="setting-row"><div class="setting-label">Einstellungen (localStorage)</div><span style="font-size:12px;color:var(--accent3)">${lsUsed} Bytes</span></div>
+    <div class="setting-row"><div class="setting-label">VFS-Inhalt</div><span style="font-size:12px;color:var(--accent3)">${used} Bytes</span></div>
+    <div class="setting-row"><div class="setting-label">Einstellungen zurücksetzen</div>
+      <button class="setting-btn danger" onclick="if(confirm('Alle Einstellungen zurücksetzen?')){localStorage.removeItem('novos_settings');NovSettings={...DEFAULT_SETTINGS};applyAllSettings();loadSettings('design');showNotif('Einstellungen','Zurückgesetzt ✓','#ff6a8a')}">↺ Reset</button>
+    </div>
+    <div class="setting-row"><div class="setting-label">Cache leeren</div>
+      <button class="setting-btn" onclick="showNotif('Speicher','Cache geleert – 840 MB freigegeben')">🧹 Bereinigen</button>
+    </div>
+  </div>`;
+  },
+
+  notifs: () => `<div class="setting-group">
+    <h3>🔔 Benachrichtigungen</h3>
+    ${settingToggle('doNotDisturb','Nicht stören','Alle Benachrichtigungen stumm')}
+    ${settingToggle('notifBrowser','NovBrowser','')}
+    ${settingToggle('notifMusic','NovMusic','')}
+    ${settingToggle('notifMail','NovMail','')}
+    <div class="setting-row"><div class="setting-label">NovUpdate</div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+    <div class="setting-row"><div class="setting-label">Testbenachrichtigung</div>
+      <button class="setting-btn" onclick="showNotif('Test','Das ist eine Testbenachrichtigung 🔔')">Senden</button>
+    </div>
+  </div>`,
+
+  privacy: () => `<div class="setting-group">
+    <h3>🕵️ Datenschutz</h3>
+    ${settingToggle('telemetry','Telemetrie','Anonyme Nutzungsdaten senden')}
+    ${settingToggle('locationServices','Standortdienste','')}
+    <div class="setting-row"><div class="setting-label">Kamera</div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+    <div class="setting-row"><div class="setting-label">Gespeicherte Daten</div>
+      <button class="setting-btn danger" onclick="if(confirm('Alle gespeicherten Daten löschen?')){localStorage.clear();showNotif('Datenschutz','Alle Daten gelöscht','#ff6a8a')}">🗑️ Alle löschen</button>
+    </div>
+  </div>`,
+
+  browser_set: () => `<div class="setting-group">
+    <h3>🌐 Browser-Einstellungen</h3>
+    <div class="setting-row">
+      <div class="setting-label">Startseite</div>
+      <div style="display:flex;gap:6px">
+        <input id="homepage-inp" class="sm-search" style="width:150px;margin:0;padding:4px 8px" value="${NovSettings.browserHomepage}">
+        <button class="setting-btn" onclick="setSetting('browserHomepage',document.getElementById('homepage-inp').value);showNotif('Browser','Startseite gespeichert ✓','#6affca')">✓</button>
+      </div>
+    </div>
+    <div class="setting-row">
+      <div class="setting-label">Suchmaschine</div>
+      <select class="setting-select" onchange="setSetting('browserSearch',this.value)">
+        ${['DuckDuckGo','Google','Bing','Ecosia','Startpage'].map(s=>`<option ${NovSettings.browserSearch===s?'selected':''}>${s}</option>`).join('')}
+      </select>
+    </div>
+    <div class="setting-row"><div class="setting-label">Verlauf löschen</div>
+      <button class="setting-btn danger" onclick="browserTabsData=[{id:'t1',url:NovSettings.browserHomepage,title:'Neuer Tab',history:[NovSettings.browserHomepage],histPos:0}];browserActiveTab='t1';if(windows.browser)browserRebuildTabs();showNotif('Browser','Verlauf gelöscht 🗑️','#ff6a8a')">🗑️ Löschen</button>
+    </div>
+    <div class="setting-row"><div class="setting-label">Lesezeichen</div>
+      <button class="setting-btn" onclick="openApp('browser');browserGo('nov://bookmarks')">📚 Öffnen</button>
+    </div>
+  </div>`,
+
+  about: () => `<div class="setting-group">
+    <h3>ℹ️ Über NovOS</h3>
+    <div class="about-box">
+      <div class="about-logo">✦</div>
+      <div><div class="about-name">NovOS</div><div class="about-ver">Version 3.1.0 – nova-6.4.2</div></div>
+    </div>
+    <div class="setting-row"><div class="setting-label">Gerätename</div><span style="font-size:12px;color:var(--text2)">nova-machine</span></div>
+    <div class="setting-row"><div class="setting-label">Prozessor</div><span style="font-size:12px;color:var(--text2)">nova-core i9 (16 Kerne)</span></div>
+    <div class="setting-row"><div class="setting-label">Arbeitsspeicher</div><span style="font-size:12px;color:var(--text2)">16 GB DDR5</span></div>
+    <div class="setting-row"><div class="setting-label">localStorage-Einstellungen</div><span style="font-size:11px;color:var(--accent3)">✓ Aktiv – Einstellungen bleiben beim Neuladen erhalten</span></div>
+    <div class="setting-row"><div class="setting-label">Updates</div>
+      <button class="setting-btn" onclick="this.textContent='Prüfe…';setTimeout(()=>{this.textContent='🔄 Prüfen';showNotif('NovUpdate','Alle Updates installiert ✓','#6affca')},1200)">🔄 Prüfen</button>
+    </div>
+  </div>`,
+};
+
 function loadSettings(key) {
   document.querySelectorAll('[id^="si-"]').forEach(i=>i.classList.remove('active'));
   document.getElementById('si-'+key)?.classList.add('active');
-  const pane=document.getElementById('settings-pane');
-  if(pane) pane.innerHTML=settingsPages[key]||'';
+  const pane = document.getElementById('settings-pane');
+  if(!pane) return;
+  const builder = settingsBuilders[key];
+  pane.innerHTML = builder ? builder() : '<div style="padding:20px;color:var(--text2)">Seite nicht gefunden</div>';
+}
+function renderSettingsAccents() {
+  Object.keys(ACCENT_PRESETS).forEach(k=>{
+    const el=document.getElementById('accent-dot-'+k);
+    if(el) el.style.border=`2px solid ${NovSettings.accentPreset===k?'white':'transparent'}`;
+  });
+}
+function renderSettingsWP() {
+  WALLPAPER_PRESETS.forEach((_,i)=>{
+    const el=document.getElementById('wp-thumb-'+i);
+    if(el) el.style.border=`2px solid ${NovSettings.wallpaperIdx===i?'white':'transparent'}`;
+  });
 }
 </script>
 </body>
