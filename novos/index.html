@@ -124,7 +124,7 @@
   #taskbar {
     position:absolute; bottom:0; left:0; right:0;
     height:var(--taskbar-h);
-    background:rgba(10,10,20,0.8); backdrop-filter:blur(20px);
+    background:rgba(255,255,255,0.7); backdrop-filter:blur(20px);
     border-top:1px solid var(--border);
     display:flex; align-items:center; padding:0 12px; gap:6px; z-index:1000;
   }
@@ -155,6 +155,34 @@
   .tb-icon:hover { opacity:1; }
   #clock { font-size:13px; font-weight:600; color:var(--text); }
   #date-display { font-size:10px; color:var(--text2); }
+
+  /* ══════════════════ CONTROL CENTER ══════════════════ */
+  .cc-section { margin-bottom:14px; }
+  .cc-section:last-child { margin-bottom:0; }
+  .cc-label { font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;color:var(--text2);margin-bottom:8px; }
+  .cc-tiles { display:grid;grid-template-columns:1fr 1fr;gap:8px; }
+  .cc-tile {
+    background:var(--panel2);border:1px solid var(--border);border-radius:12px;
+    padding:12px 10px;cursor:pointer;transition:all 0.15s;
+    display:flex;flex-direction:column;gap:5px;
+  }
+  .cc-tile:hover { border-color:var(--accent);background:rgba(124,106,255,0.08); }
+  .cc-tile.on { background:rgba(124,106,255,0.18);border-color:var(--accent); }
+  .cc-tile-icon { font-size:20px;line-height:1; }
+  .cc-tile-name { font-size:11px;font-weight:600;color:var(--text); }
+  .cc-tile-sub  { font-size:10px;color:var(--text2); }
+  .cc-slider-row { display:flex;align-items:center;gap:10px;padding:4px 0; }
+  .cc-slider-icon { font-size:16px;flex-shrink:0; }
+  .cc-slider {
+    flex:1;-webkit-appearance:none;height:4px;border-radius:2px;
+    background:var(--border);outline:none;cursor:pointer;
+  }
+  .cc-slider::-webkit-slider-thumb {
+    -webkit-appearance:none;width:16px;height:16px;border-radius:50%;
+    background:var(--accent);cursor:pointer;box-shadow:0 0 6px rgba(124,106,255,0.5);
+  }
+  .cc-bat-bar { height:8px;background:var(--border);border-radius:4px;overflow:hidden;margin-top:4px; }
+  .cc-bat-fill { height:100%;border-radius:4px;transition:width 0.6s ease; }
 
   /* ══════════════════ START MENU ══════════════════ */
   #start-menu {
@@ -633,7 +661,7 @@
     <div class="sm-footer">
       <div class="sm-footer-btn" onclick="closeStartMenu();showNotif('NovOS','Energie-Optionen...')">⚡ Energie</div>
       <div class="sm-footer-btn" onclick="closeStartMenu();doLogout()">🔴 Abmelden</div>
-      <div class="sm-footer-btn" onclick="closeStartMenu();showNotif('NovOS','Neustart...')" href="shutdown.html">🔄 Neustart</div>
+      <div class="sm-footer-btn" onclick="closeStartMenu();showNotif('NovOS','Neustart...')">🔄 Neustart</div>
     </div>
   </div>
 
@@ -644,17 +672,26 @@
     <div id="taskbar-apps"></div>
     <div id="tb-right">
       <div id="tb-icons">
-        <span class="tb-icon" title="WLAN" onclick="showNotif('Netzwerk','Verbunden mit: NovNet-5G 📶')">📶</span>
-        <span class="tb-icon" title="Lautstärke" onclick="showNotif('Audio','Lautstärke: 70% 🔊')">🔊</span>
-        <span class="tb-icon" title="Akku" onclick="showNotif('Akku','Akku: 87% 🔋')">🔋</span>
+        <span class="tb-icon" id="tb-wifi"   title="WLAN"      onclick="toggleCC()">📶</span>
+        <span class="tb-icon" id="tb-vol"    title="Lautstärke" onclick="toggleCC()">🔊</span>
+        <span class="tb-icon" id="tb-battery" title="Akku"     onclick="toggleCC()">🔋</span>
+        <span class="tb-icon" id="tb-bat-pct" style="font-size:10px;font-weight:600;color:var(--text2);cursor:pointer" onclick="toggleCC()"></span>
       </div>
-      <div style="text-align:right">
-        <div id="clock"></div>
-        <div id="date-display"></div>
+      <div style="text-align:right;cursor:pointer" onclick="toggleCC()" title="Kontrollzentrum">
+        <div id="clock" style="pointer-events:none"></div>
+        <div id="date-display" style="pointer-events:none"></div>
       </div>
     </div>
   </div>
-</div>
+
+  <!-- CONTROL CENTER -->
+  <div id="control-center" style="
+    position:absolute;bottom:calc(var(--taskbar-h) + 8px);right:12px;
+    width:320px;background:rgba(14,14,24,0.97);backdrop-filter:blur(24px);
+    border:1px solid var(--border);border-radius:16px;
+    box-shadow:0 24px 80px rgba(0,0,0,0.7);padding:16px;
+    z-index:2000;display:none;animation:fadeUp 0.18s ease;">
+  </div>
 
 <script>
 // ══════════════════════════════════════
@@ -683,6 +720,174 @@ function updateClock() {
 }
 setInterval(updateClock, 1000);
 updateClock();
+
+// ══════════════════════════════════════
+// CONTROL CENTER
+// ══════════════════════════════════════
+let ccOpen = false;
+let ccBattery = null;
+let ccVolume = 70;       // synced with NovSettings after load
+let ccBrightness = 80;
+let ccWifi = true;
+let ccBluetooth = false;
+let ccDnd = false;
+let ccAirplane = false;
+
+// Init Battery API
+if(navigator.getBattery) {
+  navigator.getBattery().then(bat => {
+    ccBattery = bat;
+    updateBatteryIcon();
+    bat.addEventListener('levelchange', updateBatteryIcon);
+    bat.addEventListener('chargingchange', updateBatteryIcon);
+  });
+}
+
+function updateBatteryIcon() {
+  if(!ccBattery) return;
+  const pct = Math.round(ccBattery.level * 100);
+  const charging = ccBattery.charging;
+  const icon = charging ? '⚡' : pct > 80 ? '🔋' : pct > 40 ? '🪫' : '🪫';
+  const el = document.getElementById('tb-battery');
+  const pctEl = document.getElementById('tb-bat-pct');
+  if(el) el.textContent = charging ? '⚡' : icon;
+  if(pctEl) pctEl.textContent = pct + '%';
+  // Update CC if open
+  if(ccOpen) renderCC();
+}
+
+function toggleCC() {
+  const cc = document.getElementById('control-center');
+  if(!cc) return;
+  ccOpen = !ccOpen;
+  if(ccOpen) {
+    // Close start menu if open
+    document.getElementById('start-menu')?.classList.remove('open');
+    renderCC();
+    cc.style.display = 'block';
+  } else {
+    cc.style.display = 'none';
+  }
+}
+
+function renderCC() {
+  const cc = document.getElementById('control-center');
+  if(!cc) return;
+
+  // Battery info
+  let batPct = 100, batCharging = false, batKnown = false;
+  if(ccBattery) {
+    batPct = Math.round(ccBattery.level * 100);
+    batCharging = ccBattery.charging;
+    batKnown = true;
+  }
+  const batColor = batPct > 60 ? '#2ecc71' : batPct > 20 ? '#f39c12' : '#e74c3c';
+  const batIcon = batCharging ? '⚡' : batPct > 80 ? '🔋' : batPct > 30 ? '🪫' : '🪫';
+  const batLabel = batKnown
+    ? (batCharging ? 'Lädt… ' + batPct + '%' : batPct + '% – ' + (batPct > 80 ? 'Gut' : batPct > 30 ? 'Mittel' : 'Niedrig'))
+    : 'Nicht verfügbar';
+
+  const n = new Date();
+  const timeStr = String(n.getHours()).padStart(2,'0') + ':' + String(n.getMinutes()).padStart(2,'0');
+  const dateStr = DAYS[n.getDay()] + ', ' + n.getDate() + '. ' + MONTHS[n.getMonth()] + ' ' + n.getFullYear();
+
+  cc.innerHTML = `
+    <div style="text-align:center;margin-bottom:14px;border-bottom:1px solid var(--border);padding-bottom:12px">
+      <div style="font-size:32px;font-weight:200;letter-spacing:-1px;color:var(--text)">${timeStr}</div>
+      <div style="font-size:11px;color:var(--text2);margin-top:2px">${dateStr}</div>
+    </div>
+
+    <div class="cc-section">
+      <div class="cc-label">Verbindungen</div>
+      <div class="cc-tiles">
+        <div class="cc-tile ${ccWifi?'on':''}" onclick="ccToggle('wifi',this)">
+          <div class="cc-tile-icon">📶</div>
+          <div class="cc-tile-name">WLAN</div>
+          <div class="cc-tile-sub">${ccWifi?'NovNet-5G':'Aus'}</div>
+        </div>
+        <div class="cc-tile ${ccBluetooth?'on':''}" onclick="ccToggle('bt',this)">
+          <div class="cc-tile-icon">🦷</div>
+          <div class="cc-tile-name">Bluetooth</div>
+          <div class="cc-tile-sub">${ccBluetooth?'An':'Aus'}</div>
+        </div>
+        <div class="cc-tile ${ccAirplane?'on':''}" onclick="ccToggle('airplane',this)">
+          <div class="cc-tile-icon">✈️</div>
+          <div class="cc-tile-name">Flugmodus</div>
+          <div class="cc-tile-sub">${ccAirplane?'Aktiv':'Inaktiv'}</div>
+        </div>
+        <div class="cc-tile ${ccDnd?'on':''}" onclick="ccToggle('dnd',this)">
+          <div class="cc-tile-icon">${ccDnd?'🔕':'🔔'}</div>
+          <div class="cc-tile-name">Nicht stören</div>
+          <div class="cc-tile-sub">${ccDnd?'An':'Aus'}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cc-section">
+      <div class="cc-label">Steuerung</div>
+      <div class="cc-slider-row">
+        <div class="cc-slider-icon">🔆</div>
+        <input type="range" class="cc-slider" min="10" max="100" value="${ccBrightness}"
+          oninput="ccBrightness=+this.value;document.getElementById('desktop').style.filter='brightness('+((ccBrightness/100)*0.4+0.6).toFixed(2)+')'">
+        <div style="font-size:10px;color:var(--text2);width:28px;text-align:right">${ccBrightness}%</div>
+      </div>
+      <div class="cc-slider-row">
+        <div class="cc-slider-icon" onclick="ccMuteToggle()" style="cursor:pointer">${ccVolume===0?'🔇':ccVolume<50?'🔉':'🔊'}</div>
+        <input type="range" class="cc-slider" min="0" max="100" value="${ccVolume}"
+          oninput="ccVolume=+this.value;setSetting('volume',ccVolume);this.previousElementSibling.textContent=ccVolume===0?'🔇':ccVolume<50?'🔉':'🔊';this.nextElementSibling.textContent=ccVolume+'%'">
+        <div style="font-size:10px;color:var(--text2);width:28px;text-align:right">${ccVolume}%</div>
+      </div>
+    </div>
+
+    <div class="cc-section">
+      <div class="cc-label">Akku</div>
+      <div style="background:var(--panel2);border:1px solid var(--border);border-radius:12px;padding:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-size:22px">${batIcon}</span>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:var(--text)">${batKnown ? batPct+'%' : '–'}</div>
+              <div style="font-size:10px;color:var(--text2)">${batLabel}</div>
+            </div>
+          </div>
+          ${batCharging ? '<span style="font-size:11px;color:#2ecc71;font-weight:600">⚡ Lädt</span>' : ''}
+        </div>
+        ${batKnown ? `
+        <div class="cc-bat-bar">
+          <div class="cc-bat-fill" style="width:${batPct}%;background:${batColor}"></div>
+        </div>` : '<div style="font-size:11px;color:var(--text2)">Battery API nicht unterstützt</div>'}
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
+      <button onclick="openApp('settings');toggleCC()" style="flex:1;padding:8px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;color:var(--text2);font-family:inherit;font-size:11px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">⚙️ Einstellungen</button>
+      <button onclick="if(confirm('NovOS abmelden?')){document.getElementById('desktop').classList.remove('visible');document.getElementById('login-screen').classList.remove('out');toggleCC()}" style="flex:1;padding:8px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;color:var(--text2);font-family:inherit;font-size:11px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.borderColor='var(--accent2)'" onmouseout="this.style.borderColor='var(--border)'">🔒 Sperren</button>
+    </div>`;
+}
+
+function ccToggle(key, el) {
+  if(key==='wifi')     { ccWifi=!ccWifi; setSetting('wifiEnabled',ccWifi); }
+  if(key==='bt')       { ccBluetooth=!ccBluetooth; setSetting('bluetooth',ccBluetooth); }
+  if(key==='airplane') { ccAirplane=!ccAirplane; if(ccAirplane){ccWifi=false;ccBluetooth=false;} }
+  if(key==='dnd')      { ccDnd=!ccDnd; setSetting('doNotDisturb',ccDnd); }
+  renderCC();
+}
+
+function ccMuteToggle() {
+  ccVolume = ccVolume > 0 ? 0 : 70;
+  setSetting('volume', ccVolume);
+  renderCC();
+}
+
+// Close CC when clicking outside
+document.addEventListener('click', e => {
+  const cc = document.getElementById('control-center');
+  if(!cc || !ccOpen) return;
+  if(!cc.contains(e.target) && !e.target.closest('#tb-right')) {
+    ccOpen = false;
+    cc.style.display = 'none';
+  }
+});
 
 // ══════════════════════════════════════════════════════
 // PERSISTENT SETTINGS (localStorage) — defined early so
@@ -749,6 +954,8 @@ function setSetting(key, value) {
   applyAllSettings();
 }
 function applyAllSettings() {
+  // Sync CC state
+  if(NovSettings.volume !== undefined) ccVolume = NovSettings.volume;
   const preset = ACCENT_PRESETS[NovSettings.accentPreset] || ACCENT_PRESETS.lila;
   const root = document.documentElement;
   root.style.setProperty('--accent', preset.accent);
@@ -776,6 +983,8 @@ function applyAllSettings() {
     wpEl.style.background = WALLPAPER_PRESETS[wpIdx % WALLPAPER_PRESETS.length];
   }
   document.body.style.fontSize = NovSettings.uiScale;
+  const tb = document.getElementById('taskbar');
+  if(tb) tb.style.background = NovSettings.darkMode ? 'rgba(10,10,20,0.85)' : 'rgba(255,255,255,0.75)';
   document.querySelectorAll('.login-name').forEach(el => el.textContent = NovSettings.userName);
   // Update login screen theme
   const ls = document.getElementById('login-screen');
