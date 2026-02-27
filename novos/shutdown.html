@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+  <head>
+    <style>
+      body {
+        background: #000000;
+        font-family: Inter, SF Pro, Carlito, Calibri, system-ui;
+      }
+        .loader {
+          display: block;
+          position: relative;
+          height: 12px;
+          width: 80%;
+          border: 1px solid #fff;
+          border-radius: 10px;
+          overflow: hidden;
+        }
+        .loader:after {
+          content: '';
+          position: absolute;
+          left: 0;
+          top: 0;
+          height: 100%;
+          width: 0;
+          background: #FF3D00;
+          animation: 6s prog ease-in infinite;
+        }
+      
+        @keyframes prog {
+          to  {   width: 100%;}
+        }
+      </style>
+  </head>
+  <body>
+    <div style="height: 800px"></div>
+    <span class="loader"></span>
+    <h1>Herunterfahren</h1>
+  </body>
+</html>
