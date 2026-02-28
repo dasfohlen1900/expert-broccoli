@@ -476,58 +476,86 @@
   .browser-ql .ql-url { font-size:10px; color:var(--text2); margin-top:2px; }
 
   /* ══════════════════ MUSIC ══════════════════ */
-  .music-body {
-    padding:24px; display:flex; flex-direction:column; align-items:center; gap:16px;
-    background:linear-gradient(160deg,#0f0820,#07060f); flex:1; overflow-y:auto;
+  .music-shell {
+    display:flex; flex:1; overflow:hidden; background:#080812;
   }
-  .album-art {
-    width:140px; height:140px; border-radius:14px;
+  .music-sidebar {
+    width:190px; flex-shrink:0; border-right:1px solid var(--border);
+    background:#05050e; padding:12px 8px; overflow-y:auto; display:flex; flex-direction:column; gap:2px;
+  }
+  .music-nav-section { font-size:9px; font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:1px; padding:12px 8px 4px; }
+  .music-nav-item {
+    display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:7px;
+    cursor:pointer; font-size:12px; color:var(--text2); transition:all 0.12s;
+  }
+  .music-nav-item:hover { background:rgba(255,255,255,0.05); color:var(--text); }
+  .music-nav-item.active { background:rgba(124,106,255,0.18); color:var(--accent); font-weight:600; }
+  .music-main-area {
+    flex:1; display:flex; flex-direction:column; overflow:hidden;
+  }
+  .music-library {
+    flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:0;
+  }
+  .music-lib-header {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 8px 12px; flex-shrink:0;
+  }
+  .music-lib-title { font-size:18px; font-weight:700; color:var(--text); }
+  .music-track-row {
+    display:grid; grid-template-columns:28px 1fr 1fr 60px;
+    align-items:center; gap:12px; padding:8px 10px; border-radius:8px;
+    cursor:pointer; transition:background 0.1s; border-bottom:1px solid rgba(255,255,255,0.03);
+  }
+  .music-track-row:hover { background:rgba(255,255,255,0.05); }
+  .music-track-row.playing { background:rgba(124,106,255,0.12); }
+  .music-track-row .tnum { font-size:11px; color:var(--text2); text-align:center; }
+  .music-track-row .tnum.eq { color:var(--accent); animation:eq-pulse 1s ease-in-out infinite; }
+  @keyframes eq-pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .music-track-row .tname { font-size:12px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .music-track-row .tartist { font-size:11px; color:var(--text2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .music-track-row .tdur { font-size:11px; color:var(--text2); text-align:right; }
+  .music-player-bar {
+    border-top:1px solid var(--border); background:#05050e; padding:12px 16px;
+    display:flex; flex-direction:column; gap:10px; flex-shrink:0;
+  }
+  .music-player-top { display:flex; align-items:center; gap:16px; }
+  .music-mini-art {
+    width:44px; height:44px; border-radius:8px; flex-shrink:0;
     background:linear-gradient(135deg,var(--accent),var(--accent2));
-    display:flex; align-items:center; justify-content:center; font-size:60px;
-    box-shadow:0 16px 48px rgba(124,106,255,0.5);
-    animation:spin-slow 20s linear infinite paused; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; font-size:20px;
+    box-shadow:0 4px 16px rgba(124,106,255,0.4);
+    animation:spin-slow 20s linear infinite paused;
   }
-  .album-art.playing { animation-play-state:running; }
-  @keyframes spin-slow { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
-  .track-info { text-align:center; }
-  .track-title { font-size:16px; font-weight:700; color:var(--text); }
-  .track-artist { font-size:12px; color:var(--text2); margin-top:3px; }
-  .track-album { font-size:11px; color:var(--text2); opacity:0.6; margin-top:2px; }
-  .music-progress { width:100%; }
-  .progress-bar { width:100%; height:4px; background:var(--border); border-radius:2px; cursor:pointer; position:relative; }
-  .progress-fill { height:100%; background:linear-gradient(90deg,var(--accent),var(--accent2)); border-radius:2px; transition:width 0.5s linear; }
-  .progress-times { display:flex; justify-content:space-between; margin-top:5px; font-size:10px; color:var(--text2); }
-  .music-controls { display:flex; align-items:center; gap:16px; }
-  .music-btn { background:none; border:none; cursor:pointer; color:var(--text2); font-size:18px; transition:color 0.15s,transform 0.15s; }
-  .music-btn:hover { color:var(--text); transform:scale(1.1); }
-  .music-btn.play-btn {
-    width:48px; height:48px; border-radius:50%;
+  .music-mini-art.playing { animation-play-state:running; }
+  @keyframes spin-slow { to{transform:rotate(360deg)} }
+  .music-mini-info { flex:1; min-width:0; }
+  .music-mini-title { font-size:13px; font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .music-mini-artist { font-size:11px; color:var(--text2); }
+  .music-player-controls { display:flex; align-items:center; gap:10px; flex-shrink:0; }
+  .music-ctrl-btn { background:none; border:none; cursor:pointer; color:var(--text2); font-size:16px; padding:6px; border-radius:6px; transition:all 0.12s; }
+  .music-ctrl-btn:hover { color:var(--text); background:rgba(255,255,255,0.07); }
+  .music-ctrl-btn.active { color:var(--accent); }
+  .music-play-btn {
+    width:38px; height:38px; border-radius:50%; border:none; cursor:pointer;
     background:linear-gradient(135deg,var(--accent),var(--accent2));
-    color:white; font-size:20px; display:flex; align-items:center; justify-content:center;
-    box-shadow:0 4px 20px rgba(124,106,255,0.5);
+    color:white; font-size:14px; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 4px 16px rgba(124,106,255,0.5); transition:transform 0.15s;
   }
-  .music-btn.play-btn:hover { transform:scale(1.05); }
-  .volume-row { display:flex; align-items:center; gap:10px; width:100%; }
-  .volume-slider {
-    flex:1; height:3px; background:var(--border); border-radius:2px;
-    cursor:pointer; -webkit-appearance:none; appearance:none; outline:none;
+  .music-play-btn:hover { transform:scale(1.08); }
+  .music-player-progress { display:flex; align-items:center; gap:10px; }
+  .music-prog-time { font-size:10px; color:var(--text2); width:30px; flex-shrink:0; }
+  .music-prog-time.end { text-align:right; }
+  .music-prog-track { flex:1; height:3px; background:var(--border); border-radius:2px; cursor:pointer; position:relative; }
+  .music-prog-fill { height:100%; background:linear-gradient(90deg,var(--accent),var(--accent2)); border-radius:2px; transition:width 0.8s linear; pointer-events:none; }
+  .music-vol-row { display:flex; align-items:center; gap:8px; }
+  .music-vol-icon { font-size:12px; color:var(--text2); cursor:pointer; }
+  .music-vol-slider {
+    flex:1; height:2px; background:var(--border); border-radius:2px; cursor:pointer;
+    -webkit-appearance:none; appearance:none; outline:none;
   }
-  .volume-slider::-webkit-slider-thumb {
-    -webkit-appearance:none; width:12px; height:12px; border-radius:50%;
-    background:var(--accent); cursor:pointer;
+  .music-vol-slider::-webkit-slider-thumb {
+    -webkit-appearance:none; width:10px; height:10px; border-radius:50%; background:var(--accent); cursor:pointer;
   }
-  .music-playlist { width:100%; }
-  .playlist-item {
-    display:flex; align-items:center; gap:12px; padding:8px 10px;
-    border-radius:8px; cursor:pointer; transition:background 0.1s;
-  }
-  .playlist-item:hover { background:rgba(255,255,255,0.05); }
-  .playlist-item.active { background:rgba(124,106,255,0.15); }
-  .playlist-item .num { font-size:11px; color:var(--text2); width:16px; text-align:center; }
-  .playlist-item .p-info { flex:1; }
-  .playlist-item .p-title { font-size:12px; color:var(--text); }
-  .playlist-item .p-artist { font-size:10px; color:var(--text2); }
-  .playlist-item .p-dur { font-size:10px; color:var(--text2); }
 
   /* ══════════════════ SETTINGS ══════════════════ */
   .settings-sidebar { width:170px; flex-shrink:0; border-right:1px solid var(--border); padding:12px 8px; background:var(--panel2); overflow-y:auto; }
@@ -561,29 +589,51 @@
   .about-ver { font-size:11px; color:var(--text2); margin-top:3px; }
 
   /* ══════════════════ CALCULATOR ══════════════════ */
-  .calc-body { flex:1; display:flex; flex-direction:column; background:#0a0a14; padding:16px; gap:12px; }
+  .calc-shell { flex:1; display:flex; flex-direction:column; background:#08080f; overflow:hidden; }
+  .calc-mode-bar {
+    display:flex; border-bottom:1px solid var(--border); background:var(--panel2); flex-shrink:0;
+  }
+  .calc-mode-btn {
+    flex:1; padding:7px; font-size:11px; font-weight:600; background:none; border:none;
+    color:var(--text2); cursor:pointer; transition:all 0.12s; border-bottom:2px solid transparent;
+    font-family:'Inter',sans-serif;
+  }
+  .calc-mode-btn.active { color:var(--accent); border-bottom-color:var(--accent); background:rgba(124,106,255,0.07); }
   .calc-display {
-    background:var(--panel2); border:1px solid var(--border); border-radius:10px;
-    padding:14px 16px; text-align:right;
+    padding:14px 16px 10px; text-align:right; flex-shrink:0;
+    background:linear-gradient(180deg,#0d0d1a,#08080f);
   }
-  .calc-expr { font-size:11px; color:var(--text2); min-height:16px; }
-  .calc-val { font-size:28px; font-weight:300; color:var(--text); word-break:break-all; }
-  .calc-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; flex:1; }
+  .calc-history-strip { font-size:10px; color:var(--text2); min-height:14px; opacity:0.7; word-break:break-all; }
+  .calc-expr { font-size:12px; color:var(--text2); min-height:16px; margin-bottom:4px; }
+  .calc-val { font-size:32px; font-weight:200; color:var(--text); word-break:break-all; line-height:1.1; }
+  .calc-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; padding:10px; flex:1; }
+  .calc-grid-sci { display:grid; grid-template-columns:repeat(4,1fr); gap:5px; padding:8px; flex:1; }
   .calc-btn {
-    border-radius:10px; border:none; cursor:pointer;
-    font-family:'Inter',sans-serif; font-size:16px; font-weight:500;
-    background:var(--panel2); color:var(--text);
-    display:flex; align-items:center; justify-content:center;
-    transition:all 0.1s; border:1px solid var(--border);
+    border-radius:10px; border:1px solid rgba(255,255,255,0.06); cursor:pointer;
+    font-family:'Inter',sans-serif; font-size:15px; font-weight:500;
+    background:rgba(255,255,255,0.05); color:var(--text);
+    display:flex; align-items:center; justify-content:center; padding:0;
+    transition:all 0.08s; min-height:52px;
   }
-  .calc-btn:hover { background:var(--border); }
-  .calc-btn:active { transform:scale(0.94); }
-  .calc-btn.op { background:rgba(124,106,255,0.15); color:var(--accent); border-color:rgba(124,106,255,0.3); }
-  .calc-btn.op:hover { background:rgba(124,106,255,0.25); }
-  .calc-btn.eq { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:white; border:none; box-shadow:0 4px 16px rgba(124,106,255,0.4); }
-  .calc-btn.eq:hover { filter:brightness(1.1); }
-  .calc-btn.clr { color:var(--accent2); }
+  .calc-btn:hover  { background:rgba(255,255,255,0.10); }
+  .calc-btn:active { transform:scale(0.93); background:rgba(255,255,255,0.15); }
+  .calc-btn.op   { background:rgba(124,106,255,0.13); color:var(--accent); border-color:rgba(124,106,255,0.25); }
+  .calc-btn.op:hover { background:rgba(124,106,255,0.22); }
+  .calc-btn.eq   { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:white; border:none; box-shadow:0 4px 20px rgba(124,106,255,0.4); }
+  .calc-btn.eq:hover { filter:brightness(1.12); }
+  .calc-btn.clr  { color:var(--accent2); background:rgba(255,106,138,0.08); }
+  .calc-btn.sci  { font-size:11px; background:rgba(255,255,255,0.04); color:var(--accent3); border-color:rgba(106,255,202,0.15); }
+  .calc-btn.sci:hover { background:rgba(106,255,202,0.08); }
   .calc-btn.span2 { grid-column:span 2; }
+  .calc-history-panel {
+    max-height:90px; overflow-y:auto; padding:0 12px 8px;
+    display:flex; flex-direction:column; gap:2px;
+  }
+  .calc-hist-row {
+    font-size:10px; color:var(--text2); text-align:right; padding:2px 0;
+    border-bottom:1px solid rgba(255,255,255,0.04); cursor:pointer;
+  }
+  .calc-hist-row:hover { color:var(--accent); }
 
   /* ══════════════════ TEXT EDITOR ══════════════════ */
   .editor-toolbar {
@@ -610,19 +660,39 @@
   }
 
   /* ══════════════════ SYSTEM MONITOR ══════════════════ */
-  .sysmon-body { flex:1; padding:16px; overflow-y:auto; background:var(--panel); display:flex; flex-direction:column; gap:14px; }
-  .sysmon-card { background:var(--panel2); border:1px solid var(--border); border-radius:10px; padding:14px; }
-  .sysmon-title { font-size:11px; font-weight:600; color:var(--text2); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px; }
-  .sysmon-val { font-size:24px; font-weight:700; color:var(--text); margin-bottom:8px; }
-  .sysmon-val span { font-size:12px; font-weight:400; color:var(--text2); }
-  .bar-track { width:100%; height:8px; background:var(--border); border-radius:4px; overflow:hidden; }
-  .bar-fill { height:100%; border-radius:4px; transition:width 1s ease; }
-  .sysmon-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-  .proc-list { display:flex; flex-direction:column; gap:4px; }
-  .proc-row { display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid rgba(42,42,58,0.5); font-size:11px; }
-  .proc-name { flex:1; color:var(--text); }
-  .proc-cpu { width:50px; text-align:right; color:var(--text2); }
-  .proc-mem { width:50px; text-align:right; color:var(--text2); }
+  .sysmon-shell { flex:1; display:flex; flex-direction:column; background:var(--panel); overflow:hidden; }
+  .sysmon-tabs { display:flex; border-bottom:1px solid var(--border); background:var(--panel2); flex-shrink:0; }
+  .sysmon-tab {
+    padding:8px 16px; font-size:11px; cursor:pointer; color:var(--text2);
+    border-bottom:2px solid transparent; transition:all 0.12s; user-select:none;
+  }
+  .sysmon-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+  .sysmon-tab:hover:not(.active) { color:var(--text); background:rgba(255,255,255,0.03); }
+  .sysmon-pane { flex:1; overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:12px; min-height:0; }
+  .sysmon-overview { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .sysmon-card {
+    background:var(--panel2); border:1px solid var(--border); border-radius:12px; padding:14px;
+  }
+  .sysmon-card-title { font-size:10px; font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:8px; display:flex; align-items:center; justify-content:space-between; }
+  .sysmon-val-row { display:flex; align-items:baseline; gap:6px; margin-bottom:8px; }
+  .sysmon-big { font-size:28px; font-weight:700; color:var(--text); line-height:1; }
+  .sysmon-sub { font-size:11px; color:var(--text2); }
+  .bar-track { width:100%; height:7px; background:rgba(255,255,255,0.06); border-radius:4px; overflow:hidden; margin-bottom:8px; }
+  .bar-fill { height:100%; border-radius:4px; transition:width 0.8s ease; }
+  .spark-wrap { height:44px; overflow:hidden; position:relative; }
+  .spark-canvas { width:100%; height:44px; display:block; }
+  .sysmon-label-row { display:flex; justify-content:space-between; font-size:9px; color:var(--text2); opacity:0.6; }
+  .proc-table { width:100%; border-collapse:collapse; font-size:11px; }
+  .proc-table th { text-align:left; color:var(--text2); font-weight:600; font-size:10px; text-transform:uppercase; letter-spacing:0.5px; padding:6px 8px; border-bottom:1px solid var(--border); cursor:pointer; user-select:none; }
+  .proc-table th:hover { color:var(--text); }
+  .proc-table td { padding:7px 8px; color:var(--text); border-bottom:1px solid rgba(255,255,255,0.04); }
+  .proc-table tr:hover td { background:rgba(255,255,255,0.04); }
+  .proc-table .kill-btn {
+    background:rgba(255,80,80,0.15); border:1px solid rgba(255,80,80,0.3); border-radius:4px;
+    color:#ff5050; padding:2px 8px; font-size:10px; cursor:pointer; transition:all 0.1s;
+  }
+  .proc-table .kill-btn:hover { background:rgba(255,80,80,0.3); }
+  .proc-cpu-bar { display:inline-block; height:3px; border-radius:2px; background:var(--accent); vertical-align:middle; margin-left:6px; transition:width 0.5s; }
 
   /* ══════════════════ PDF VIEWER ══════════════════ */
   .pdf-toolbar {
@@ -674,39 +744,113 @@
   }
 
   /* ══════════════════ GALLERY ══════════════════ */
-  .gallery-toolbar { display:flex; align-items:center; gap:8px; padding:8px 12px; border-bottom:1px solid var(--border); background:var(--panel2); flex-shrink:0; }
-  .gallery-grid { flex:1; padding:14px; overflow-y:auto; display:grid; grid-template-columns:repeat(auto-fill,120px); gap:10px; }
-  .gallery-item {
-    width:120px; height:90px; border-radius:8px; cursor:pointer;
-    border:2px solid transparent; transition:all 0.15s; overflow:hidden;
-    display:flex; align-items:center; justify-content:center; font-size:40px;
-    position:relative;
+  .gallery-shell { display:flex; flex:1; overflow:hidden; }
+  .gallery-sidebar {
+    width:160px; flex-shrink:0; border-right:1px solid var(--border);
+    background:var(--panel2); padding:10px 8px; overflow-y:auto; display:flex; flex-direction:column; gap:1px;
   }
-  .gallery-item:hover { border-color:var(--accent); transform:scale(1.03); }
-  .gallery-item .label {
-    position:absolute; bottom:0; left:0; right:0;
-    background:rgba(0,0,0,0.6); padding:3px 6px;
-    font-size:9px; color:white; text-align:center;
+  .gallery-nav-section { font-size:9px; font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:1px; padding:10px 8px 4px; }
+  .gallery-nav-item {
+    display:flex; align-items:center; gap:9px; padding:7px 10px; border-radius:7px;
+    cursor:pointer; font-size:12px; color:var(--text2); transition:all 0.1s;
+  }
+  .gallery-nav-item:hover { background:var(--border); color:var(--text); }
+  .gallery-nav-item.active { background:rgba(124,106,255,0.18); color:var(--accent); font-weight:600; }
+  .gallery-main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+  .gallery-toolbar {
+    display:flex; align-items:center; gap:8px; padding:8px 12px;
+    border-bottom:1px solid var(--border); background:var(--panel2); flex-shrink:0;
+  }
+  .gallery-view-toggle { display:flex; border:1px solid var(--border); border-radius:6px; overflow:hidden; }
+  .gallery-view-btn {
+    padding:4px 9px; background:none; border:none; color:var(--text2); cursor:pointer; font-size:11px; transition:all 0.1s;
+  }
+  .gallery-view-btn.active { background:var(--accent); color:white; }
+  .gallery-content { flex:1; overflow-y:auto; padding:14px; }
+  .gallery-section-header {
+    font-size:11px; font-weight:700; color:var(--text2); text-transform:uppercase;
+    letter-spacing:0.5px; padding:8px 2px 6px; border-bottom:1px solid var(--border); margin-bottom:10px;
+  }
+  .gallery-grid-view { display:grid; grid-template-columns:repeat(auto-fill,minmax(110px,1fr)); gap:6px; }
+  .gallery-list-view { display:flex; flex-direction:column; gap:1px; }
+  .gallery-tile {
+    border-radius:8px; overflow:hidden; cursor:pointer;
+    border:2px solid transparent; transition:all 0.15s; position:relative;
+  }
+  .gallery-tile:hover { border-color:var(--accent); transform:scale(1.02); }
+  .gallery-tile.selected { border-color:var(--accent); box-shadow:0 0 0 2px rgba(124,106,255,0.3); }
+  .gallery-tile-img { width:100%; aspect-ratio:4/3; display:flex; align-items:center; justify-content:center; font-size:36px; }
+  .gallery-tile-label {
+    padding:4px 6px; font-size:9px; color:var(--text2); background:var(--panel2);
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .gallery-list-row {
+    display:grid; grid-template-columns:36px 1fr 80px 80px; align-items:center; gap:12px;
+    padding:8px 10px; border-radius:6px; cursor:pointer; transition:background 0.1s;
+    font-size:12px; border-bottom:1px solid rgba(255,255,255,0.03);
+  }
+  .gallery-list-row:hover { background:rgba(255,255,255,0.05); }
+  .gallery-info-bar {
+    border-top:1px solid var(--border); background:var(--panel2); padding:8px 14px;
+    display:flex; align-items:center; gap:16px; flex-shrink:0; font-size:11px; color:var(--text2);
   }
 
   /* ══════════════════ WEATHER ══════════════════ */
-  .weather-body { flex:1; padding:20px; overflow-y:auto; background:linear-gradient(160deg,#0d1a2e,#07060f); }
-  .weather-main { text-align:center; padding:20px 0; }
-  .weather-icon { font-size:72px; margin-bottom:8px; }
-  .weather-temp { font-size:56px; font-weight:200; color:var(--text); }
-  .weather-desc { font-size:16px; color:var(--text2); margin-top:4px; }
-  .weather-city { font-size:13px; color:var(--text2); margin-top:2px; opacity:0.7; }
-  .weather-details { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:20px; }
-  .weather-detail { background:rgba(255,255,255,0.05); border-radius:10px; padding:12px; text-align:center; }
-  .weather-detail .wd-val { font-size:18px; font-weight:600; color:var(--text); }
-  .weather-detail .wd-label { font-size:10px; color:var(--text2); margin-top:3px; }
-  .weather-forecast { margin-top:16px; background:rgba(255,255,255,0.03); border-radius:12px; padding:12px; }
-  .forecast-row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.05); }
+  .weather-shell { flex:1; overflow-y:auto; background:linear-gradient(160deg,#0d1a2e 0%,#07060f 60%); display:flex; flex-direction:column; }
+  .weather-search-bar {
+    display:flex; align-items:center; gap:8px; padding:12px 16px;
+    background:rgba(255,255,255,0.04); border-bottom:1px solid rgba(255,255,255,0.06); flex-shrink:0;
+  }
+  .weather-search-inp {
+    flex:1; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12);
+    border-radius:20px; padding:7px 14px; color:var(--text); font-family:'Inter',sans-serif; font-size:12px; outline:none; transition:border-color 0.15s;
+  }
+  .weather-search-inp:focus { border-color:var(--accent); }
+  .weather-hero { padding:24px 24px 16px; text-align:center; }
+  .weather-anim-icon { font-size:80px; margin-bottom:4px; line-height:1; filter:drop-shadow(0 8px 24px rgba(0,0,0,0.5)); animation:float-icon 3s ease-in-out infinite; }
+  @keyframes float-icon { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+  .weather-temp-big { font-size:64px; font-weight:100; color:white; line-height:1; letter-spacing:-2px; }
+  .weather-feels { font-size:12px; color:rgba(255,255,255,0.5); margin-top:4px; }
+  .weather-desc-big { font-size:18px; color:rgba(255,255,255,0.8); margin-top:6px; }
+  .weather-location { font-size:12px; color:rgba(255,255,255,0.5); margin-top:4px; }
+  .weather-stats {
+    display:grid; grid-template-columns:repeat(4,1fr); gap:8px; padding:0 16px 16px;
+  }
+  .weather-stat {
+    background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.08);
+    border-radius:12px; padding:12px; text-align:center;
+  }
+  .weather-stat-ico { font-size:18px; margin-bottom:4px; }
+  .weather-stat-val { font-size:16px; font-weight:700; color:white; }
+  .weather-stat-label { font-size:9px; color:rgba(255,255,255,0.45); text-transform:uppercase; letter-spacing:0.5px; margin-top:2px; }
+  .weather-hourly {
+    padding:0 16px 16px; overflow-x:auto; display:flex; gap:0;
+    background:rgba(255,255,255,0.03); border-top:1px solid rgba(255,255,255,0.06);
+    border-bottom:1px solid rgba(255,255,255,0.06); margin:0;
+  }
+  .weather-hour {
+    flex-shrink:0; width:70px; padding:14px 0; text-align:center; cursor:pointer;
+    transition:background 0.1s; border-right:1px solid rgba(255,255,255,0.04);
+  }
+  .weather-hour:hover { background:rgba(255,255,255,0.05); }
+  .weather-hour.now { background:rgba(124,106,255,0.15); }
+  .weather-hour .wh-time { font-size:10px; color:rgba(255,255,255,0.5); }
+  .weather-hour .wh-ico  { font-size:20px; margin:6px 0; }
+  .weather-hour .wh-temp { font-size:13px; font-weight:600; color:white; }
+  .weather-hour .wh-rain { font-size:9px; color:#6affca; }
+  .weather-forecast-section { padding:16px; }
+  .weather-forecast-title { font-size:10px; font-weight:700; color:rgba(255,255,255,0.4); text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; }
+  .forecast-row {
+    display:grid; grid-template-columns:80px 1fr 80px 70px; align-items:center; gap:12px;
+    padding:10px 4px; border-bottom:1px solid rgba(255,255,255,0.05);
+  }
   .forecast-row:last-child { border-bottom:none; }
-  .forecast-day { font-size:12px; color:var(--text2); width:60px; }
-  .forecast-ico { font-size:18px; }
-  .forecast-temps { font-size:12px; color:var(--text); }
-  .forecast-temps span { color:var(--text2); }
+  .forecast-day { font-size:13px; color:rgba(255,255,255,0.8); font-weight:600; }
+  .forecast-ico  { font-size:20px; }
+  .forecast-bar-wrap { height:4px; background:rgba(255,255,255,0.1); border-radius:2px; position:relative; }
+  .forecast-bar-fill { position:absolute; top:0; height:100%; background:linear-gradient(90deg,#6affca,#ffca6a); border-radius:2px; }
+  .forecast-temps { font-size:12px; color:rgba(255,255,255,0.7); text-align:right; }
+  .forecast-temps .low { color:rgba(255,255,255,0.35); margin-left:6px; }
 </style>
 </head>
 <body>
@@ -1412,6 +1556,8 @@ function openApp(app) {
   document.getElementById('desktop').appendChild(el);
   windows[app] = { el, def, minimized:false };
   setupDrag(app); setupResize(app); addTaskbarBtn(app); focusWindow(app);
+  if(app==='gallery')  setTimeout(()=>initGallery(),10);
+  if(app==='weather')  setTimeout(()=>initWeather(),10);
   if(app==='browser')  setTimeout(()=>browserInit(),10);
   if(app==='terminal') setTimeout(()=>initTerminal(),10);
   if(app==='music')    setTimeout(()=>initMusic(),10);
@@ -1536,97 +1682,449 @@ document.getElementById('desktop').addEventListener('mousedown', e=>{
 function buildTerminal() {
   return `
     <div class="terminal-body" id="term-output">
-      <div class="terminal-line" style="color:var(--accent)">NovOS Terminal v3.1.0</div>
-      <div class="terminal-line terminal-out">Tippe 'help' für alle Befehle.</div>
+      <div class="terminal-line" style="color:var(--accent);font-weight:600">NovOS Terminal v3.1.0 — novsh 2.1</div>
+      <div class="terminal-line terminal-out" style="color:var(--text2)">Angemeldet als <span style="color:var(--accent3)">user</span> · Tippe <span style="color:var(--accent)">'help'</span> für alle Befehle</div>
       <div class="terminal-line"> </div>
     </div>
     <div class="terminal-input-row">
-      <span class="terminal-prompt-inp">user@novos:~$</span>
-      <input class="terminal-input" id="term-input" type="text" autocomplete="off" spellcheck="false" placeholder="_">
+      <span class="terminal-prompt-inp" id="term-prompt-lbl">user@novos:~$</span>
+      <input class="terminal-input" id="term-input" type="text" autocomplete="off" spellcheck="false" placeholder="">
     </div>`;
 }
-const termHistory = []; let histIdx=-1;
+
+const termHistory = []; let histIdx = -1;
+let termCwd = 'home';
+
+const termDirMap = { home:'~', docs:'~/Dokumente', pics:'~/Bilder', dl:'~/Downloads', vids:'~/Videos' };
+function termPrompt() { return `user@novos:${termDirMap[termCwd]||('~/'+termCwd)}$`; }
+
 function initTerminal() {
-  const inp=document.getElementById('term-input'); if(!inp) return;
+  const inp = document.getElementById('term-input'); if(!inp) return;
   inp.focus();
-  inp.addEventListener('keydown', e=>{
-    if(e.key==='Enter') {
-      const cmd=inp.value.trim();
-      if(cmd){termHistory.unshift(cmd);histIdx=-1;}
-      runTermCmd(cmd); inp.value='';
-    } else if(e.key==='ArrowUp') { histIdx=Math.min(histIdx+1,termHistory.length-1); inp.value=termHistory[histIdx]||''; }
-    else if(e.key==='ArrowDown') { histIdx=Math.max(histIdx-1,-1); inp.value=histIdx===-1?'':termHistory[histIdx]; }
-    else if(e.key==='Tab') { e.preventDefault(); autocomplete(inp); }
+  inp.addEventListener('keydown', e => {
+    if(e.key === 'Enter') {
+      const cmd = inp.value.trim();
+      if(cmd) { termHistory.unshift(cmd); histIdx = -1; }
+      runTermCmd(cmd); inp.value = '';
+    } else if(e.key === 'ArrowUp') {
+      histIdx = Math.min(histIdx+1, termHistory.length-1);
+      inp.value = termHistory[histIdx] || '';
+    } else if(e.key === 'ArrowDown') {
+      histIdx = Math.max(histIdx-1, -1);
+      inp.value = histIdx === -1 ? '' : termHistory[histIdx];
+    } else if(e.key === 'Tab') {
+      e.preventDefault(); termAutocomplete(inp);
+    } else if(e.key === 'l' && e.ctrlKey) {
+      e.preventDefault(); document.getElementById('term-output').innerHTML = ''; 
+    } else if(e.key === 'c' && e.ctrlKey) {
+      e.preventDefault(); inp.value = '';
+      termPrint('<span style="color:var(--accent2)">^C</span>', false);
+    }
   });
+  document.getElementById('term-prompt-lbl').textContent = termPrompt();
 }
-function autocomplete(inp) {
-  const partial=inp.value;
-  const match=Object.keys(termCmds).find(k=>k.startsWith(partial) && k!==partial);
-  if(match) inp.value=match;
+
+function termAutocomplete(inp) {
+  const val = inp.value;
+  const parts = val.trim().split(' ');
+  const last = parts[parts.length-1];
+  if(parts.length === 1) {
+    const allCmds = ['help','ls','ll','pwd','cd','echo','date','uname','whoami','hostname','uptime','clear','neofetch','cat','edit','nano','touch','mkdir','rmdir','rm','cp','mv','find','grep','wc','head','tail','history','top','ps','kill','df','du','free','ping','curl','openapp','exit','printenv','env','alias','source','chmod','chown'];
+    const match = allCmds.find(c => c.startsWith(last) && c !== last);
+    if(match) inp.value = match;
+  } else {
+    const files = (vfs[termCwd]||[]).map(f => f.n);
+    const match = files.find(f => f.startsWith(last) && f !== last);
+    if(match) { parts[parts.length-1] = match; inp.value = parts.join(' '); }
+  }
 }
-const termCmds = {
-  help:     ()=>`<span style="color:var(--accent)">Verfügbare Befehle:</span><br>help ls pwd echo date uname whoami clear neofetch<br>cat &lt;datei&gt;  edit &lt;datei&gt;  mkdir rm cp mv top disk openapp`,
-  ls:       ()=>`<span style="color:var(--accent2)">Dokumente/</span>  <span style="color:var(--accent2)">Downloads/</span>  <span style="color:var(--accent2)">Bilder/</span>  README.md  config.json  .secret`,
-  'ls -la': ()=>`drwxr-xr-x  user user  Dokumente<br>drwxr-xr-x  user user  Downloads<br>drwxr-xr-x  user user  Bilder<br>-rw-r--r--  user user  README.md (4.2 KB)<br>-rw-r--r--  user user  config.json (1.1 KB)<br>-rw-------  user user  .secret (128 B)`,
-  pwd:      ()=>`/home/user`,
-  whoami:   ()=>`user`,
-  date:     ()=>new Date().toLocaleString('de-DE'),
-  uname:    ()=>`NovOS 3.1.0-nova x86_64 GNU/Linux`,
-  'uname -a':()=>`NovOS 3.1.0-nova #1 SMP PREEMPT x86_64 GNU/Linux`,
-  top:      ()=>`<span style="color:var(--accent)">Prozesse: 142 total, 3 running</span><br>CPU:  23.4%  Mem: 4.2GB/16GB<br>novshell  1.2%  novd  0.8%  Xorg  2.1%`,
-  disk:     ()=>`Filesystem: /dev/nova0  Size: 512G  Used: 128G  Avail: 384G  73% /`,
-  calc:     ()=>`<span style="color:var(--text2)">Tipp: Öffne den Rechner mit 'openapp calc'</span>`,
-  neofetch: ()=>`<span style="color:var(--accent)">     ✦✦✦</span>   <span style="color:var(--text)">user@novos</span>
-<span style="color:var(--accent)">    ✦✦✦✦✦</span>  OS: <span style="color:var(--text)">NovOS 3.1.0</span>
-<span style="color:var(--accent)">   ✦✦✦✦✦✦✦</span> Kernel: <span style="color:var(--text)">nova-6.4.2</span>
-<span style="color:var(--accent)">    ✦✦✦✦✦</span>  Shell: <span style="color:var(--text)">novsh 2.1</span>
-<span style="color:var(--accent)">     ✦✦✦</span>   DE: <span style="color:var(--text)">NovaShell 3</span>
-<span style="color:var(--accent)">      ✦</span>    Memory: <span style="color:var(--text)">4.2GB / 16GB</span>
-           Resolution: <span style="color:var(--text)">1920x1080</span>`,
-  'cat README.md': ()=>`# NovOS 3.1.0\n\nWillkommen in NovOS – dem modernen,\nsicheren Betriebssystem für alle.\n\nVersion: 3.1.0\nKernel: nova-6.4.2\nLizenz: NovaCL v2`,
-  'cat .secret': ()=>`<span style="color:var(--accent2)">Zugriff verweigert: Berechtigung fehlt</span>`,
-  'cat config.json': ()=>`{\n  "theme": "dark",\n  "locale": "de-DE",\n  "animations": true,\n  "telemetry": false\n}`,
-  mkdir:    ()=>`<span style="color:var(--text2)">Syntax: mkdir &lt;ordnername&gt;</span>`,
-  rm:       ()=>`<span style="color:var(--text2)">Syntax: rm &lt;datei&gt;</span>`,
-  cp:       ()=>`<span style="color:var(--text2)">Syntax: cp &lt;quelle&gt; &lt;ziel&gt;</span>`,
-  mv:       ()=>`<span style="color:var(--text2)">Syntax: mv &lt;quelle&gt; &lt;ziel&gt;</span>`,
-};
-function runTermCmd(cmd) {
-  const out=document.getElementById('term-output'); if(!out) return;
-  const echo=document.createElement('div');
-  echo.className='terminal-line';
-  echo.innerHTML=`<span class="terminal-prompt">user@novos:~$</span> <span class="terminal-cmd">${cmd}</span>`;
-  out.appendChild(echo);
-  if(cmd==='clear'){out.innerHTML='';return;}
-  const res=document.createElement('div');
-  res.className='terminal-line terminal-out';
-  if(!cmd){res.style.display='none';}
-  else if(termCmds[cmd]){res.innerHTML=termCmds[cmd]();}
-  else if(cmd.startsWith('cat ')){ 
-    const fname=cmd.slice(4).trim();
-    // check vfs
-    const path=Object.keys(vfsContents).find(k=>k.endsWith('/'+fname));
-    if(path!==undefined){ res.innerHTML=`<pre style="color:var(--accent3);white-space:pre-wrap">${vfsContents[path].replace(/</g,'&lt;')}</pre>`; }
-    else if(termCmds['cat '+fname]){ res.innerHTML=termCmds['cat '+fname](); }
-    else { res.innerHTML=`<span class="terminal-err">cat: ${fname}: Keine solche Datei</span>`; }
+
+function termPrint(html, isCmd = false, cmdText = '') {
+  const out = document.getElementById('term-output'); if(!out) return;
+  const line = document.createElement('div');
+  line.className = 'terminal-line' + (isCmd ? '' : ' terminal-out');
+  if(isCmd) {
+    line.innerHTML = `<span class="terminal-prompt">${termPrompt()}</span> <span class="terminal-cmd">${cmdText.replace(/</g,'&lt;')}</span>`;
+  } else {
+    line.innerHTML = html;
   }
-  else if(cmd.startsWith('edit ')){ 
-    const fname=cmd.slice(5).trim();
-    const path=Object.keys(vfsContents).find(k=>k.endsWith('/'+fname));
-    if(path!==undefined){ 
-      const [dir,name]=path.split('/');
-      fmOpenTxt(dir,name);
-      res.innerHTML=`<span style="color:var(--accent3)">${fname} in NovEdit geöffnet ✓</span>`;
-    } else { res.innerHTML=`<span class="terminal-err">edit: ${fname}: Nicht gefunden</span>`; }
+  out.appendChild(line);
+  out.scrollTop = out.scrollHeight;
+  return line;
+}
+
+function runTermCmd(rawCmd) {
+  const out = document.getElementById('term-output'); if(!out) return;
+  if(rawCmd !== '') termPrint('', true, rawCmd);
+
+  const cmd = rawCmd.trim();
+  if(!cmd) return;
+
+  // Parse pipes (basic)
+  const parts = cmd.split('|').map(s => s.trim());
+  let output = termExec(parts[0]);
+  // simple grep pipe
+  if(parts.length > 1) {
+    for(let i=1; i<parts.length; i++) {
+      const p = parts[i];
+      if(p.startsWith('grep ')) {
+        const pat = p.slice(5).trim().replace(/^['"]|['"]$/g,'');
+        const lines = output.replace(/<[^>]+>/g,'').split('\n');
+        output = lines.filter(l => l.includes(pat)).join('\n') || `<span style="color:var(--text2)">(keine Treffer)</span>`;
+      } else if(p.startsWith('wc')) {
+        const lines = output.replace(/<[^>]+>/g,'').split('\n');
+        output = `${lines.length} Zeilen, ${output.replace(/<[^>]+>/g,'').split(/\s+/).filter(Boolean).length} Wörter`;
+      }
+    }
   }
-  else if(cmd==='ls docs'||cmd==='ls Dokumente'){ res.innerHTML=vfs.docs.map(f=>`<span style="color:${f.type==='dir'?'var(--accent2)':'var(--text2)'}">${f.n}</span>`).join('  '); }
-  else if(cmd==='ls ~'||cmd==='ls /home/user'){ res.innerHTML=vfs.home.map(f=>`<span style="color:${f.type==='dir'?'var(--accent2)':'var(--text2)'}">${f.n}</span>`).join('  '); }
-  else if(cmd.startsWith('echo ')) res.textContent=cmd.slice(5);
-  else if(cmd.startsWith('mkdir ')){ res.innerHTML=`<span style="color:var(--accent3)">Ordner '${cmd.slice(6)}' erstellt</span>`; }
-  else if(cmd.startsWith('openapp ')){ const a=cmd.slice(8); if(appDefs[a]){openApp(a);res.innerHTML=`<span style="color:var(--accent3)">${appDefs[a].title} geöffnet</span>`;}else{res.innerHTML=`<span class="terminal-err">App nicht gefunden: ${a}</span>`;} }
-  else { res.innerHTML=`<span class="terminal-err">novsh: Befehl nicht gefunden: ${cmd}</span>`; }
-  out.appendChild(res);
-  out.scrollTop=out.scrollHeight;
+
+  if(output !== null) termPrint(output);
+  const lbl = document.getElementById('term-prompt-lbl');
+  if(lbl) lbl.textContent = termPrompt();
+}
+
+function termExec(cmd) {
+  const argv = cmd.match(/(?:[^\s"']+|"[^"]*"|'[^']*')+/g) || [];
+  const arg0 = argv[0] || '';
+  const args = argv.slice(1);
+  const flag = args.find(a=>a.startsWith('-')) || '';
+  const target = args.find(a=>!a.startsWith('-')) || '';
+
+  const c = arg => arg.replace(/^['"]|['"]$/g,'');
+  const color = (text, col) => `<span style="color:${col}">${text}</span>`;
+  const bold = text => `<span style="font-weight:700;color:var(--text)">${text}</span>`;
+
+  // ── Help ────────────────────────────────────────────
+  if(arg0 === 'help') return `${color('NovOS Shell 2.1 — Verfügbare Befehle:','var(--accent)')}
+
+${color('Navigation:','var(--accent3)')}  cd &lt;dir&gt;  ls [Optionen]  ll  pwd  find
+
+${color('Dateien:','var(--accent3)')}     cat &lt;datei&gt;  head  tail  touch  mkdir  rmdir  rm  cp  mv  nano/edit
+
+${color('System:','var(--accent3)')}      top  ps  kill &lt;pid&gt;  free  df  du  uptime  uname  hostname  neofetch
+
+${color('Netzwerk:','var(--accent3)')}    ping &lt;host&gt;  curl &lt;url&gt;
+
+${color('Sonstiges:','var(--accent3)')}   echo  date  whoami  history  clear  openapp &lt;app&gt;  printenv  alias
+
+${color('Tipp:','var(--text2)')} Tab für Autovervollständigung · ↑↓ für Verlauf · Strg+L zum Leeren · Pipe | grep/wc`;
+
+  // ── Navigation ──────────────────────────────────────
+  if(arg0 === 'pwd') return `/home/user${termCwd==='home'?'':'/'+termCwd}`;
+  if(arg0 === 'cd') {
+    const dest = c(target);
+    if(!dest || dest === '~' || dest === '/home/user') { termCwd='home'; return ''; }
+    if(dest === '..') {
+      const p = fmGetMeta(termCwd)?.parent || 'home';
+      termCwd = p;
+      return '';
+    }
+    // find dir in current
+    const entry = (vfs[termCwd]||[]).find(f=>f.n===dest&&f.type==='dir');
+    if(entry && entry.key && vfs[entry.key]) { termCwd=entry.key; return ''; }
+    // top-level aliases
+    const aliases = {docs:'docs','Dokumente':'docs',pics:'pics','Bilder':'pics',dl:'dl','Downloads':'dl',vids:'vids','Videos':'vids'};
+    if(aliases[dest] && vfs[aliases[dest]]) { termCwd=aliases[dest]; return ''; }
+    return color(`cd: ${dest}: Kein solches Verzeichnis`,'var(--accent2)');
+  }
+
+  // ── ls ──────────────────────────────────────────────
+  if(arg0 === 'ls' || arg0 === 'll') {
+    const dirKey = target && vfs[target] ? target : termCwd;
+    const files = vfs[dirKey] || [];
+    if(flag === '-la' || flag === '-l' || arg0==='ll') {
+      const now = new Date();
+      const dateStr = now.toLocaleDateString('de-DE',{day:'2-digit',month:'short'});
+      return files.map(f=>{
+        const isDir = f.type==='dir';
+        const perm = isDir ? 'drwxr-xr-x' : (f.n.startsWith('.')? '-rw-------' : '-rw-r--r--');
+        const size = isDir ? '4096' : Math.floor(Math.random()*50000+500)+'';
+        return `${color(perm,'var(--text2)')}  ${color('user','var(--accent3)')} ${color('user','var(--accent3)')}  ${size.padStart(6)} ${dateStr}  ${isDir?color(f.n+'/','var(--accent)'):color(f.n,'var(--text)')}`;
+      }).join('\n') || color('(leer)','var(--text2)');
+    }
+    if(flag === '-a') {
+      return [color('.','var(--text2)'),color('..','var(--text2)'), ...files.map(f=>f.type==='dir'?color(f.n+'/','var(--accent)'):color(f.n,'var(--text)'))].join('  ');
+    }
+    if(files.length===0) return color('(leeres Verzeichnis)','var(--text2)');
+    return files.map(f => f.type==='dir' ? color(f.n+'/','var(--accent)') : f.n).join('  ');
+  }
+
+  // ── find ────────────────────────────────────────────
+  if(arg0 === 'find') {
+    const needle = args.find(a=>a.startsWith('-name'))?args[args.indexOf(args.find(a=>a.startsWith('-name')))+1]:'';
+    const results = [];
+    for(const [dir,files] of Object.entries(vfs)) {
+      files.forEach(f => {
+        const path = `~/${dir==='home'?'':dir+'/'}${f.n}`;
+        if(!needle || f.n.includes(c(needle).replace(/\*/g,''))) results.push(color(path,'var(--accent3)'));
+      });
+    }
+    return results.length ? results.join('\n') : color('Keine Treffer','var(--text2)');
+  }
+
+  // ── cat / head / tail ───────────────────────────────
+  if(arg0 === 'cat' || arg0 === 'head' || arg0 === 'tail') {
+    const fname = c(target);
+    if(!fname) return color(`${arg0}: Kein Dateiname angegeben`,'var(--accent2)');
+    const path = Object.keys(vfsContents).find(k => k.endsWith('/'+fname));
+    if(path) {
+      let content = vfsContents[path];
+      if(content.startsWith('data:')) return color(`${arg0}: ${fname}: Binärdatei (nicht lesbar)`,'var(--accent2)');
+      const lines = content.split('\n');
+      const shown = arg0==='head' ? lines.slice(0,10) : arg0==='tail' ? lines.slice(-10) : lines;
+      return `<pre style="color:var(--accent3);white-space:pre-wrap;margin:0">${shown.join('\n').replace(/</g,'&lt;')}</pre>`;
+    }
+    return color(`${arg0}: ${fname}: Keine solche Datei`,'var(--accent2)');
+  }
+
+  // ── grep ────────────────────────────────────────────
+  if(arg0 === 'grep') {
+    const pat = c(args[0]||'');
+    const fname = c(args[1]||'');
+    if(!pat) return color('grep: Muster fehlt','var(--accent2)');
+    const path = Object.keys(vfsContents).find(k => k.endsWith('/'+fname));
+    if(!path && fname) return color(`grep: ${fname}: Keine solche Datei`,'var(--accent2)');
+    const content = path ? vfsContents[path] : Object.values(vfsContents).join('\n');
+    const lines = content.split('\n').filter(l=>l.includes(pat));
+    if(!lines.length) return color('(keine Treffer)','var(--text2)');
+    return lines.map(l=>`<span style="color:var(--text)">${l.replace(pat,`<span style="color:var(--accent2);font-weight:700">${pat}</span>`)}</span>`).join('\n');
+  }
+
+  // ── wc ──────────────────────────────────────────────
+  if(arg0 === 'wc') {
+    const fname = c(target);
+    const path = Object.keys(vfsContents).find(k=>k.endsWith('/'+fname));
+    if(!path) return color(`wc: ${fname}: Keine solche Datei`,'var(--accent2)');
+    const t = vfsContents[path];
+    const lines = t.split('\n').length;
+    const words = t.trim().split(/\s+/).filter(Boolean).length;
+    const chars = t.length;
+    return `${color(lines,'var(--accent)')} Zeilen  ${color(words,'var(--accent3)')} Wörter  ${color(chars,'var(--text2)')} Zeichen  ${fname}`;
+  }
+
+  // ── touch / mkdir / rmdir ───────────────────────────
+  if(arg0 === 'touch') {
+    const fname = c(target);
+    if(!fname) return color('touch: Dateiname fehlt','var(--accent2)');
+    if(!vfs[termCwd].find(f=>f.n===fname)) {
+      vfs[termCwd].push({ico:getFileIcon(fname,'txt'),n:fname,type:'txt'});
+      vfsContents[termCwd+'/'+fname]='';
+      vfsSave();
+    }
+    return '';
+  }
+  if(arg0 === 'mkdir') {
+    const name = c(target);
+    if(!name) return color('mkdir: Ordnername fehlt','var(--accent2)');
+    if(vfs[termCwd].find(f=>f.n===name)) return color(`mkdir: ${name}: Existiert bereits`,'var(--accent2)');
+    const key='dir_'+Date.now();
+    vfs[key]=[];
+    fmDirMeta[key]={label:name,icon:'📂',parent:termCwd};
+    vfs[termCwd].push({ico:'📂',n:name,type:'dir',key});
+    vfsSave();
+    return '';
+  }
+  if(arg0 === 'rmdir') {
+    const name = c(target);
+    const entry = (vfs[termCwd]||[]).find(f=>f.n===name&&f.type==='dir');
+    if(!entry) return color(`rmdir: ${name}: Kein solches Verzeichnis`,'var(--accent2)');
+    if(entry.key && vfs[entry.key]?.length) return color(`rmdir: ${name}: Verzeichnis nicht leer`,'var(--accent2)');
+    if(entry.key) { delete vfs[entry.key]; delete fmDirMeta[entry.key]; }
+    vfs[termCwd].splice(vfs[termCwd].indexOf(entry),1);
+    vfsSave();
+    return '';
+  }
+
+  // ── rm ──────────────────────────────────────────────
+  if(arg0 === 'rm') {
+    const name = c(target);
+    if(!name) return color('rm: Dateiname fehlt','var(--accent2)');
+    const idx = (vfs[termCwd]||[]).findIndex(f=>f.n===name);
+    if(idx<0) return color(`rm: ${name}: Keine solche Datei`,'var(--accent2)');
+    if(flag==='-i') return color(`rm: Sicherheitshinweis: Nutze Dateimanager für interaktives Löschen`,'var(--text2)');
+    if(vfs[termCwd][idx].type==='dir' && !flag.includes('r')) return color(`rm: ${name}: Ist ein Verzeichnis (rm -r für Ordner)`,'var(--accent2)');
+    vfs[termCwd].splice(idx,1);
+    delete vfsContents[termCwd+'/'+name];
+    vfsSave();
+    return color(`'${name}' entfernt`,'var(--accent3)');
+  }
+
+  // ── cp / mv ─────────────────────────────────────────
+  if(arg0 === 'cp' || arg0 === 'mv') {
+    const src = c(args[0]||''); const dst = c(args[1]||'');
+    if(!src||!dst) return color(`${arg0}: Quelle und Ziel erforderlich`,'var(--accent2)');
+    const entry = (vfs[termCwd]||[]).find(f=>f.n===src);
+    if(!entry) return color(`${arg0}: ${src}: Keine solche Datei`,'var(--accent2)');
+    const newEntry = {...entry, n:dst, ico:getFileIcon(dst,entry.type)};
+    vfs[termCwd].push(newEntry);
+    if(vfsContents[termCwd+'/'+src] !== undefined) vfsContents[termCwd+'/'+dst]=vfsContents[termCwd+'/'+src];
+    if(arg0==='mv') { vfs[termCwd].splice(vfs[termCwd].indexOf(entry),1); delete vfsContents[termCwd+'/'+src]; }
+    vfsSave();
+    return color(`'${src}' → '${dst}' ${arg0==='mv'?'verschoben':'kopiert'}`,'var(--accent3)');
+  }
+
+  // ── nano / edit ─────────────────────────────────────
+  if(arg0 === 'nano' || arg0 === 'edit') {
+    const fname = c(target);
+    if(!fname) return color(`${arg0}: Dateiname fehlt`,'var(--accent2)');
+    const path = Object.keys(vfsContents).find(k=>k.endsWith('/'+fname));
+    if(path) { const [dir,name]=path.split('/'); fmOpenTxt(dir,name); openApp('editor'); }
+    else {
+      vfs[termCwd].push({ico:getFileIcon(fname,'txt'),n:fname,type:'txt'});
+      vfsContents[termCwd+'/'+fname]='';
+      vfsSave();
+      fmOpenTxt(termCwd,fname); openApp('editor');
+    }
+    return color(`${fname} in NovEdit geöffnet ✓`,'var(--accent3)');
+  }
+
+  // ── echo / printenv / env ───────────────────────────
+  if(arg0 === 'echo') {
+    const txt = args.join(' ').replace(/^['"]|['"]$/g,'');
+    if(txt.startsWith('$')) {
+      const envMap = { USER:'user', HOME:'/home/user', SHELL:'/bin/novsh', TERM:'xterm-256color', LANG:'de_DE.UTF-8', PATH:'/usr/local/bin:/usr/bin:/bin:/home/user/.local/bin', DISPLAY:':0', XDG_SESSION_TYPE:'x11' };
+      return envMap[txt.slice(1)] || '';
+    }
+    return txt;
+  }
+  if(arg0 === 'printenv' || arg0 === 'env') {
+    return ['USER=user','HOME=/home/user','SHELL=/bin/novsh','TERM=xterm-256color','LANG=de_DE.UTF-8','PATH=/usr/local/bin:/usr/bin:/bin:/home/user/.local/bin','DISPLAY=:0','XDG_SESSION_TYPE=x11','NOVOS_VERSION=3.1.0','NOVOS_DE=NovaShell'].map(e=>`<span style="color:var(--accent3)">${e.split('=')[0]}</span>=<span style="color:var(--text)">${e.split('=').slice(1).join('=')}</span>`).join('\n');
+  }
+  if(arg0 === 'alias') return ['alias ll=\'ls -la\'','alias la=\'ls -a\'','alias ..=\'cd ..\'','alias grep=\'grep --color=auto\'','alias cls=\'clear\''].map(a=>`<span style="color:var(--text2)">${a}</span>`).join('\n');
+
+  // ── System info ─────────────────────────────────────
+  if(arg0 === 'whoami') return color('user','var(--accent3)');
+  if(arg0 === 'hostname') return color('novos-desktop','var(--accent)');
+  if(arg0 === 'date') return new Date().toLocaleString('de-DE',{weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  if(arg0 === 'uname') {
+    if(flag==='-a') return 'NovOS 3.1.0-nova #1 SMP PREEMPT '+new Date().toLocaleDateString('de-DE')+' x86_64 GNU/Linux';
+    if(flag==='-r') return '3.1.0-nova';
+    if(flag==='-m') return 'x86_64';
+    return 'NovOS';
+  }
+  if(arg0 === 'uptime') {
+    const h = Math.floor(Math.random()*48+1);
+    const m = Math.floor(Math.random()*60);
+    return ` ${new Date().toLocaleTimeString('de-DE')} up ${h}:${String(m).padStart(2,'0')},  1 user,  load average: ${(Math.random()*2).toFixed(2)}, ${(Math.random()*1.5).toFixed(2)}, ${(Math.random()).toFixed(2)}`;
+  }
+  if(arg0 === 'free') {
+    const used = (Math.random()*4+2).toFixed(0);
+    const total = 16384;
+    const usedKB = parseInt(used)*1024;
+    const freeKB = total*1024 - usedKB;
+    return `              total        used        free      shared     buffers
+${color('Speicher:','var(--text2)')}   ${String(total*1024).padStart(10)}  ${String(usedKB).padStart(10)}  ${String(freeKB).padStart(10)}       ${Math.floor(Math.random()*200+100)}       ${Math.floor(Math.random()*400+200)}
+${color('Swap:','var(--text2)')}        8388608       24576     8364032`;
+  }
+  if(arg0 === 'df') {
+    return `${color('Dateisystem      1K-Blöcke    Benutzt Verfügbar Verw% Eingehängt auf','var(--text2)')}
+${color('/dev/nova0      524288000  134217728  390070272   26% /','var(--text)')}
+${color('tmpfs             8388608     102400    8286208    2% /dev/shm','var(--text2)')}
+${color('/dev/nova1       52428800    1048576   51380224    3% /boot','var(--text2)')}`;
+  }
+  if(arg0 === 'du') {
+    const dir = termDirMap[termCwd] || '~';
+    const size = Math.floor(Math.random()*50000+5000);
+    return `${size}\t${dir}`;
+  }
+
+  // ── top / ps ────────────────────────────────────────
+  if(arg0 === 'top') {
+    const cpu = (Math.random()*40+5).toFixed(1);
+    const ram = (Math.random()*4+2).toFixed(1);
+    const procs = [
+      ['novshell','1842','user',  (Math.random()*3).toFixed(1),  '184'],
+      ['Xorg',    '1203','root',  (Math.random()*5+1).toFixed(1),'256'],
+      ['NovBrow.','2891','user',  (Math.random()*12+2).toFixed(1),'512'],
+      ['novd',    ' 892','root',  (Math.random()*2).toFixed(1),  ' 64'],
+      ['audio-srv','1445','user', (Math.random()*2).toFixed(1),  ' 48'],
+      ['net-mgr', '1120','root',  (Math.random()*1).toFixed(1),  ' 32'],
+      ['NovEdit', '3104','user',  (Math.random()*3).toFixed(1),  '128'],
+      ['sysmon',  '3201','user',  (Math.random()*1).toFixed(1),  ' 24'],
+    ];
+    return `${color(`top — ${new Date().toLocaleTimeString('de-DE')}  up 12:43,  1 user,  load: ${(cpu/40).toFixed(2)}`, 'var(--accent)')}
+${color('Aufgaben:','var(--text2)')} ${color('142','var(--text)')} gesamt,  ${color('3','var(--accent3)')} laufend,  ${color('139','var(--text2)')} schlafend
+${color(`%CPU: ${cpu}%  Mem: ${ram}GB/16GB  Swap: 0.2GB/8GB`,'var(--text2)')}
+
+${color('  PID  USER     CPU%   MEM   Befehl','var(--text2)')}
+${procs.map(([n,pid,usr,c,m])=>`${color(pid.padStart(5),'var(--accent3)')}  ${usr.padEnd(8)} ${color(c.padStart(5)+'%','var(--accent)')}  ${m.padStart(4)}M  ${bold(n)}`).join('\n')}`;
+  }
+  if(arg0 === 'ps') {
+    const procs = [['1842','user','novshell'],['1203','root','Xorg'],['2891','user','NovBrowser'],['892','root','novd'],['1445','user','audio-srv'],['3104','user','NovEdit'],['3201','user','sysmon']];
+    return `${color('  PID  USER     COMMAND','var(--text2)')}
+${procs.map(([pid,usr,cmd])=>`${color(pid.padStart(5),'var(--accent3)')}  ${color(usr.padEnd(8),'var(--text2)')}  ${cmd}`).join('\n')}`;
+  }
+  if(arg0 === 'kill') {
+    const pid = target;
+    if(!pid) return color('kill: PID fehlt','var(--accent2)');
+    return color(`kill: (${pid}) Prozess beendet`,'var(--accent3)');
+  }
+
+  // ── Network ─────────────────────────────────────────
+  if(arg0 === 'ping') {
+    const host = c(target) || 'localhost';
+    const times = [8,12,11,9,10].map(t => t + Math.floor(Math.random()*3));
+    return `${color(`PING ${host} (${host==='localhost'?'127.0.0.1':'93.184.216.34'}): 56 Byte Daten`,'var(--text)')}
+${times.map((t,i)=>`64 Bytes von ${host}: icmp_seq=${i+1} ttl=64 ${color('Zeit='+t+' ms','var(--accent3)')}`).join('\n')}
+${color(`--- ${host} Ping-Statistik ---`,'var(--text2)')}
+5 Pakete übertragen, 5 empfangen, 0% Paketverlust
+Umlaufzeiten: min/avg/max = ${Math.min(...times)}/${(times.reduce((a,b)=>a+b)/times.length).toFixed(1)}/${Math.max(...times)} ms`;
+  }
+  if(arg0 === 'curl') {
+    const url = c(target);
+    if(!url) return color('curl: URL fehlt','var(--accent2)');
+    if(url.startsWith('nov://')) return color(`curl: ${url} — Internes Protokoll, nicht via curl erreichbar`,'var(--text2)');
+    return color(`curl: (6) Konnte Host auflösen: '${url.replace(/https?:\/\//,'')}'  (Netzwerk deaktiviert in dieser Umgebung)`,'var(--accent2)');
+  }
+
+  // ── openapp ─────────────────────────────────────────
+  if(arg0 === 'openapp') {
+    const a = target;
+    if(appDefs[a]) { openApp(a); return color(`${appDefs[a].title} geöffnet ✓`,'var(--accent3)'); }
+    const all = Object.keys(appDefs).join(', ');
+    return color(`App nicht gefunden: '${a}'\nVerfügbar: ${all}`,'var(--accent2)');
+  }
+
+  // ── history / clear / exit ───────────────────────────
+  if(arg0 === 'history') {
+    if(!termHistory.length) return color('(kein Verlauf)','var(--text2)');
+    return termHistory.slice().reverse().map((c,i)=>`${color(String(i+1).padStart(4),'var(--text2)')}  ${c}`).join('\n');
+  }
+  if(arg0 === 'clear' || arg0 === 'cls') {
+    document.getElementById('term-output').innerHTML = '';
+    return null;
+  }
+  if(arg0 === 'exit' || arg0 === 'logout') {
+    termPrint(color('Sitzung beendet.','var(--text2)'));
+    return null;
+  }
+
+  // ── neofetch ────────────────────────────────────────
+  if(arg0 === 'neofetch') {
+    const cpu = (Math.random()*3+1.2).toFixed(1);
+    const ram = (Math.random()*4+2).toFixed(1);
+    const [c1,c2] = ['var(--accent)','var(--accent2)'];
+    return `<pre style="line-height:1.6;margin:0">${color('      ✦✦✦✦✦✦','var(--accent)')}    ${bold('user@novos')}
+${color('    ✦✦✦✦✦✦✦✦✦✦','var(--accent)')}  ${color('──────────────────','var(--border)')}
+${color('   ✦✦✦✦✦✦✦✦✦✦✦✦✦','var(--accent)')} OS:       ${color('NovOS 3.1.0','var(--text)')}
+${color('  ✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦','var(--accent)')} Kernel:   ${color('nova-6.4.2-lts x86_64','var(--text)')}
+${color('  ✦✦✦✦✦✦✦✦✦✦✦✦✦✦✦','var(--accent)')} Shell:    ${color('novsh 2.1','var(--text)')}
+${color('   ✦✦✦✦✦✦✦✦✦✦✦✦✦','var(--accent)')} DE:       ${color('NovaShell 3.1','var(--text)')}
+${color('    ✦✦✦✦✦✦✦✦✦✦','var(--accent)')}  Uptime:   ${color('12h 43m','var(--text)')}
+${color('      ✦✦✦✦✦✦','var(--accent)')}    CPU:      ${color('Nova-Core i9 @ '+cpu+'GHz','var(--text)')}
+              RAM:      ${color(ram+'GB / 16.0GB','var(--text)')}
+              Display:  ${color('1920×1080 (60Hz)','var(--text)')}
+              Terminal: ${color('NovTerm 3.1','var(--text)')}
+              Locale:   ${color('de_DE.UTF-8','var(--text)')}</pre>`;
+  }
+
+  if(arg0 === 'chmod') return color('chmod: Berechtigungen geändert (simuliert)','var(--accent3)');
+  if(arg0 === 'chown') return color('chown: Besitzer geändert (simuliert)','var(--accent3)');
+  if(arg0 === 'source') return '';
+  if(arg0 === 'which') return target ? color(`/usr/bin/${target}`,'var(--accent3)') : color('which: fehlender Argument','var(--accent2)');
+  if(arg0 === 'man') return target ? color(`man ${target}: Keine Handbuchseite für '${target}'\nVerwende 'help' für NovOS-spezifische Hilfe`,'var(--text2)') : color('was manual? tippe help','var(--text2)');
+
+  return color(`novsh: Befehl nicht gefunden: '${arg0}'\nHinweis: tippe 'help' für verfügbare Befehle`,'var(--accent2)');
 }
 
 // ══════════════════════════════════════
@@ -2659,175 +3157,417 @@ function browserPage(url) {
 // ══════════════════════════════════════
 let musicPlaying=false, musicInterval=null, progressPct=0, curTrack=0;
 const tracks=[
-  {title:'Neon Drift',artist:'Synthwave Collective',album:'Digital Dreams',dur:'3:42',secs:222,ico:'🌆'},
-  {title:'Quantum Beat',artist:'Nova Circuit',album:'System Sounds',dur:'4:15',secs:255,ico:'⚡'},
-  {title:'Stellar Void',artist:'Deep Space Audio',album:'Cosmos EP',dur:'5:01',secs:301,ico:'🌌'},
-  {title:'Cyber Rain',artist:'NeonPulse',album:'Rain Sessions',dur:'3:28',secs:208,ico:'🌧️'},
-  {title:'Nova Rise',artist:'Synthwave Collective',album:'Digital Dreams',dur:'4:44',secs:284,ico:'🚀'},
+  {title:'Neon Drift',         artist:'Synthwave Collective', album:'Digital Dreams',    dur:'3:42',secs:222,ico:'🌆',year:2023,genre:'Synthwave'},
+  {title:'Quantum Beat',       artist:'Nova Circuit',         album:'System Sounds',     dur:'4:15',secs:255,ico:'⚡',year:2022,genre:'Electronic'},
+  {title:'Stellar Void',       artist:'Deep Space Audio',     album:'Cosmos EP',         dur:'5:01',secs:301,ico:'🌌',year:2024,genre:'Ambient'},
+  {title:'Cyber Rain',         artist:'NeonPulse',            album:'Rain Sessions',     dur:'3:28',secs:208,ico:'🌧️',year:2023,genre:'Chillwave'},
+  {title:'Nova Rise',          artist:'Synthwave Collective', album:'Digital Dreams',    dur:'4:44',secs:284,ico:'🚀',year:2023,genre:'Synthwave'},
+  {title:'Midnight Protocol',  artist:'Binary Ghost',         album:'Dark Net Vol.2',    dur:'3:56',secs:236,ico:'🌃',year:2022,genre:'Dark Synth'},
+  {title:'Aurora Circuit',     artist:'Deep Space Audio',     album:'Cosmos EP',         dur:'6:12',secs:372,ico:'🌠',year:2024,genre:'Ambient'},
+  {title:'Chrome Horizon',     artist:'NeonPulse',            album:'Velocity',          dur:'3:21',secs:201,ico:'🌅',year:2023,genre:'Electro'},
 ];
-let elapsed=0;
+const trackColors = [
+  ['#7c6aff','#ff6a8a'],['#3a8fff','#6affca'],['#a78bfa','#6affca'],
+  ['#ff6ab0','#ff9f6a'],['#6affca','#3a8fff'],['#ff6a8a','#7c6aff'],
+  ['#ffca6a','#ff6ab0'],['#6affca','#a78bfa'],
+];
+let elapsed=0, musicVolume=70, musicShuffle=false, musicRepeat=false, musicView='library';
+
 function buildMusic() {
-  const t=tracks[curTrack];
   return `
-    <div class="music-body" id="music-body">
-      <div class="album-art" id="album-art">${t.ico}</div>
-      <div class="track-info">
-        <div class="track-title" id="track-title">${t.title}</div>
-        <div class="track-artist" id="track-artist">${t.artist}</div>
-        <div class="track-album" id="track-album">${t.album}</div>
+    <div class="music-shell">
+      <div class="music-sidebar">
+        <div class="music-nav-section">Bibliothek</div>
+        <div class="music-nav-item active" onclick="musicSetView('library',this)">🎵 Alle Titel</div>
+        <div class="music-nav-item" onclick="musicSetView('albums',this)">💿 Alben</div>
+        <div class="music-nav-item" onclick="musicSetView('artists',this)">🎤 Künstler</div>
+        <div class="music-nav-section">Playlists</div>
+        <div class="music-nav-item" onclick="showNotif('NovMusic','🎵 Playlist: Favoriten')">❤️ Favoriten</div>
+        <div class="music-nav-item" onclick="showNotif('NovMusic','🎵 Playlist: Zuletzt gespielt')">🕐 Zuletzt gespielt</div>
+        <div class="music-nav-item" onclick="showNotif('NovMusic','🎵 Playlist: Schlafzimmer')">🌙 Abend-Mix</div>
+        <div class="music-nav-section">Dienste</div>
+        <div class="music-nav-item" onclick="showNotif('NovMusic','☁️ NovCloud Musik – 347 Titel synchronisiert')">☁️ NovCloud</div>
+        <div class="music-nav-item" onclick="showNotif('NovMusic','📻 NovRadio – 8 Sender verfügbar')">📻 NovRadio</div>
       </div>
-      <div class="music-progress" style="width:100%">
-        <div class="progress-bar" id="prog-bar" onclick="seekMusic(event,this)">
-          <div class="progress-fill" id="prog-fill" style="width:0%"></div>
+      <div class="music-main-area">
+        <div class="music-library" id="music-library-pane"></div>
+        <div class="music-player-bar">
+          <div class="music-player-top">
+            <div class="music-mini-art ${musicPlaying?'playing':''}" id="music-mini-art">
+              ${tracks[curTrack].ico}
+            </div>
+            <div class="music-mini-info">
+              <div class="music-mini-title" id="music-mini-title">${tracks[curTrack].title}</div>
+              <div class="music-mini-artist" id="music-mini-artist">${tracks[curTrack].artist} · ${tracks[curTrack].album}</div>
+            </div>
+            <div class="music-player-controls">
+              <button class="music-ctrl-btn ${musicShuffle?'active':''}" id="music-btn-shuffle" onclick="musicToggleShuffle()" title="Zufallswiedergabe">⇌</button>
+              <button class="music-ctrl-btn" onclick="prevTrack()" title="Zurück">⏮</button>
+              <button class="music-play-btn" id="music-play-btn" onclick="togglePlay()">${musicPlaying?'⏸':'▶'}</button>
+              <button class="music-ctrl-btn" onclick="nextTrack()" title="Weiter">⏭</button>
+              <button class="music-ctrl-btn ${musicRepeat?'active':''}" id="music-btn-repeat" onclick="musicToggleRepeat()" title="Wiederholen">🔁</button>
+            </div>
+            <div class="music-vol-row" style="width:120px;margin-left:8px">
+              <span class="music-vol-icon" onclick="musicToggleMute()" id="music-vol-ico">🔊</span>
+              <input type="range" class="music-vol-slider" id="music-vol" min="0" max="100" value="${musicVolume}" oninput="musicSetVol(this.value)">
+            </div>
+          </div>
+          <div class="music-player-progress">
+            <span class="music-prog-time" id="music-cur-time">0:00</span>
+            <div class="music-prog-track" id="music-prog-track" onclick="musicSeek(event,this)">
+              <div class="music-prog-fill" id="music-prog-fill" style="width:0%"></div>
+            </div>
+            <span class="music-prog-time end" id="music-dur">${tracks[curTrack].dur}</span>
+          </div>
         </div>
-        <div class="progress-times"><span id="cur-time">0:00</span><span id="total-time">${t.dur}</span></div>
-      </div>
-      <div class="music-controls">
-        <button class="music-btn" onclick="shuffleTrack()" title="Shuffle">⇌</button>
-        <button class="music-btn" onclick="prevTrack()">⏮</button>
-        <button class="music-btn play-btn" id="play-btn" onclick="togglePlay()">▶</button>
-        <button class="music-btn" onclick="nextTrack()">⏭</button>
-        <button class="music-btn" onclick="showNotif('NovMusic','Wiederholung aktiviert 🔁')" title="Repeat">🔁</button>
-      </div>
-      <div class="volume-row" style="width:100%">
-        <span style="font-size:13px">🔈</span>
-        <input type="range" class="volume-slider" min="0" max="100" value="70" oninput="showNotif('Audio','Lautstärke: '+this.value+'%')">
-        <span style="font-size:13px">🔊</span>
-      </div>
-      <div class="music-playlist" style="width:100%">
-        <div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Playlist</div>
-        ${tracks.map((tr,i)=>`
-        <div class="playlist-item ${i===curTrack?'active':''}" id="pli-${i}" onclick="selectTrack(${i})">
-          <span class="num">${i===curTrack&&musicPlaying?'▶':(i+1)}</span>
-          <div class="p-info"><div class="p-title">${tr.title}</div><div class="p-artist">${tr.artist}</div></div>
-          <span class="p-dur">${tr.dur}</span>
-        </div>`).join('')}
       </div>
     </div>`;
 }
-function initMusic() { updateMusicUI(); }
+
+function initMusic() { musicRenderLibrary(); }
+
+function musicSetView(view, el) {
+  musicView = view;
+  document.querySelectorAll('#body-music .music-nav-item').forEach(e=>e.classList.remove('active'));
+  if(el) el.classList.add('active');
+  musicRenderLibrary();
+}
+
+function musicRenderLibrary() {
+  const pane = document.getElementById('music-library-pane');
+  if(!pane) return;
+
+  if(musicView === 'albums') {
+    const albums = [...new Set(tracks.map(t=>t.album))];
+    pane.innerHTML = `
+      <div class="music-lib-header"><div class="music-lib-title">Alben</div><span style="font-size:11px;color:var(--text2)">${albums.length} Alben · ${tracks.length} Titel</span></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,130px);gap:14px;padding:4px">
+        ${albums.map(album => {
+          const t = tracks.find(tr=>tr.album===album);
+          const [c1,c2] = trackColors[tracks.indexOf(t) % trackColors.length];
+          return `<div onclick="musicSetView('library',null)" style="cursor:pointer;border-radius:10px;overflow:hidden;border:1px solid var(--border);transition:all 0.15s" onmouseover="this.style.transform='scale(1.03)';this.style.borderColor='var(--accent)'" onmouseout="this.style.transform='';this.style.borderColor='var(--border)'">
+            <div style="height:80px;background:linear-gradient(135deg,${c1},${c2});display:flex;align-items:center;justify-content:center;font-size:32px">${t.ico}</div>
+            <div style="padding:8px;background:var(--panel2)">
+              <div style="font-size:11px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${album}</div>
+              <div style="font-size:10px;color:var(--text2);margin-top:2px">${t.artist}</div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>`;
+    return;
+  }
+
+  if(musicView === 'artists') {
+    const artists = [...new Set(tracks.map(t=>t.artist))];
+    pane.innerHTML = `
+      <div class="music-lib-header"><div class="music-lib-title">Künstler</div><span style="font-size:11px;color:var(--text2)">${artists.length} Künstler</span></div>
+      ${artists.map(artist => {
+        const artistTracks = tracks.filter(t=>t.artist===artist);
+        return `<div onclick="musicSetView('library',null)" style="display:flex;align-items:center;gap:14px;padding:12px 8px;border-bottom:1px solid rgba(255,255,255,0.04);cursor:pointer;border-radius:8px;transition:background 0.1s" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background=''">
+          <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,${trackColors[artists.indexOf(artist)%8][0]},${trackColors[artists.indexOf(artist)%8][1]});display:flex;align-items:center;justify-content:center;font-size:18px">${artistTracks[0].ico}</div>
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600;color:var(--text)">${artist}</div>
+            <div style="font-size:11px;color:var(--text2)">${artistTracks.length} Titel · ${[...new Set(artistTracks.map(t=>t.album))].length} Alben</div>
+          </div>
+        </div>`;
+      }).join('')}`;
+    return;
+  }
+
+  // Default: library / all tracks
+  pane.innerHTML = `
+    <div class="music-lib-header">
+      <div class="music-lib-title">Alle Titel</div>
+      <span style="font-size:11px;color:var(--text2)">${tracks.length} Titel</span>
+    </div>
+    <div style="display:grid;grid-template-columns:28px 1fr 1fr 60px;align-items:center;gap:12px;padding:4px 10px 8px;border-bottom:1px solid rgba(255,255,255,0.05)">
+      <span style="font-size:9px;color:var(--text2)">#</span>
+      <span style="font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px">Titel</span>
+      <span style="font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px">Album</span>
+      <span style="font-size:9px;color:var(--text2);text-align:right">⏱</span>
+    </div>
+    ${tracks.map((t,i) => `
+      <div class="music-track-row ${i===curTrack?'playing':''}" ondblclick="selectTrack(${i})" onclick="selectTrack(${i})">
+        <span class="tnum ${i===curTrack&&musicPlaying?'eq':''}">${i===curTrack&&musicPlaying?'♪':(i+1)}</span>
+        <div>
+          <div class="tname" style="color:${i===curTrack?'var(--accent)':'var(--text)'}">${t.title}</div>
+          <div class="tartist">${t.artist}</div>
+        </div>
+        <div class="tartist">${t.album}</div>
+        <div class="tdur">${t.dur}</div>
+      </div>`).join('')}`;
+}
+
 function togglePlay() {
   musicPlaying=!musicPlaying;
-  const pb=document.getElementById('play-btn');
+  const pb=document.getElementById('music-play-btn');
   if(pb) pb.textContent=musicPlaying?'⏸':'▶';
-  document.getElementById('album-art')?.classList.toggle('playing',musicPlaying);
+  const art=document.getElementById('music-mini-art');
+  if(art) art.classList.toggle('playing',musicPlaying);
   if(musicPlaying) {
     musicInterval=setInterval(()=>{
       elapsed=Math.min(elapsed+1, tracks[curTrack].secs);
-      if(elapsed>=tracks[curTrack].secs){nextTrack();return;}
-      progressPct=(elapsed/tracks[curTrack].secs)*100;
-      const pf=document.getElementById('prog-fill');
-      if(pf) pf.style.width=progressPct+'%';
-      const ct=document.getElementById('cur-time');
+      if(elapsed>=tracks[curTrack].secs){
+        if(musicRepeat){elapsed=0;}
+        else{nextTrack();return;}
+      }
+      const pct=(elapsed/tracks[curTrack].secs)*100;
+      const pf=document.getElementById('music-prog-fill');
+      if(pf) pf.style.width=pct+'%';
+      const ct=document.getElementById('music-cur-time');
       if(ct) ct.textContent=`${Math.floor(elapsed/60)}:${String(elapsed%60).padStart(2,'0')}`;
     },1000);
   } else clearInterval(musicInterval);
+  musicRenderLibrary();
 }
-function nextTrack(){ curTrack=(curTrack+1)%tracks.length; elapsed=0; progressPct=0; updateMusicUI(); if(musicPlaying){clearInterval(musicInterval);togglePlay();} }
-function prevTrack(){ curTrack=(curTrack-1+tracks.length)%tracks.length; elapsed=0; progressPct=0; updateMusicUI(); if(musicPlaying){clearInterval(musicInterval);togglePlay();} }
-function selectTrack(i){ curTrack=i; elapsed=0; progressPct=0; updateMusicUI(); if(!musicPlaying)togglePlay(); }
-function shuffleTrack(){ curTrack=Math.floor(Math.random()*tracks.length); elapsed=0; progressPct=0; updateMusicUI(); }
-function updateMusicUI() {
+
+function nextTrack(){
+  if(musicShuffle) curTrack=Math.floor(Math.random()*tracks.length);
+  else curTrack=(curTrack+1)%tracks.length;
+  elapsed=0; musicUpdateBar();
+  if(musicPlaying){clearInterval(musicInterval);musicPlaying=false;togglePlay();}
+}
+function prevTrack(){
+  if(elapsed>3){elapsed=0;musicUpdateBar();return;}
+  curTrack=(curTrack-1+tracks.length)%tracks.length;
+  elapsed=0; musicUpdateBar();
+  if(musicPlaying){clearInterval(musicInterval);musicPlaying=false;togglePlay();}
+}
+function selectTrack(i){
+  curTrack=i; elapsed=0;
+  if(!musicPlaying) togglePlay(); else { clearInterval(musicInterval); musicPlaying=false; togglePlay(); }
+}
+function musicUpdateBar(){
   const t=tracks[curTrack];
-  const setT=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=val;};
-  setT('track-title',t.title); setT('track-artist',t.artist); setT('track-album',t.album);
-  setT('total-time',t.dur); setT('cur-time','0:00');
-  const pf=document.getElementById('prog-fill'); if(pf) pf.style.width='0%';
-  const aa=document.getElementById('album-art'); if(aa) aa.textContent=t.ico;
-  document.querySelectorAll('#body-music .playlist-item').forEach((el,i)=>el.classList.toggle('active',i===curTrack));
+  const setT=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v;};
+  setT('music-mini-title',t.title);
+  setT('music-mini-artist',t.artist+' · '+t.album);
+  setT('music-dur',t.dur);
+  setT('music-cur-time','0:00');
+  const pf=document.getElementById('music-prog-fill');if(pf)pf.style.width='0%';
+  const art=document.getElementById('music-mini-art');
+  if(art){const[c1,c2]=trackColors[curTrack%8];art.style.background=`linear-gradient(135deg,${c1},${c2})`;art.textContent=t.ico;}
+  musicRenderLibrary();
 }
-function seekMusic(e,bar) {
+function musicSeek(e,bar){
   const r=bar.getBoundingClientRect();
-  progressPct=((e.clientX-r.left)/r.width)*100;
-  elapsed=Math.floor((progressPct/100)*tracks[curTrack].secs);
-  document.getElementById('prog-fill').style.width=progressPct+'%';
-  document.getElementById('cur-time').textContent=`${Math.floor(elapsed/60)}:${String(elapsed%60).padStart(2,'0')}`;
+  const pct=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));
+  elapsed=Math.floor(pct*tracks[curTrack].secs);
+  const pf=document.getElementById('music-prog-fill');if(pf)pf.style.width=(pct*100)+'%';
+  const ct=document.getElementById('music-cur-time');if(ct)ct.textContent=`${Math.floor(elapsed/60)}:${String(elapsed%60).padStart(2,'0')}`;
+}
+function musicSetVol(v){
+  musicVolume=parseInt(v);
+  const ico=document.getElementById('music-vol-ico');
+  if(ico) ico.textContent = v==0?'🔇':v<40?'🔈':'🔊';
+}
+function musicToggleMute(){
+  const sl=document.getElementById('music-vol');
+  if(!sl) return;
+  if(musicVolume>0){sl._prevVol=musicVolume;sl.value=0;musicSetVol(0);}
+  else{const v=sl._prevVol||70;sl.value=v;musicSetVol(v);}
+}
+function musicToggleShuffle(){
+  musicShuffle=!musicShuffle;
+  const btn=document.getElementById('music-btn-shuffle');
+  if(btn) btn.classList.toggle('active',musicShuffle);
+  showNotif('NovMusic',musicShuffle?'Zufallswiedergabe aktiviert ⇌':'Zufallswiedergabe deaktiviert');
+}
+function musicToggleRepeat(){
+  musicRepeat=!musicRepeat;
+  const btn=document.getElementById('music-btn-repeat');
+  if(btn) btn.classList.toggle('active',musicRepeat);
+  showNotif('NovMusic',musicRepeat?'Wiederholen aktiviert 🔁':'Wiederholen deaktiviert');
 }
 
 // ══════════════════════════════════════
 // CALCULATOR
 // ══════════════════════════════════════
-let calcExpr='', calcVal='0', calcNewNum=true;
+let calcExpr='', calcVal='0', calcNewNum=true, calcMode='standard', calcHistList=[];
 function buildCalc() {
   return `
-    <div class="calc-body">
+    <div class="calc-shell">
+      <div class="calc-mode-bar">
+        <button class="calc-mode-btn active" id="cm-standard" onclick="calcSwitchMode('standard',this)">Standard</button>
+        <button class="calc-mode-btn" id="cm-scientific" onclick="calcSwitchMode('scientific',this)">Wissenschaftlich</button>
+        <button class="calc-mode-btn" id="cm-history" onclick="calcSwitchMode('history',this)">Verlauf</button>
+      </div>
       <div class="calc-display">
+        <div class="calc-history-strip" id="calc-hist-strip"></div>
         <div class="calc-expr" id="calc-expr"></div>
         <div class="calc-val" id="calc-val">0</div>
       </div>
-      <div class="calc-grid">
-        <button class="calc-btn clr" onclick="calcPress('C')">C</button>
-        <button class="calc-btn clr" onclick="calcPress('±')">±</button>
-        <button class="calc-btn clr" onclick="calcPress('%')">%</button>
-        <button class="calc-btn op"  onclick="calcPress('÷')">÷</button>
-
-        <button class="calc-btn" onclick="calcPress('7')">7</button>
-        <button class="calc-btn" onclick="calcPress('8')">8</button>
-        <button class="calc-btn" onclick="calcPress('9')">9</button>
-        <button class="calc-btn op"  onclick="calcPress('×')">×</button>
-
-        <button class="calc-btn" onclick="calcPress('4')">4</button>
-        <button class="calc-btn" onclick="calcPress('5')">5</button>
-        <button class="calc-btn" onclick="calcPress('6')">6</button>
-        <button class="calc-btn op"  onclick="calcPress('−')">−</button>
-
-        <button class="calc-btn" onclick="calcPress('1')">1</button>
-        <button class="calc-btn" onclick="calcPress('2')">2</button>
-        <button class="calc-btn" onclick="calcPress('3')">3</button>
-        <button class="calc-btn op"  onclick="calcPress('+')">+</button>
-
-        <button class="calc-btn span2" onclick="calcPress('0')">0</button>
-        <button class="calc-btn" onclick="calcPress('.')">.</button>
-        <button class="calc-btn eq"   onclick="calcPress('=')">=</button>
+      <div id="calc-buttons">
+        ${calcBuildStandardGrid()}
       </div>
     </div>`;
 }
+
+function calcBuildStandardGrid() {
+  return `<div class="calc-grid">
+    <button class="calc-btn clr" onclick="calcPress('C')">C</button>
+    <button class="calc-btn clr" onclick="calcPress('←')">⌫</button>
+    <button class="calc-btn clr" onclick="calcPress('%')">%</button>
+    <button class="calc-btn op"  onclick="calcPress('÷')">÷</button>
+    <button class="calc-btn" onclick="calcPress('7')">7</button>
+    <button class="calc-btn" onclick="calcPress('8')">8</button>
+    <button class="calc-btn" onclick="calcPress('9')">9</button>
+    <button class="calc-btn op" onclick="calcPress('×')">×</button>
+    <button class="calc-btn" onclick="calcPress('4')">4</button>
+    <button class="calc-btn" onclick="calcPress('5')">5</button>
+    <button class="calc-btn" onclick="calcPress('6')">6</button>
+    <button class="calc-btn op" onclick="calcPress('−')">−</button>
+    <button class="calc-btn" onclick="calcPress('1')">1</button>
+    <button class="calc-btn" onclick="calcPress('2')">2</button>
+    <button class="calc-btn" onclick="calcPress('3')">3</button>
+    <button class="calc-btn op" onclick="calcPress('+')">+</button>
+    <button class="calc-btn clr" onclick="calcPress('±')">±</button>
+    <button class="calc-btn" onclick="calcPress('0')">0</button>
+    <button class="calc-btn" onclick="calcPress('.')">.</button>
+    <button class="calc-btn eq" onclick="calcPress('=')">=</button>
+  </div>`;
+}
+
+function calcBuildSciGrid() {
+  return `<div class="calc-grid-sci">
+    <button class="calc-btn sci" onclick="calcSci('sin')">sin</button>
+    <button class="calc-btn sci" onclick="calcSci('cos')">cos</button>
+    <button class="calc-btn sci" onclick="calcSci('tan')">tan</button>
+    <button class="calc-btn sci" onclick="calcSci('log')">log</button>
+    <button class="calc-btn sci" onclick="calcSci('ln')">ln</button>
+    <button class="calc-btn sci" onclick="calcSci('sqrt')">√</button>
+    <button class="calc-btn sci" onclick="calcSci('sq')">x²</button>
+    <button class="calc-btn sci" onclick="calcSci('inv')">1/x</button>
+    <button class="calc-btn sci" onclick="calcSci('pi')">π</button>
+    <button class="calc-btn sci" onclick="calcSci('e')">e</button>
+    <button class="calc-btn sci" onclick="calcPress('(')">( </button>
+    <button class="calc-btn sci" onclick="calcPress(')')"> )</button>
+    <button class="calc-btn clr" onclick="calcPress('C')">C</button>
+    <button class="calc-btn clr" onclick="calcPress('←')">⌫</button>
+    <button class="calc-btn clr" onclick="calcPress('%')">%</button>
+    <button class="calc-btn op"  onclick="calcPress('÷')">÷</button>
+    <button class="calc-btn" onclick="calcPress('7')">7</button>
+    <button class="calc-btn" onclick="calcPress('8')">8</button>
+    <button class="calc-btn" onclick="calcPress('9')">9</button>
+    <button class="calc-btn op" onclick="calcPress('×')">×</button>
+    <button class="calc-btn" onclick="calcPress('4')">4</button>
+    <button class="calc-btn" onclick="calcPress('5')">5</button>
+    <button class="calc-btn" onclick="calcPress('6')">6</button>
+    <button class="calc-btn op" onclick="calcPress('−')">−</button>
+    <button class="calc-btn" onclick="calcPress('1')">1</button>
+    <button class="calc-btn" onclick="calcPress('2')">2</button>
+    <button class="calc-btn" onclick="calcPress('3')">3</button>
+    <button class="calc-btn op" onclick="calcPress('+')">+</button>
+    <button class="calc-btn clr" onclick="calcPress('±')">±</button>
+    <button class="calc-btn" onclick="calcPress('0')">0</button>
+    <button class="calc-btn" onclick="calcPress('.')">.</button>
+    <button class="calc-btn eq" onclick="calcPress('=')">=</button>
+  </div>`;
+}
+
+function calcSwitchMode(mode, el) {
+  calcMode = mode;
+  document.querySelectorAll('.calc-mode-btn').forEach(b=>b.classList.remove('active'));
+  if(el) el.classList.add('active');
+  const btn = document.getElementById('calc-buttons');
+  if(!btn) return;
+  if(mode === 'standard')    btn.innerHTML = calcBuildStandardGrid();
+  else if(mode === 'scientific') btn.innerHTML = calcBuildSciGrid();
+  else if(mode === 'history') {
+    btn.innerHTML = `<div class="calc-history-panel" style="max-height:none;flex:1">
+      ${calcHistList.length === 0
+        ? '<div style="text-align:center;padding:24px;color:var(--text2);font-size:12px">Kein Verlauf vorhanden</div>'
+        : calcHistList.map((h,i)=>`<div class="calc-hist-row" onclick="calcVal='${h.result}';calcNewNum=true;calcUpdateDisplay();calcSwitchMode('standard',document.getElementById('cm-standard'))">${h.expr} = <strong style="color:var(--accent)">${h.result}</strong></div>`).reverse().join('')
+      }
+      ${calcHistList.length > 0 ? '<button class="setting-btn" style="margin:8px;font-size:10px" onclick="calcHistList=[];calcSwitchMode(\'history\',document.getElementById(\'cm-history\'))">Verlauf löschen</button>' : ''}
+    </div>`;
+  }
+}
+
+function calcSci(fn) {
+  const v = parseFloat(calcVal);
+  let res;
+  try {
+    if(fn==='sin')  res = Math.sin(v * Math.PI/180);
+    else if(fn==='cos')  res = Math.cos(v * Math.PI/180);
+    else if(fn==='tan')  res = Math.tan(v * Math.PI/180);
+    else if(fn==='log')  res = Math.log10(v);
+    else if(fn==='ln')   res = Math.log(v);
+    else if(fn==='sqrt') res = Math.sqrt(v);
+    else if(fn==='sq')   res = v*v;
+    else if(fn==='inv')  res = 1/v;
+    else if(fn==='pi')   { calcVal='3.14159265358979'; calcNewNum=true; calcUpdateDisplay(); return; }
+    else if(fn==='e')    { calcVal='2.71828182845905'; calcNewNum=true; calcUpdateDisplay(); return; }
+    calcExpr = fn+'('+calcVal+')';
+    calcVal = parseFloat(res.toFixed(10)).toString();
+    calcNewNum = true;
+    calcUpdateDisplay();
+  } catch(e) { calcVal='Fehler'; calcNewNum=true; calcUpdateDisplay(); }
+}
+
 function calcPress(k) {
-  const vEl=document.getElementById('calc-val');
-  const eEl=document.getElementById('calc-expr');
-  if(!vEl||!eEl) return;
   if(k==='C') { calcVal='0'; calcExpr=''; calcNewNum=true; }
   else if(k==='←') { if(calcNewNum){calcExpr='';calcVal='0';} else calcVal=calcVal.length>1?calcVal.slice(0,-1):'0'; }
   else if(k==='±') { calcVal=(parseFloat(calcVal)*-1).toString(); }
   else if(k==='%') { calcVal=(parseFloat(calcVal)/100).toString(); }
   else if(['÷','×','−','+'].includes(k)) {
     if(calcExpr && !calcNewNum) {
-      const op2=calcExpr.trim().slice(-1);
-      const a=parseFloat(calcExpr);
-      let res=parseFloat(calcVal);
-      if(op2==='÷'&&res!==0) res=a/res;
-      else if(op2==='×') res=a*res;
-      else if(op2==='−') res=a-res;
-      else if(op2==='+') res=a+res;
-      calcVal=parseFloat(res.toFixed(10)).toString();
+      const parts = calcExpr.trim().split(' ');
+      const a = parseFloat(parts[0]);
+      const op2 = parts[1];
+      const b = parseFloat(calcVal);
+      let r = b;
+      if(op2==='÷'&&b!==0) r=a/b; else if(op2==='×') r=a*b; else if(op2==='−') r=a-b; else if(op2==='+') r=a+b;
+      calcVal = parseFloat(r.toFixed(10)).toString();
     }
     calcExpr=calcVal+' '+k; calcNewNum=true;
   }
   else if(k==='=') {
+    if(!calcExpr) return;
     try {
-      if(!calcExpr) return;
-      const a=parseFloat(calcExpr); const op=calcExpr.trim().slice(-1);
-      let res=parseFloat(calcVal);
-      if(op==='÷') res = parseFloat(calcVal)!==0 ? a/parseFloat(calcVal) : 'Fehler';
-      else if(op==='×') res=a*parseFloat(calcVal);
-      else if(op==='−') res=a-parseFloat(calcVal);
-      else if(op==='+') res=a+parseFloat(calcVal);
+      const parts = calcExpr.trim().split(' ');
+      const a=parseFloat(parts[0]); const op=parts[1]; const b=parseFloat(calcVal);
+      let res = b;
+      if(op==='÷') res = b!==0 ? a/b : 'Fehler';
+      else if(op==='×') res=a*b;
+      else if(op==='−') res=a-b;
+      else if(op==='+') res=a+b;
       else res=parseFloat(calcVal);
-      const finalRes = (typeof res === 'string') ? res : parseFloat(res.toFixed(10)).toString();
-      calcExpr=calcExpr+' '+calcVal+' ='; calcVal=finalRes; calcNewNum=true;
+      const finalRes = (typeof res==='string') ? res : parseFloat(res.toFixed(10)).toString();
+      const histEntry = calcExpr+' '+calcVal;
+      calcHistList.push({expr: histEntry, result: finalRes});
+      if(calcHistList.length>50) calcHistList.shift();
+      const strip = document.getElementById('calc-hist-strip');
+      if(strip && calcHistList.length > 0) {
+        const last = calcHistList[calcHistList.length-2];
+        strip.textContent = last ? last.expr+' '+last.result+' =' : '';
+      }
+      calcExpr=histEntry+' ='; calcVal=finalRes; calcNewNum=true;
     } catch(e){ calcVal='Fehler'; calcNewNum=true; }
   }
+  else if(k==='(') { calcExpr+='('; }
+  else if(k===')') { calcExpr+=')'; }
   else if(k==='.') { if(calcNewNum){calcVal='0.';calcNewNum=false;} else if(!calcVal.includes('.')) calcVal+='.'; }
   else {
     if(calcNewNum||calcVal==='0'){calcVal=k;calcNewNum=false;}
     else calcVal+=k;
   }
-  vEl.textContent=calcVal; eEl.textContent=calcExpr;
+  calcUpdateDisplay();
 }
 
-// ══════════════════════════════════════
-// TEXT EDITOR (FULL FEATURED)
-// ══════════════════════════════════════
+function calcUpdateDisplay() {
+  const vEl=document.getElementById('calc-val');
+  const eEl=document.getElementById('calc-expr');
+  if(vEl) vEl.textContent=calcVal;
+  if(eEl) eEl.textContent=calcExpr;
+}
+
+// Keyboard support for calculator
+document.addEventListener('keydown', e => {
+  if(!windows['calc']) return;
+  const map = {'0':'0','1':'1','2':'2','3':'3','4':'4','5':'5','6':'6','7':'7','8':'8','9':'9','.':'.','Enter':'=','Backspace':'←','Escape':'C','+':'+','-':'−','*':'×','/':'÷','%':'%'};
+  if(map[e.key]) { e.preventDefault(); calcPress(map[e.key]); }
+});
 let editorTabs = []; // {id, name, content, vfsPath, unsaved}
 let editorActiveTab = null;
 let editorNextId = 1;
@@ -3150,16 +3890,299 @@ function editorWordCount() {
 // ══════════════════════════════════════
 // GALLERY
 // ══════════════════════════════════════
-const galleryImages = [
-  {ico:'🌅',name:'Sonnenuntergang.png',bg:'linear-gradient(135deg,#ff6a00,#ee0979)'},
-  {ico:'🌊',name:'Ozean.jpg',bg:'linear-gradient(135deg,#00b4db,#0083b0)'},
-  {ico:'🏔️',name:'Berge.png',bg:'linear-gradient(135deg,#a8edea,#fed6e3)'},
-  {ico:'🌸',name:'Kirschblüte.jpg',bg:'linear-gradient(135deg,#f093fb,#f5576c)'},
-  {ico:'🌃',name:'Nachtstadt.png',bg:'linear-gradient(135deg,#0f0c29,#302b63)'},
-  {ico:'🦋',name:'Schmetterling.jpg',bg:'linear-gradient(135deg,#43e97b,#38f9d7)'},
-  {ico:'🌺',name:'Blume.png',bg:'linear-gradient(135deg,#fa709a,#fee140)'},
-  {ico:'🦅',name:'Adler.jpg',bg:'linear-gradient(135deg,#4facfe,#00f2fe)'},
+// ══════════════════════════════════════
+// GALLERY
+// ══════════════════════════════════════
+let galleryView = 'grid';    // grid | list
+let gallerySelected = null;
+let galleryFilter = 'all';   // all | image | video
+let gallerySortKey = 'name'; // name | date | size
+let gallerySlideInterval = null;
+let gallerySlideIdx = 0;
+let galleryImportedImages = []; // {name, dataUrl, size, date, type}
+
+const galleryBuiltin = [
+  {name:'Sonnenuntergang.jpg', ico:'🌅', bg:'linear-gradient(135deg,#ff6a00,#ee0979)', date:'2025-09-12', size:2847392, type:'image'},
+  {name:'Ozean_Wellen.jpg',    ico:'🌊', bg:'linear-gradient(135deg,#00b4db,#0083b0)', date:'2025-08-04', size:3124800, type:'image'},
+  {name:'Bergpanorama.png',    ico:'🏔️', bg:'linear-gradient(135deg,#a8edea,#5fa8d3)', date:'2025-07-19', size:5234100, type:'image'},
+  {name:'Kirschblüte.jpg',     ico:'🌸', bg:'linear-gradient(135deg,#f093fb,#f5576c)', date:'2025-04-07', size:1928400, type:'image'},
+  {name:'Nachtstadt.png',      ico:'🌃', bg:'linear-gradient(135deg,#0f0c29,#302b63)', date:'2025-06-23', size:4102000, type:'image'},
+  {name:'Schmetterling.jpg',   ico:'🦋', bg:'linear-gradient(135deg,#43e97b,#38f9d7)', date:'2025-05-15', size:987300,  type:'image'},
+  {name:'Bergbach.jpg',        ico:'🏞️', bg:'linear-gradient(135deg,#2af598,#009efd)', date:'2025-08-29', size:3401200, type:'image'},
+  {name:'Wüste_Dünen.jpg',     ico:'🏜️', bg:'linear-gradient(135deg,#f7971e,#ffd200)', date:'2025-10-01', size:2765000, type:'image'},
+  {name:'Nordlichter.jpg',     ico:'🌌', bg:'linear-gradient(135deg,#12c2e9,#f64f59)', date:'2025-12-20', size:6102300, type:'image'},
+  {name:'Herbstwald.jpg',      ico:'🍂', bg:'linear-gradient(135deg,#d4731b,#a84210)', date:'2025-10-28', size:3827100, type:'image'},
+  {name:'Urlaub_Strand.mp4',   ico:'🎬', bg:'linear-gradient(135deg,#006994,#00c6ff)', date:'2025-08-06', size:52428800, type:'video'},
+  {name:'Geburtstag.mp4',      ico:'🎂', bg:'linear-gradient(135deg,#da4453,#89216b)', date:'2025-03-14', size:38000000, type:'video'},
 ];
+
+function galleryAllImages() {
+  return [
+    ...galleryBuiltin,
+    ...galleryImportedImages
+  ];
+}
+
+function buildGallery() {
+  return `
+    <div class="gallery-shell">
+      <div class="gallery-sidebar">
+        <div class="gallery-nav-section">Mediathek</div>
+        <div class="gallery-nav-item active" data-gf="all"   onclick="gallerySetFilter('all',this)">🖼️ Alle Medien</div>
+        <div class="gallery-nav-item" data-gf="image" onclick="gallerySetFilter('image',this)">📷 Fotos</div>
+        <div class="gallery-nav-item" data-gf="video" onclick="gallerySetFilter('video',this)">🎬 Videos</div>
+        <div class="gallery-nav-section">Alben</div>
+        <div class="gallery-nav-item" onclick="gallerySetAlbum('Urlaub')">✈️ Urlaub</div>
+        <div class="gallery-nav-item" onclick="gallerySetAlbum('Natur')">🌿 Natur</div>
+        <div class="gallery-nav-item" onclick="gallerySetAlbum('Sonstiges')">📁 Sonstiges</div>
+        <div class="gallery-nav-section">Aktionen</div>
+        <div class="gallery-nav-item" onclick="galleryImport()">📥 Importieren</div>
+        <div class="gallery-nav-item" onclick="galleryStartSlideshow()">▶ Diashow</div>
+      </div>
+      <div class="gallery-main">
+        <div class="gallery-toolbar">
+          <input type="text" id="gallery-search" placeholder="🔍 Suchen…" style="
+            background:var(--panel); border:1px solid var(--border); border-radius:20px;
+            padding:5px 12px; color:var(--text); font-family:'Inter',sans-serif; font-size:11px;
+            outline:none; width:160px; transition:border-color 0.15s;"
+            oninput="galleryRender()" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor=''">
+          <span style="flex:1"></span>
+          <select id="gallery-sort" style="background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-family:'Inter',sans-serif;font-size:11px;outline:none;cursor:pointer" onchange="gallerySortKey=this.value;galleryRender()">
+            <option value="name">Name</option>
+            <option value="date">Datum</option>
+            <option value="size">Größe</option>
+          </select>
+          <div class="gallery-view-toggle">
+            <button class="gallery-view-btn active" id="gvb-grid" onclick="gallerySetView('grid',this)" title="Rasteransicht">⊞</button>
+            <button class="gallery-view-btn" id="gvb-list" onclick="gallerySetView('list',this)" title="Listenansicht">≡</button>
+          </div>
+        </div>
+        <div class="gallery-content" id="gallery-content"></div>
+        <div class="gallery-info-bar" id="gallery-info-bar">
+          <span id="gallery-count">0 Objekte</span>
+          <span style="flex:1"></span>
+          <span id="gallery-sel-info" style="color:var(--text)"></span>
+        </div>
+      </div>
+    </div>`;
+}
+
+function initGallery() { galleryRender(); }
+
+function gallerySetFilter(f, el) {
+  galleryFilter = f;
+  gallerySelected = null;
+  document.querySelectorAll('#body-gallery .gallery-nav-item').forEach(e => e.classList.remove('active'));
+  if(el) el.classList.add('active');
+  galleryRender();
+}
+function gallerySetAlbum(name) {
+  showNotif('NovGalerie', 'Album "' + name + '" – ' + Math.floor(Math.random()*8+2) + ' Fotos 🖼️');
+}
+function gallerySetView(v, el) {
+  galleryView = v;
+  document.querySelectorAll('.gallery-view-btn').forEach(b => b.classList.remove('active'));
+  if(el) el.classList.add('active');
+  galleryRender();
+}
+
+function galleryRender() {
+  const content = document.getElementById('gallery-content'); if(!content) return;
+  const search = (document.getElementById('gallery-search')?.value || '').toLowerCase();
+  const sortKey = document.getElementById('gallery-sort')?.value || gallerySortKey;
+
+  let imgs = galleryAllImages();
+  if(galleryFilter !== 'all') imgs = imgs.filter(i => i.type === galleryFilter);
+  if(search) imgs = imgs.filter(i => i.name.toLowerCase().includes(search));
+
+  imgs = [...imgs].sort((a,b) => {
+    if(sortKey === 'date') return (b.date||'') < (a.date||'') ? -1 : 1;
+    if(sortKey === 'size') return (b.size||0) - (a.size||0);
+    return a.name.localeCompare(b.name);
+  });
+
+  const cnt = document.getElementById('gallery-count');
+  if(cnt) cnt.textContent = imgs.length + ' Objekt' + (imgs.length === 1 ? '' : 'e');
+
+  if(imgs.length === 0) {
+    content.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;color:var(--text2)"><div style="font-size:48px">🖼️</div><div>Keine Bilder gefunden</div><button class="setting-btn" onclick="galleryImport()">📥 Fotos importieren</button></div>';
+    return;
+  }
+
+  if(galleryView === 'grid') {
+    content.innerHTML = '<div class="gallery-grid-view">' +
+      imgs.map((img, i) => {
+        const isImported = !!img.dataUrl;
+        const isSelected = gallerySelected === img.name;
+        return '<div class="gallery-tile' + (isSelected?' selected':'') + '" onclick="gallerySelectImg(' + i + ',event)" ondblclick="galleryOpenLightbox(' + i + ')" title="' + img.name + '">' +
+          '<div class="gallery-tile-img"' + (isImported ? ' style="background:var(--panel2);overflow:hidden">' + '<img src="' + img.dataUrl + '" style="width:100%;height:100%;object-fit:cover">' : ' style="background:' + img.bg + '">' + '<span style="font-size:36px">' + img.ico + '</span>') + '</div>' +
+          '<div class="gallery-tile-label">' + img.name + '</div>' +
+          (img.type === 'video' ? '<div style="position:absolute;top:6px;left:6px;background:rgba(0,0,0,0.6);border-radius:4px;padding:2px 5px;font-size:9px;color:white">▶ Video</div>' : '') +
+          '</div>';
+      }).join('') + '</div>';
+  } else {
+    content.innerHTML = '<div class="gallery-list-view">' +
+      '<div style="display:grid;grid-template-columns:36px 1fr 90px 90px 60px;align-items:center;gap:12px;padding:4px 10px 8px;font-size:10px;color:var(--text2);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid var(--border)"><span></span><span>Name</span><span>Datum</span><span>Größe</span><span>Typ</span></div>' +
+      imgs.map((img, i) => {
+        const isImported = !!img.dataUrl;
+        const isSelected = gallerySelected === img.name;
+        const sizeStr = img.size > 1048576 ? (img.size/1048576).toFixed(1)+' MB' : (img.size/1024).toFixed(0)+' KB';
+        return '<div class="gallery-list-row' + (isSelected?' selected':'') + '" style="' + (isSelected?'background:rgba(124,106,255,0.12);':'') + 'display:grid;grid-template-columns:36px 1fr 90px 90px 60px" onclick="gallerySelectImg(' + i + ',event)" ondblclick="galleryOpenLightbox(' + i + ')">' +
+          '<span style="font-size:20px">' + img.ico + '</span>' +
+          '<span style="color:var(--text);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + img.name + '</span>' +
+          '<span>' + (img.date||'—') + '</span>' +
+          '<span>' + sizeStr + '</span>' +
+          '<span style="color:var(--text2)">' + (img.type === 'image' ? '🖼️ Bild' : '🎬 Video') + '</span>' +
+          '</div>';
+      }).join('') + '</div>';
+  }
+}
+
+function gallerySelectImg(idx, e) {
+  e.stopPropagation();
+  const imgs = galleryGetFiltered();
+  const img = imgs[idx];
+  gallerySelected = gallerySelected === img?.name ? null : img?.name;
+  const selInfo = document.getElementById('gallery-sel-info');
+  if(selInfo) {
+    if(gallerySelected && img) {
+      const sizeStr = img.size > 1048576 ? (img.size/1048576).toFixed(1)+' MB' : (img.size/1024).toFixed(0)+' KB';
+      selInfo.textContent = img.name + ' · ' + sizeStr + (img.date ? ' · ' + img.date : '');
+    } else selInfo.textContent = '';
+  }
+  galleryRender();
+}
+
+function galleryGetFiltered() {
+  const search = (document.getElementById('gallery-search')?.value || '').toLowerCase();
+  const sortKey = document.getElementById('gallery-sort')?.value || gallerySortKey;
+  let imgs = galleryAllImages();
+  if(galleryFilter !== 'all') imgs = imgs.filter(i => i.type === galleryFilter);
+  if(search) imgs = imgs.filter(i => i.name.toLowerCase().includes(search));
+  return [...imgs].sort((a,b) => {
+    if(sortKey === 'date') return (b.date||'') < (a.date||'') ? -1 : 1;
+    if(sortKey === 'size') return (b.size||0) - (a.size||0);
+    return a.name.localeCompare(b.name);
+  });
+}
+
+function galleryOpenLightbox(idx) {
+  const imgs = galleryGetFiltered();
+  const img = imgs[idx];
+  if(!img) return;
+
+  const existing = document.getElementById('gallery-lightbox');
+  if(existing) existing.remove();
+
+  const lb = document.createElement('div');
+  lb.id = 'gallery-lightbox';
+  lb.style.cssText = 'position:fixed;inset:0;z-index:8000;background:rgba(0,0,0,0.92);display:flex;flex-direction:column;align-items:center;justify-content:center;backdrop-filter:blur(10px)';
+
+  const imgHtml = img.dataUrl
+    ? `<img src="${img.dataUrl}" style="max-width:85vw;max-height:75vh;border-radius:8px;object-fit:contain;box-shadow:0 24px 80px rgba(0,0,0,0.8)">`
+    : `<div style="width:420px;height:300px;border-radius:8px;background:${img.bg};display:flex;align-items:center;justify-content:center;font-size:120px;box-shadow:0 24px 80px rgba(0,0,0,0.8)">${img.ico}</div>`;
+
+  lb.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;width:100%;max-width:900px;padding:16px 24px;position:absolute;top:0">
+      <div>
+        <div style="font-size:14px;font-weight:600;color:white">${img.name}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.45)">${img.date||''} · ${(img.size/1048576).toFixed(1)} MB · ${img.type === 'image'?'Bild':'Video'}</div>
+      </div>
+      <div style="display:flex;gap:12px;align-items:center">
+        <span style="font-size:11px;color:rgba(255,255,255,0.4)">${idx+1} / ${imgs.length}</span>
+        <button onclick="document.getElementById('gallery-lightbox').remove()" style="background:rgba(255,255,255,0.1);border:none;border-radius:8px;color:white;padding:6px 12px;cursor:pointer;font-size:13px;transition:background 0.15s" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">✕ Schließen</button>
+      </div>
+    </div>
+    ${imgHtml}
+    <div style="display:flex;align-items:center;gap:24px;margin-top:20px">
+      ${idx > 0 ? `<button onclick="galleryOpenLightbox(${idx-1})" style="background:rgba(255,255,255,0.1);border:none;border-radius:50%;color:white;width:42px;height:42px;cursor:pointer;font-size:18px;transition:background 0.15s" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">‹</button>` : '<div style="width:42px"></div>'}
+      <button onclick="document.getElementById('gallery-lightbox').remove();galleryStartSlideshow()" style="background:rgba(255,255,255,0.1);border:none;border-radius:8px;color:white;padding:8px 16px;cursor:pointer;font-size:12px;transition:background 0.15s" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">▶ Diashow</button>
+      ${idx < imgs.length-1 ? `<button onclick="galleryOpenLightbox(${idx+1})" style="background:rgba(255,255,255,0.1);border:none;border-radius:50%;color:white;width:42px;height:42px;cursor:pointer;font-size:18px;transition:background 0.15s" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">›</button>` : '<div style="width:42px"></div>'}
+    </div>`;
+
+  lb.addEventListener('click', e => { if(e.target === lb) lb.remove(); });
+  document.getElementById('desktop').appendChild(lb);
+
+  // Keyboard nav
+  lb._keyHandler = e => {
+    if(e.key === 'Escape') lb.remove();
+    if(e.key === 'ArrowRight' && idx < imgs.length-1) { lb.remove(); galleryOpenLightbox(idx+1); }
+    if(e.key === 'ArrowLeft' && idx > 0) { lb.remove(); galleryOpenLightbox(idx-1); }
+  };
+  document.addEventListener('keydown', lb._keyHandler);
+  lb.addEventListener('remove', () => document.removeEventListener('keydown', lb._keyHandler));
+}
+
+function galleryImport() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*,video/*';
+  input.multiple = true;
+  input.onchange = e => {
+    const files = Array.from(e.target.files);
+    let done = 0;
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const dataUrl = ev.target.result;
+        const type = file.type.startsWith('video') ? 'video' : 'image';
+        const ico = type === 'video' ? '🎬' : '🖼️';
+        const today = new Date().toISOString().slice(0,10);
+        // Add to pics vfs too
+        if(!vfs.pics.find(f => f.n === file.name)) {
+          vfs.pics.push({ico, n:file.name, type});
+        }
+        // Store preview in gallery
+        if(!galleryImportedImages.find(i => i.name === file.name)) {
+          galleryImportedImages.push({
+            name: file.name, dataUrl, ico, bg:'linear-gradient(135deg,#2a2a3a,#3a3a4a)',
+            date: today, size: file.size, type
+          });
+        }
+        done++;
+        if(done === files.length) {
+          vfsSave();
+          galleryRender();
+          showNotif('NovGalerie', done + ' Bild(er) importiert ✓', '#6affca');
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+  input.click();
+}
+
+function galleryStartSlideshow() {
+  if(gallerySlideInterval) { clearInterval(gallerySlideInterval); gallerySlideInterval = null; }
+  const imgs = galleryGetFiltered();
+  if(!imgs.length) { showNotif('NovGalerie', 'Keine Bilder für Diashow', '#ff6a8a'); return; }
+
+  gallerySlideIdx = 0;
+  const lb = document.createElement('div');
+  lb.id = 'gallery-slideshow';
+  lb.style.cssText = 'position:fixed;inset:0;z-index:8100;background:black;display:flex;flex-direction:column;align-items:center;justify-content:center';
+
+  function showSlide() {
+    const img = imgs[gallerySlideIdx % imgs.length];
+    const imgHtml = img.dataUrl
+      ? `<img src="${img.dataUrl}" style="max-width:100vw;max-height:90vh;object-fit:contain">`
+      : `<div style="width:500px;height:380px;background:${img.bg};display:flex;align-items:center;justify-content:center;font-size:140px">${img.ico}</div>`;
+    lb.innerHTML = `
+      ${imgHtml}
+      <div style="position:absolute;bottom:24px;left:0;right:0;text-align:center">
+        <div style="color:white;font-size:14px;font-weight:600">${img.name}</div>
+        <div style="color:rgba(255,255,255,0.4);font-size:11px;margin-top:4px">${gallerySlideIdx+1} / ${imgs.length}</div>
+        <button onclick="clearInterval(gallerySlideInterval);gallerySlideInterval=null;document.getElementById('gallery-slideshow')?.remove()" style="margin-top:16px;background:rgba(255,255,255,0.1);border:none;border-radius:8px;color:white;padding:8px 20px;cursor:pointer;font-size:12px">■ Beenden</button>
+      </div>`;
+    gallerySlideIdx++;
+  }
+
+  showSlide();
+  gallerySlideInterval = setInterval(showSlide, 3500);
+  document.getElementById('desktop').appendChild(lb);
+}
+
+const galleryImages = galleryBuiltin; // backward compat alias
 // ══════════════════════════════════════
 // PDF VIEWER
 // ══════════════════════════════════════
@@ -3562,118 +4585,444 @@ function pdfZoomOut() { pdfZoom = Math.max(0.5, pdfZoom - 0.15); pdfRender(); }
 // ══════════════════════════════════════
 // GALLERY
 // ══════════════════════════════════════
-function buildGallery() {
-  return `
-    <div class="gallery-toolbar">
-      <button class="editor-btn">📂 Importieren</button>
-      <button class="editor-btn" onclick="showNotif('Galerie','Diashow gestartet 🎞️')">▶ Diashow</button>
-      <span style="flex:1"></span>
-      <button class="editor-btn" onclick="showNotif('Galerie','Sortiert nach Datum')">🗂️ Sortieren</button>
-    </div>
-    <div class="gallery-grid">
-      ${galleryImages.map((img,i)=>`
-        <div class="gallery-item" style="background:${img.bg}" onclick="openImageViewer(${i})" title="${img.name}">
-          <span style="font-size:44px">${img.ico}</span>
-          <div class="label">${img.name}</div>
-        </div>`).join('')}
-    </div>`;
-}
-function openImageViewer(i) {
-  const img=galleryImages[i];
-  const existing=document.getElementById('img-viewer');
-  if(existing) existing.remove();
-  const viewer=document.createElement('div');
-  viewer.id='img-viewer';
-  viewer.style.cssText='position:fixed;inset:0;z-index:5000;background:rgba(0,0,0,0.85);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;cursor:pointer;backdrop-filter:blur(8px)';
-  viewer.innerHTML=`<div style="font-size:120px">${img.ico}</div><div style="font-size:16px;color:#fff;font-weight:600">${img.name}</div><div style="font-size:12px;color:rgba(255,255,255,0.5)">Klicken zum Schließen</div>`;
-  viewer.onclick=()=>viewer.remove();
-  document.getElementById('desktop').appendChild(viewer);
-}
-
 // ══════════════════════════════════════
 // WEATHER
 // ══════════════════════════════════════
+const weatherCities = {
+  'Nova City':    { temp:18, feels:15, desc:'Teilweise bewölkt',   ico:'⛅', humidity:68, wind:12, visibility:8,  uv:4, pressure:1013, sunrise:'07:12', sunset:'18:44' },
+  'Berlin':       { temp:8,  feels:5,  desc:'Bedeckt',             ico:'☁️', humidity:82, wind:22, visibility:5,  uv:1, pressure:1002, sunrise:'07:45', sunset:'17:30' },
+  'München':      { temp:5,  feels:2,  desc:'Leichter Schneefall', ico:'🌨️', humidity:90, wind:8,  visibility:3,  uv:1, pressure:994,  sunrise:'07:50', sunset:'17:20' },
+  'Hamburg':      { temp:6,  feels:3,  desc:'Regen',               ico:'🌧️', humidity:88, wind:28, visibility:4,  uv:1, pressure:998,  sunrise:'07:40', sunset:'17:35' },
+  'Wien':         { temp:7,  feels:4,  desc:'Neblig',              ico:'🌫️', humidity:93, wind:5,  visibility:1,  uv:0, pressure:1008, sunrise:'07:35', sunset:'17:28' },
+  'Zürich':       { temp:4,  feels:0,  desc:'Schnee',              ico:'❄️', humidity:95, wind:10, visibility:2,  uv:1, pressure:990,  sunrise:'07:55', sunset:'17:15' },
+  'Madrid':       { temp:16, feels:14, desc:'Sonnig',              ico:'☀️', humidity:45, wind:15, visibility:14, uv:6, pressure:1018, sunrise:'08:00', sunset:'18:20' },
+  'Paris':        { temp:10, feels:7,  desc:'Leichter Regen',      ico:'🌦️', humidity:76, wind:18, visibility:6,  uv:2, pressure:1006, sunrise:'08:10', sunset:'17:45' },
+  'London':       { temp:9,  feels:6,  desc:'Bewölkt',             ico:'🌥️', humidity:78, wind:20, visibility:7,  uv:2, pressure:1010, sunrise:'08:00', sunset:'17:50' },
+  'New York':     { temp:3,  feels:-2, desc:'Klar und kalt',       ico:'🌬️', humidity:55, wind:32, visibility:16, uv:3, pressure:1024, sunrise:'07:15', sunset:'17:00' },
+  'Tokyo':        { temp:12, feels:9,  desc:'Klar',                ico:'☀️', humidity:52, wind:8,  visibility:20, uv:5, pressure:1016, sunrise:'06:30', sunset:'17:10' },
+  'Dubai':        { temp:28, feels:30, desc:'Sonnig & heiß',       ico:'☀️', humidity:38, wind:14, visibility:18, uv:9, pressure:1012, sunrise:'06:45', sunset:'18:00' },
+};
+
+let weatherCurrentCity = 'Nova City';
+let weatherUnit = 'C';
+
+function weatherGetData(city) {
+  const d = weatherCities[city] || weatherCities['Nova City'];
+  return d;
+}
+
 function buildWeather() {
-  return `
-    <div class="weather-body">
-      <div class="weather-main">
-        <div class="weather-icon">⛅</div>
-        <div class="weather-temp">18°</div>
-        <div class="weather-desc">Teilweise bewölkt</div>
-        <div class="weather-city">📍 Nova City, NovOS</div>
-      </div>
-      <div class="weather-details">
-        <div class="weather-detail"><div class="wd-val">68%</div><div class="wd-label">Luftfeuchte</div></div>
-        <div class="weather-detail"><div class="wd-val">12 km/h</div><div class="wd-label">Wind</div></div>
-        <div class="weather-detail"><div class="wd-val">8 km</div><div class="wd-label">Sicht</div></div>
-      </div>
-      <div class="weather-forecast">
-        <div style="font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">7-Tage-Vorhersage</div>
-        ${[['Mo','🌤','22°','14°'],['Di','🌧','17°','12°'],['Mi','⛈','15°','10°'],['Do','🌤','20°','13°'],['Fr','☀️','25°','16°'],['Sa','☀️','27°','17°'],['So','🌤','23°','15°']].map(([d,i,h,l])=>`
-        <div class="forecast-row">
-          <span class="forecast-day">${d}</span>
-          <span class="forecast-ico">${i}</span>
-          <span class="forecast-temps">${h} <span>${l}</span></span>
+  return `<div class="weather-shell" id="weather-shell"></div>`;
+}
+
+function initWeather() { weatherRender(); }
+
+function weatherRender() {
+  const shell = document.getElementById('weather-shell'); if(!shell) return;
+  const d = weatherGetData(weatherCurrentCity);
+  const temp = weatherUnit === 'F' ? Math.round(d.temp * 9/5 + 32) : d.temp;
+  const feels = weatherUnit === 'F' ? Math.round(d.feels * 9/5 + 32) : d.feels;
+  const unit = '°' + weatherUnit;
+
+  // Generate hourly forecast (random variation around current)
+  const now = new Date();
+  const hourly = Array.from({length: 12}, (_, i) => {
+    const h = (now.getHours() + i) % 24;
+    const variation = Math.round((Math.random() - 0.5) * 6);
+    const t = (weatherUnit === 'F') ? Math.round((d.temp + variation) * 9/5 + 32) : (d.temp + variation);
+    const icons = ['☀️','🌤️','⛅','🌥️','☁️','🌧️','⛈️','🌨️'];
+    const ico = i < 2 ? d.ico : icons[Math.floor(Math.random() * 4)];
+    const rain = Math.floor(Math.random() * 40);
+    return {h, t, ico, rain, isNow: i === 0};
+  });
+
+  // 7-day forecast
+  const days = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+  const dayForecast = Array.from({length: 7}, (_, i) => {
+    const dayIdx = (now.getDay() + i) % 7;
+    const hi = d.temp + Math.round(Math.random()*8 - 2);
+    const lo = hi - Math.round(Math.random()*8 + 4);
+    const hiF = Math.round(hi * 9/5 + 32), loF = Math.round(lo * 9/5 + 32);
+    const icons = ['☀️','🌤️','⛅','🌥️','☁️','🌧️','🌨️'];
+    const ico = i === 0 ? d.ico : icons[Math.floor(Math.random() * icons.length)];
+    const rain = Math.floor(Math.random() * 80);
+    return {
+      day: i === 0 ? 'Heute' : i === 1 ? 'Morgen' : days[dayIdx],
+      ico, rain,
+      hi: weatherUnit === 'F' ? hiF : hi,
+      lo: weatherUnit === 'F' ? loF : lo
+    };
+  });
+
+  shell.innerHTML = `
+    <div class="weather-search-bar">
+      <input class="weather-search-inp" id="weather-city-inp" type="text" placeholder="🔍 Stadt suchen…"
+        value="${weatherCurrentCity}"
+        onkeydown="if(event.key==='Enter')weatherSearch(this.value)"
+        list="weather-cities-list">
+      <datalist id="weather-cities-list">
+        ${Object.keys(weatherCities).map(c => `<option value="${c}">`).join('')}
+      </datalist>
+      <button class="editor-btn" onclick="weatherSearch(document.getElementById('weather-city-inp').value)" style="white-space:nowrap">🔍 Suchen</button>
+      <button class="editor-btn" onclick="weatherUnit=weatherUnit==='C'?'F':'C';weatherRender()" style="white-space:nowrap">${unit === '°C' ? '→°F' : '→°C'}</button>
+    </div>
+
+    <div class="weather-hero">
+      <div class="weather-anim-icon">${d.ico}</div>
+      <div class="weather-temp-big">${temp}${unit}</div>
+      <div class="weather-feels">Gefühlt wie ${feels}${unit}</div>
+      <div class="weather-desc-big">${d.desc}</div>
+      <div class="weather-location">📍 ${weatherCurrentCity}</div>
+    </div>
+
+      <div class="weather-stats">
+      <div class="weather-stat"><div class="weather-stat-ico">💧</div><div class="weather-stat-val">${d.humidity}%</div><div class="weather-stat-label">Luftfeuchte</div></div>
+      <div class="weather-stat"><div class="weather-stat-ico">💨</div><div class="weather-stat-val">${d.wind} km/h</div><div class="weather-stat-label">Wind</div></div>
+      <div class="weather-stat"><div class="weather-stat-ico">👁️</div><div class="weather-stat-val">${d.visibility} km</div><div class="weather-stat-label">Sicht</div></div>
+      <div class="weather-stat"><div class="weather-stat-ico">🌡️</div><div class="weather-stat-val">${d.pressure} hPa</div><div class="weather-stat-label">Luftdruck</div></div>
+      <div class="weather-stat"><div class="weather-stat-ico">☀️</div><div class="weather-stat-val">UV ${d.uv}</div><div class="weather-stat-label">UV-Index</div></div>
+      <div class="weather-stat"><div class="weather-stat-ico">🌅</div><div class="weather-stat-val">${d.sunrise}</div><div class="weather-stat-label">Sonnenaufgang</div></div>
+      <div class="weather-stat"><div class="weather-stat-ico">🌇</div><div class="weather-stat-val">${d.sunset}</div><div class="weather-stat-label">Sonnenuntergang</div></div>
+      <div class="weather-stat"><div class="weather-stat-ico">👁️‍🗨️</div><div class="weather-stat-val">${feels}${unit}</div><div class="weather-stat-label">Gefühlt</div></div>
+    </div>
+
+    <div class="weather-hourly">
+      ${hourly.map(h => `
+        <div class="weather-hour${h.isNow?' now':''}">
+          <div class="wh-time">${h.isNow ? 'Jetzt' : String(h.h).padStart(2,'0')+':00'}</div>
+          <div class="wh-ico">${h.ico}</div>
+          <div class="wh-temp">${h.t}${unit}</div>
+          <div class="wh-rain">${h.rain ? h.rain+'%💧' : '—'}</div>
         </div>`).join('')}
-      </div>
+    </div>
+
+    <div class="weather-forecast-section">
+      <div class="weather-forecast-title">7-Tage-Vorhersage</div>
+      ${dayForecast.map(day => {
+        const range = day.hi - day.lo;
+        const pct = Math.max(10, Math.min(90, ((day.hi - d.temp + 10) / 20) * 100));
+        return `<div class="forecast-row">
+          <span class="forecast-day">${day.day}</span>
+          <span class="forecast-ico">${day.ico}</span>
+          <div class="forecast-bar-wrap" style="flex:1">
+            <div class="forecast-bar-fill" style="left:${100-pct}%;width:${pct*0.6}%"></div>
+          </div>
+          <span class="forecast-temps">${day.hi}${unit} <span class="low">${day.lo}${unit}</span></span>
+        </div>`;
+      }).join('')}
     </div>`;
+}
+
+function weatherSearch(city) {
+  const match = Object.keys(weatherCities).find(c => c.toLowerCase() === city.toLowerCase()) || city;
+  if(weatherCities[match]) {
+    weatherCurrentCity = match;
+    weatherRender();
+  } else {
+    showNotif('NovWetter', '"' + city + '" nicht gefunden. Versuche: Berlin, München, Hamburg, Wien…', '#ff6a8a');
+  }
 }
 
 // ══════════════════════════════════════
 // SYSTEM MONITOR
 // ══════════════════════════════════════
-let sysmonInterval=null;
+let sysmonInterval = null;
+let sysmonTab = 'overview';
+let sysmonSortCol = 'cpu';
+let sysmonSortDir = -1; // -1=desc, 1=asc
+const SM_TOTAL_RAM = 16;
+const SM_TOTAL_DISK = 512;
+let cpuHistory = Array(60).fill(0);
+let ramHistory = Array(60).fill(0);
+let netUpHistory = Array(60).fill(0);
+let netDownHistory = Array(60).fill(0);
+
+const smProcesses = [
+  { pid: 1,    name: 'systemd',         user: 'root',  cpu: 0.1, mem: 8.2,   status: 'S', cmd: '/sbin/init' },
+  { pid: 892,  name: 'novd',            user: 'root',  cpu: 0.8, mem: 64,    status: 'S', cmd: '/usr/sbin/novd' },
+  { pid: 1120, name: 'net-manager',     user: 'root',  cpu: 0.2, mem: 32,    status: 'S', cmd: '/usr/sbin/net-manager' },
+  { pid: 1203, name: 'Xorg',            user: 'root',  cpu: 3.4, mem: 256,   status: 'R', cmd: '/usr/bin/Xorg :0' },
+  { pid: 1445, name: 'audio-server',    user: 'user',  cpu: 0.9, mem: 48,    status: 'S', cmd: '/usr/bin/audio-server' },
+  { pid: 1842, name: 'novshell',        user: 'user',  cpu: 2.1, mem: 184,   status: 'S', cmd: '/usr/bin/novshell --session' },
+  { pid: 2012, name: 'dbus-daemon',     user: 'user',  cpu: 0.1, mem: 12,    status: 'S', cmd: '/usr/bin/dbus-daemon --session' },
+  { pid: 2103, name: 'update-service',  user: 'root',  cpu: 0.0, mem: 28,    status: 'S', cmd: '/usr/sbin/update-service' },
+  { pid: 2567, name: 'novbar',          user: 'user',  cpu: 0.4, mem: 44,    status: 'S', cmd: '/usr/bin/novbar' },
+  { pid: 2891, name: 'NovBrowser',      user: 'user',  cpu: 8.2, mem: 512,   status: 'R', cmd: '/usr/bin/NovBrowser --renderer' },
+  { pid: 3012, name: 'NovBrowser:GPU',  user: 'user',  cpu: 1.4, mem: 128,   status: 'S', cmd: '/usr/bin/NovBrowser --gpu' },
+  { pid: 3104, name: 'NovEdit',         user: 'user',  cpu: 0.6, mem: 128,   status: 'S', cmd: '/usr/bin/NovEdit' },
+  { pid: 3201, name: 'NovSysmon',       user: 'user',  cpu: 0.3, mem: 24,    status: 'R', cmd: '/usr/bin/NovSysmon' },
+  { pid: 3345, name: 'NovMusic',        user: 'user',  cpu: 1.2, mem: 96,    status: 'S', cmd: '/usr/bin/NovMusic' },
+  { pid: 3512, name: 'novterm',         user: 'user',  cpu: 0.1, mem: 20,    status: 'S', cmd: '/usr/bin/novterm' },
+  { pid: 4001, name: 'kworker/0:1',     user: 'root',  cpu: 0.0, mem: 0,     status: 'S', cmd: '[kworker/0:1]' },
+  { pid: 4102, name: 'sshd',            user: 'root',  cpu: 0.0, mem: 6,     status: 'S', cmd: '/usr/sbin/sshd' },
+];
+
+let smProcs = smProcesses.map(p => ({...p}));
+let smKilledPids = new Set();
+
 function buildSysmon() {
   return `
-    <div class="sysmon-body" id="sysmon-body">
-      <div class="sysmon-grid">
-        <div class="sysmon-card">
-          <div class="sysmon-title">CPU-Auslastung</div>
-          <div class="sysmon-val" id="sm-cpu">0% <span>nova-core i9</span></div>
-          <div class="bar-track"><div class="bar-fill" id="sm-cpu-bar" style="background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%"></div></div>
+    <div style="display:flex;flex-direction:column;flex:1;overflow:hidden">
+      <div class="sysmon-tabs">
+        <button class="sysmon-tab active" id="smt-overview" onclick="sysmonSwitchTab('overview',this)">📊 Übersicht</button>
+        <button class="sysmon-tab" id="smt-processes" onclick="sysmonSwitchTab('processes',this)">⚙️ Prozesse</button>
+        <button class="sysmon-tab" id="smt-resources" onclick="sysmonSwitchTab('resources',this)">📈 Ressourcen</button>
+        <button class="sysmon-tab" id="smt-disk" onclick="sysmonSwitchTab('disk',this)">💾 Datenträger</button>
+      </div>
+      <div class="sysmon-pane" id="sysmon-content"></div>
+    </div>`;
+}
+
+function initSysmon() {
+  sysmonTab = 'overview';
+  sysmonRenderTab();
+  sysmonInterval = setInterval(() => {
+    sysmonTick();
+    sysmonRenderTab();
+  }, 1500);
+}
+
+function sysmonTick() {
+  // Update process CPU/mem with realistic variation
+  smProcs.forEach(p => {
+    if(smKilledPids.has(p.pid)) return;
+    p.cpu = Math.max(0, p.cpu + (Math.random()-0.5)*2);
+    p.cpu = Math.min(p.cpu, p.name.includes('Browser') ? 25 : p.name === 'Xorg' ? 12 : 6);
+    p.mem = Math.max(1, p.mem + (Math.random()-0.5)*4);
+  });
+
+  const totalCpu = smProcs.filter(p=>!smKilledPids.has(p.pid)).reduce((s,p)=>s+p.cpu,0);
+  const cpu = Math.min(100, totalCpu);
+  cpuHistory.push(cpu); cpuHistory.shift();
+  const ram = SM_TOTAL_RAM * 0.3 + (Math.random()-0.5)*0.5;
+  ramHistory.push(ram); ramHistory.shift();
+  netUpHistory.push((Math.random()*3).toFixed(1)*1); netUpHistory.shift();
+  netDownHistory.push((Math.random()*15).toFixed(1)*1); netDownHistory.shift();
+}
+
+function sysmonSwitchTab(tab, el) {
+  sysmonTab = tab;
+  document.querySelectorAll('.sysmon-tab').forEach(t => t.classList.remove('active'));
+  if(el) el.classList.add('active');
+  sysmonRenderTab();
+}
+
+function sysmonRenderTab() {
+  const c = document.getElementById('sysmon-content'); if(!c) return;
+  if(sysmonTab === 'overview') sysmonRenderOverview(c);
+  else if(sysmonTab === 'processes') sysmonRenderProcesses(c);
+  else if(sysmonTab === 'resources') sysmonRenderResources(c);
+  else if(sysmonTab === 'disk') sysmonRenderDisk(c);
+}
+
+function sysmonSparkline(data, color, h=32) {
+  const w = 200, max = Math.max(1, ...data);
+  const pts = data.map((v,i) => `${i*(w/(data.length-1))},${h-1-(v/max*(h-2))}`).join(' ');
+  return `<svg width="${w}" height="${h}" style="display:block"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linejoin="round"/></svg>`;
+}
+
+function sysmonRenderOverview(c) {
+  const cpu = cpuHistory[cpuHistory.length-1].toFixed(1);
+  const ram = ramHistory[ramHistory.length-1];
+  const ramPct = (ram/SM_TOTAL_RAM*100).toFixed(0);
+  const netUp = netUpHistory[netUpHistory.length-1].toFixed(1);
+  const netDown = netDownHistory[netDownHistory.length-1].toFixed(1);
+  const diskUsed = 128, diskPct = (diskUsed/SM_TOTAL_DISK*100).toFixed(0);
+  const activeProcs = smProcs.filter(p=>!smKilledPids.has(p.pid)).length;
+
+  c.innerHTML = `
+    <div class="sysmon-overview">
+      <div class="sysmon-card">
+        <div class="sysmon-card-title">CPU <span style="font-weight:400;color:var(--text2)">Nova-Core i9 · 8 Kerne</span></div>
+        <div class="sysmon-val-row"><span class="sysmon-big">${cpu}%</span><span class="sysmon-sub">von 100%</span></div>
+        <div class="bar-track"><div class="bar-fill" style="background:linear-gradient(90deg,var(--accent),var(--accent2));width:${cpu}%"></div></div>
+        <div class="sysmon-label-row"><span>0%</span><span>50%</span><span>100%</span></div>
+        ${sysmonSparkline(cpuHistory, 'var(--accent)')}
+      </div>
+      <div class="sysmon-card">
+        <div class="sysmon-card-title">Arbeitsspeicher <span style="font-weight:400;color:var(--text2)">DDR5-4800</span></div>
+        <div class="sysmon-val-row"><span class="sysmon-big">${ram.toFixed(1)} GB</span><span class="sysmon-sub">von ${SM_TOTAL_RAM} GB (${ramPct}%)</span></div>
+        <div class="bar-track"><div class="bar-fill" style="background:linear-gradient(90deg,var(--accent3),#00b4db);width:${ramPct}%"></div></div>
+        <div class="sysmon-label-row"><span>0</span><span>${SM_TOTAL_RAM/2}GB</span><span>${SM_TOTAL_RAM}GB</span></div>
+        ${sysmonSparkline(ramHistory.map(v=>v/SM_TOTAL_RAM*100), 'var(--accent3)')}
+      </div>
+      <div class="sysmon-card">
+        <div class="sysmon-card-title">Netzwerk <span style="font-weight:400;color:var(--text2)">NovNet 1Gbps</span></div>
+        <div class="sysmon-val-row">
+          <span class="sysmon-big" style="font-size:20px">↑ ${netUp} <span class="sysmon-sub">MB/s</span></span>
+          <span class="sysmon-big" style="font-size:20px;margin-left:16px">↓ ${netDown} <span class="sysmon-sub">MB/s</span></span>
         </div>
-        <div class="sysmon-card">
-          <div class="sysmon-title">Arbeitsspeicher</div>
-          <div class="sysmon-val" id="sm-ram">0 GB <span>von 16 GB</span></div>
-          <div class="bar-track"><div class="bar-fill" id="sm-ram-bar" style="background:linear-gradient(90deg,var(--accent3),#00b4db);width:0%"></div></div>
-        </div>
-        <div class="sysmon-card">
-          <div class="sysmon-title">Speicher</div>
-          <div class="sysmon-val">128 GB <span>von 512 GB (25%)</span></div>
-          <div class="bar-track"><div class="bar-fill" style="background:linear-gradient(90deg,#f7971e,#ffd200);width:25%"></div></div>
-        </div>
-        <div class="sysmon-card">
-          <div class="sysmon-title">Netzwerk ↑↓</div>
-          <div class="sysmon-val" id="sm-net">0 / 0 <span>MB/s</span></div>
-          <div class="bar-track"><div class="bar-fill" id="sm-net-bar" style="background:linear-gradient(90deg,#6affca,#00b4db);width:30%"></div></div>
+        <div style="display:flex;gap:8px;margin-top:4px">
+          ${sysmonSparkline(netUpHistory, '#6affca', 28)}
+          ${sysmonSparkline(netDownHistory, '#ffca6a', 28)}
         </div>
       </div>
       <div class="sysmon-card">
-        <div class="sysmon-title">Prozesse</div>
-        <div class="proc-list">
-          <div class="proc-row" style="font-size:10px;color:var(--text2)">
-            <span class="proc-name">Name</span><span class="proc-cpu">CPU %</span><span class="proc-mem">RAM MB</span>
-          </div>
-          ${[['novshell','2.1','184'],['Xorg','3.4','256'],['NovBrowser','8.2','512'],['novd','0.8','64'],['audio-srv','1.2','48'],['net-mgr','0.4','32'],['update-srv','0.2','28']].map(([n,c,m])=>`
-          <div class="proc-row"><span class="proc-name">${n}</span><span class="proc-cpu">${c}%</span><span class="proc-mem">${m}</span></div>`).join('')}
+        <div class="sysmon-card-title">Datenträger <span style="font-weight:400;color:var(--text2)">NovSSD Gen4</span></div>
+        <div class="sysmon-val-row"><span class="sysmon-big">${diskUsed} GB</span><span class="sysmon-sub">von ${SM_TOTAL_DISK} GB (${diskPct}%)</span></div>
+        <div class="bar-track"><div class="bar-fill" style="background:linear-gradient(90deg,#f7971e,#ffd200);width:${diskPct}%"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text2);margin-top:6px">
+          <span>Lesen: 3.2 GB/s</span><span>Schreiben: 2.8 GB/s</span>
         </div>
+      </div>
+    </div>
+    <div class="sysmon-card">
+      <div class="sysmon-card-title">Systeminfo</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 24px;font-size:11px">
+        ${[['OS','NovOS 3.1.0 (nova-6.4.2-lts)'],['Uptime','12 Std. 43 Min.'],['CPU','Nova-Core i9-14900K @ 3.2GHz'],['Kerne','8 Kerne / 16 Threads'],['RAM','16 GB DDR5-4800'],['GPU','NovGPU RTX 5080'],['Hostname','novos-desktop'],['Prozesse',activeProcs+' aktiv / '+smProcs.length+' gesamt']].map(([k,v])=>`
+          <div><span style="color:var(--text2)">${k}:</span> <span style="color:var(--text);font-weight:600">${v}</span></div>`).join('')}
       </div>
     </div>`;
 }
-function initSysmon() {
-  updateSysmon();
-  sysmonInterval=setInterval(updateSysmon, 2000);
+
+function sysmonRenderProcesses(c) {
+  const alive = smProcs.filter(p => !smKilledPids.has(p.pid));
+  const sorted = [...alive].sort((a,b) => {
+    const va = a[sysmonSortCol], vb = b[sysmonSortCol];
+    return typeof va === 'string' ? va.localeCompare(vb)*sysmonSortDir : (vb-va)*sysmonSortDir;
+  });
+
+  const totalCpu = alive.reduce((s,p)=>s+p.cpu,0).toFixed(1);
+  const totalMem = alive.reduce((s,p)=>s+p.mem,0);
+
+  const cols = [
+    {key:'pid',  label:'PID',    w:'55px'},
+    {key:'name', label:'Name',   w:'1fr'},
+    {key:'user', label:'Benutzer',w:'80px'},
+    {key:'status',label:'Status',w:'60px'},
+    {key:'cpu',  label:'CPU %',  w:'70px'},
+    {key:'mem',  label:'RAM MB', w:'70px'},
+    {key:'_kill',label:'',       w:'36px'},
+  ];
+
+  c.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:0 0 10px;flex-shrink:0">
+      <span style="font-size:12px;color:var(--text2)">${alive.length} Prozesse · CPU gesamt: <span style="color:var(--accent)">${totalCpu}%</span> · RAM gesamt: <span style="color:var(--accent3)">${(totalMem/1024).toFixed(1)} GB</span></span>
+      <input type="text" id="sm-proc-search" placeholder="Filtern…" style="background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:4px 10px;color:var(--text);font-family:'Inter',sans-serif;font-size:11px;outline:none;width:140px" oninput="sysmonRenderTab()">
+    </div>
+    <div style="overflow-y:auto;flex:1">
+      <table class="proc-table" style="width:100%">
+        <thead><tr>${cols.map(col => col.key === '_kill' ? '<th></th>' :
+          `<th onclick="sysmonSortProc('${col.key}')" style="width:${col.w};cursor:pointer">
+            ${col.label} ${sysmonSortCol===col.key?(sysmonSortDir<0?'↓':'↑'):''}
+          </th>`).join('')}</tr></thead>
+        <tbody>${sorted.filter(p => {
+          const search = document.getElementById('sm-proc-search')?.value?.toLowerCase() || '';
+          return !search || p.name.toLowerCase().includes(search) || String(p.pid).includes(search);
+        }).map(p => {
+          const cpuBar = `<span class="proc-cpu-bar" style="width:${Math.min(80,p.cpu*3)}px"></span>`;
+          const statusColor = p.status === 'R' ? 'var(--accent3)' : 'var(--text2)';
+          return `<tr>
+            <td style="color:var(--text2)">${p.pid}</td>
+            <td><span style="font-weight:600;color:var(--text)">${p.name}</span><span style="color:var(--text2);font-size:10px;margin-left:6px">${p.cmd.length>30?p.cmd.slice(0,30)+'…':p.cmd}</span></td>
+            <td>${p.user}</td>
+            <td><span style="color:${statusColor};font-weight:600">${p.status === 'R' ? '● Aktiv' : '◌ Warten'}</span></td>
+            <td>${p.cpu.toFixed(1)}%${cpuBar}</td>
+            <td>${p.mem.toFixed(0)}</td>
+            <td><button class="kill-btn" onclick="sysmonKillProc(${p.pid})" title="Prozess beenden">✕</button></td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>
+    </div>`;
 }
-function updateSysmon() {
-  const cpu=Math.floor(Math.random()*40+5);
-  const ram=(Math.random()*4+2).toFixed(1);
-  const netU=(Math.random()*5).toFixed(1);
-  const netD=(Math.random()*20).toFixed(1);
-  const setT=(id,v)=>{const e=document.getElementById(id);if(e)e.innerHTML=v;};
-  const setW=(id,v)=>{const e=document.getElementById(id);if(e)e.style.width=v+'%';};
-  setT('sm-cpu',`${cpu}% <span>nova-core i9</span>`); setW('sm-cpu-bar',cpu);
-  setT('sm-ram',`${ram} GB <span>von 16 GB</span>`); setW('sm-ram-bar',(ram/16*100).toFixed(0));
-  setT('sm-net',`${netU} / ${netD} <span>MB/s</span>`); setW('sm-net-bar',Math.min(netD*4,100));
+
+function sysmonSortProc(col) {
+  if(sysmonSortCol === col) sysmonSortDir *= -1;
+  else { sysmonSortCol = col; sysmonSortDir = -1; }
+  sysmonRenderTab();
+}
+
+async function sysmonKillProc(pid) {
+  const p = smProcs.find(pr => pr.pid === pid);
+  if(!p) return;
+  const ok = await novDialog({
+    icon:'⚠️', title:'Prozess beenden',
+    msg:`"${p.name}" (PID ${pid}) wirklich beenden?\nUngespeicherte Daten gehen verloren.`,
+    confirmLabel:'Beenden', danger:true
+  });
+  if(!ok) return;
+  smKilledPids.add(pid);
+  showNotif('System-Monitor', '"' + p.name + '" (PID '+pid+') beendet', '#ff6a8a');
+  sysmonRenderTab();
+}
+
+function sysmonRenderResources(c) {
+  c.innerHTML = `
+    <div class="sysmon-card">
+      <div class="sysmon-card-title">CPU-Verlauf (letzte 60s)</div>
+      <svg width="100%" height="80" viewBox="0 0 600 80" preserveAspectRatio="none" style="display:block">
+        <defs><linearGradient id="cpuGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--accent)" stop-opacity="0.3"/><stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>
+        <polygon points="${cpuHistory.map((v,i)=>`${i*(600/59)},${79-v*0.77}`).join(' ')} 600,79 0,79" fill="url(#cpuGrad)"/>
+        <polyline points="${cpuHistory.map((v,i)=>`${i*(600/59)},${79-v*0.77}`).join(' ')}" fill="none" stroke="var(--accent)" stroke-width="2"/>
+      </svg>
+      <div class="sysmon-label-row"><span>vor 60s</span><span>vor 30s</span><span>jetzt</span></div>
+    </div>
+    <div class="sysmon-card">
+      <div class="sysmon-card-title">RAM-Verlauf (letzte 60s)</div>
+      <svg width="100%" height="80" viewBox="0 0 600 80" preserveAspectRatio="none" style="display:block">
+        <defs><linearGradient id="ramGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--accent3)" stop-opacity="0.3"/><stop offset="100%" stop-color="var(--accent3)" stop-opacity="0"/></linearGradient></defs>
+        <polygon points="${ramHistory.map((v,i)=>`${i*(600/59)},${79-(v/SM_TOTAL_RAM)*77}`).join(' ')} 600,79 0,79" fill="url(#ramGrad)"/>
+        <polyline points="${ramHistory.map((v,i)=>`${i*(600/59)},${79-(v/SM_TOTAL_RAM)*77}`).join(' ')}" fill="none" stroke="var(--accent3)" stroke-width="2"/>
+      </svg>
+      <div class="sysmon-label-row"><span>vor 60s</span><span>vor 30s</span><span>jetzt (${ramHistory[59]?.toFixed(1)} GB)</span></div>
+    </div>
+    <div class="sysmon-card">
+      <div class="sysmon-card-title">Netzwerk ↑↓ (letzte 60s)</div>
+      <svg width="100%" height="80" viewBox="0 0 600 80" preserveAspectRatio="none" style="display:block">
+        <polyline points="${netDownHistory.map((v,i)=>`${i*(600/59)},${79-Math.min(v/20,1)*77}`).join(' ')}" fill="none" stroke="#ffca6a" stroke-width="1.5"/>
+        <polyline points="${netUpHistory.map((v,i)=>`${i*(600/59)},${79-Math.min(v/10,1)*77}`).join(' ')}" fill="none" stroke="#6affca" stroke-width="1.5"/>
+      </svg>
+      <div style="display:flex;gap:16px;font-size:10px;margin-top:4px">
+        <span style="color:#ffca6a">↓ Download</span>
+        <span style="color:#6affca">↑ Upload</span>
+      </div>
+    </div>`;
+}
+
+function sysmonRenderDisk(c) {
+  const partitions = [
+    {mount:'/',       label:'System',     used:47,  total:128, color:'var(--accent)',  fs:'ext4'},
+    {mount:'/home',   label:'Privat',     used:81,  total:256, color:'var(--accent3)', fs:'ext4'},
+    {mount:'/boot',   label:'Boot',       used:0.3, total:1,   color:'var(--accent2)', fs:'vfat'},
+    {mount:'/var',    label:'Variabel',   used:12,  total:64,  color:'#ffca6a',        fs:'ext4'},
+    {mount:'/tmp',    label:'Temporär',   used:0.8, total:8,   color:'#6affca',        fs:'tmpfs'},
+  ];
+  c.innerHTML = `
+    <div class="sysmon-card">
+      <div class="sysmon-card-title">Datenträger-Übersicht · NovSSD Gen4 PCIe 5.0</div>
+      <div style="display:flex;gap:16px;font-size:11px;margin-bottom:12px;color:var(--text2)">
+        <span>Modell: Nova Storage NV2000</span>
+        <span>Lesen: 3.2 GB/s</span>
+        <span>Schreiben: 2.8 GB/s</span>
+        <span>Temperatur: 38°C</span>
+      </div>
+      ${partitions.map(p => {
+        const pct = (p.used/p.total*100).toFixed(0);
+        const usedStr = p.used < 1 ? (p.used*1024).toFixed(0)+' MB' : p.used+' GB';
+        const totalStr = p.total < 1 ? (p.total*1024).toFixed(0)+' MB' : p.total+' GB';
+        return `
+          <div style="margin-bottom:14px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+              <span style="font-weight:600;color:var(--text)">${p.label}</span>
+              <span style="color:var(--text2);font-size:10px">${p.mount} · ${p.fs} · ${usedStr} / ${totalStr}</span>
+              <span style="color:${p.color};font-weight:700">${pct}%</span>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill" style="background:${p.color};width:${pct}%"></div>
+            </div>
+          </div>`;
+      }).join('')}
+    </div>
+    <div class="sysmon-card">
+      <div class="sysmon-card-title">I/O-Aktivität</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:12px">
+        ${[['📖 Gelesen','1.24 TB'],['✏️ Geschrieben','0.87 TB'],['⚡ Lesen','3.2 GB/s'],['⚡ Schreiben','2.8 GB/s'],['🔄 IOPS (Lesen)','890.000'],['🔄 IOPS (Schreiben)','780.000']].map(([k,v])=>`
+          <div style="background:var(--panel2);padding:10px;border-radius:8px;border:1px solid var(--border)">
+            <div style="color:var(--text2);font-size:10px">${k}</div>
+            <div style="font-size:15px;font-weight:700;color:var(--text);margin-top:3px">${v}</div>
+          </div>`).join('')}
+      </div>
+    </div>`;
 }
 
 // Settings UI
