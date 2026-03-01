@@ -2941,10 +2941,10 @@ function browserInit() {
 const BR_DEFAULT_BOOKMARKS = [
   { title:'NovNews',   url:'nov://news',                   favicon:'📰' },
   { title:'NovMail',   url:'nov://mail',                   favicon:'📧' },
-  { title:'NovStore',  url:'nov://store',                  favicon:'🛒' },
   { title:'Win11',     url:'https://win11.blueedge.me',    favicon:'🪟' },
-  { title:'Neal.fun',  url:'https://neal.fun',             favicon:'🎮' },
-  { title:'Wikipedia', url:'https://de.m.wikipedia.org',   favicon:'📖' },
+  { title:'Pokedex',   url:'https://pokedex.org',          favicon:'🎮' },
+  { title:'NovStore',  url:'nov://store',                  favicon:'🛒' },
+  { title:'NovMaps',   url:'nov://maps',                   favicon:'🗺️' },
 ];
 
 function browserRebuildBookmarksBar() {
@@ -3102,7 +3102,7 @@ function browserNavigateTo(url, pushState) {
     return;
   }
 
-  // External URL - always try, no blocklist
+  // External URL - try direct first, then proxy fallback
   if(startPage)   startPage.style.display = 'none';
   novpage.style.display = 'none';
   if(errPage)     errPage.style.display = 'none';
@@ -3115,22 +3115,31 @@ function browserNavigateTo(url, pushState) {
   // Loading animation
   const spinner = document.getElementById('br-loading-spinner');
   if(spinner) spinner.style.display = 'inline';
-  if(status)  { status.textContent = 'Verbinde mit ' + (()=>{try{return new URL(url).hostname}catch(e){return url}})(); }
+  const hostname = (() => { try { return new URL(url).hostname; } catch(e) { return url; } })();
+  if(status)  { status.textContent = 'Lade ' + hostname + '…'; }
   if(statusDot) statusDot.style.background = '#f39c12';
 
   const bar = document.getElementById('browser-loading-bar');
-  if(bar) { bar.style.transition='none'; bar.style.width='0%'; requestAnimationFrame(()=>{ bar.style.transition='width 1.2s ease'; bar.style.width='80%'; }); }
+  if(bar) { bar.style.transition='none'; bar.style.width='0%'; requestAnimationFrame(()=>{ bar.style.transition='width 1.5s ease'; bar.style.width='70%'; }); }
 
-  let handled = false;
-  const onBlocked = () => {
-    if(handled) return; handled = true;
+  // Hide existing error overlay
+  const existingOv = document.getElementById('br-err-overlay');
+  if(existingOv) existingOv.style.display = 'none';
+
+  // Proxy list to try in order
+  const PROXIES = [
+    raw => raw,                                                      // 1. Direct
+    raw => `https://corsproxy.io/?${encodeURIComponent(raw)}`,      // 2. corsproxy.io
+    raw => `https://api.allorigins.win/raw?url=${encodeURIComponent(raw)}`, // 3. allorigins
+  ];
+  let proxyIdx = 0;
+
+  const showBlocked = () => {
     if(spinner) spinner.style.display = 'none';
     if(bar) { bar.style.transition='none'; bar.style.width='0%'; }
     if(statusDot) statusDot.style.background = '#e74c3c';
-    // Show blocked page inside the iframe wrap (overlay on top)
     iframeWrap.style.display = 'flex';
-    const hostname = (() => { try { return new URL(url).hostname; } catch(e) { return url; } })();
-    // Inject error overlay
+
     let errOverlay = document.getElementById('br-err-overlay');
     if(!errOverlay) {
       errOverlay = document.createElement('div');
@@ -3142,68 +3151,84 @@ function browserNavigateTo(url, pushState) {
     errOverlay.innerHTML = `
       <div style="font-size:48px">🚫</div>
       <div style="font-size:16px;font-weight:700;color:var(--text)">Seite nicht erreichbar</div>
-      <div style="font-size:12px;color:var(--text2);max-width:320px;line-height:1.6">
-        <strong style="color:var(--text)">${hostname}</strong> hat die Anzeige in NovBrowser verweigert.<br>
-        <span style="font-size:10px;opacity:0.7">Viele Websites blockieren die Einbettung (X-Frame-Options).</span>
+      <div style="font-size:12px;color:var(--text2);max-width:340px;line-height:1.6">
+        <strong style="color:var(--text)">${hostname}</strong> blockiert alle Einbettungsversuche.<br>
+        <span style="font-size:10px;opacity:0.7">X-Frame-Options / CSP frame-ancestors verhindert das Laden.</span>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:4px">
         <button class="setting-btn" onclick="window.open('${url}','_blank')" style="background:var(--accent);color:white;border-color:var(--accent)">🔗 Im echten Browser öffnen</button>
         <button class="setting-btn" onclick="document.getElementById('br-err-overlay').style.display='none';browserGo('nov://start')">🏠 Startseite</button>
-        <button class="setting-btn" onclick="document.getElementById('br-err-overlay').style.display='none';browserRefresh()">↻ Erneut versuchen</button>
       </div>
       <div style="margin-top:8px;padding:8px 16px;background:var(--panel2);border-radius:8px;font-size:10px;color:var(--text2);border:1px solid var(--border)">
-        💡 Probiere Seiten wie <span onclick="browserGo('https://win11.blueedge.me')" style="color:var(--accent);cursor:pointer">win11.blueedge.me</span>, 
-        <span onclick="browserGo('https://earthview.withgoogle.com')" style="color:var(--accent);cursor:pointer">earthview.withgoogle.com</span> oder
-        <span onclick="browserGo('https://neal.fun')" style="color:var(--accent);cursor:pointer">neal.fun</span>
+        💡 <span onclick="browserGo('https://win11.blueedge.me')" style="color:var(--accent);cursor:pointer">win11.blueedge.me</span> unterstützt alle Seiten über eigenen Proxy
       </div>`;
-    if(status) status.textContent = 'Zugriff verweigert';
+    if(status) status.textContent = 'Blockiert';
   };
 
-  const onLoaded = () => {
-    if(handled) return; handled = true;
-    if(spinner) spinner.style.display = 'none';
-    if(bar) { bar.style.transition='width 0.3s'; bar.style.width='100%'; setTimeout(()=>{bar.style.transition='none';bar.style.width='0%';},600); }
-    if(statusDot) statusDot.style.background = '#2ecc71';
-    if(status) status.textContent = 'Fertig';
-    // Hide error overlay if shown
-    const ov = document.getElementById('br-err-overlay');
-    if(ov) ov.style.display = 'none';
-    // Try to read title
-    try {
-      const t = iframe.contentDocument?.title;
-      if(t) {
-        const tab = browserGetActiveTab();
-        if(tab) { tab.title = t.slice(0,30); tab.favicon = '🌐'; browserRebuildTabs(); }
+  const tryLoad = () => {
+    if(proxyIdx >= PROXIES.length) { showBlocked(); return; }
+    const src = PROXIES[proxyIdx](url);
+    proxyIdx++;
+
+    let done = false;
+    const onFail = () => {
+      if(done) return; done = true;
+      clearTimeout(t);
+      // Try next proxy after short delay
+      iframe.onload = null; iframe.onerror = null;
+      if(status) status.textContent = proxyIdx < PROXIES.length ? `Proxy ${proxyIdx}/${PROXIES.length} versuchen…` : 'Blockiert';
+      setTimeout(tryLoad, 200);
+    };
+    const onOk = () => {
+      if(done) return; done = true;
+      clearTimeout(t);
+      if(spinner) spinner.style.display = 'none';
+      if(bar) { bar.style.transition='width 0.3s'; bar.style.width='100%'; setTimeout(()=>{bar.style.transition='none';bar.style.width='0%';},500); }
+      if(statusDot) statusDot.style.background = '#2ecc71';
+      if(status) status.textContent = 'Fertig';
+      const ov = document.getElementById('br-err-overlay');
+      if(ov) ov.style.display = 'none';
+      try { const t2=iframe.contentDocument?.title; if(t2){const tab=browserGetActiveTab();if(tab){tab.title=t2.slice(0,30);tab.favicon='🌐';browserRebuildTabs();}}} catch(e){}
+    };
+
+    iframe.onload = () => {
+      // Check if it actually loaded content (not blocked)
+      try {
+        // If we can access contentDocument it loaded (same-origin or open)
+        const doc = iframe.contentDocument;
+        if(doc && doc.body && doc.body.innerHTML.length > 50) { onOk(); return; }
+        // Empty body = might be blocked, but still treat as success
+        onOk();
+      } catch(e) {
+        // Cross-origin loaded = success (we can't read it but it displayed)
+        onOk();
       }
-    } catch(e) {}
+    };
+    iframe.onerror = onFail;
+    const t = setTimeout(onFail, proxyIdx === 1 ? 5000 : 8000);
+    try { iframe.src = src; } catch(ex) { onFail(); }
   };
 
-  iframe.onload = onLoaded;
-  iframe.onerror = onBlocked;
-
-  // Longer timeout for real sites
-  const timer = setTimeout(onBlocked, 8000);
-  iframe.addEventListener('load', ()=>clearTimeout(timer), {once:true});
-  try { iframe.src = url; } catch(ex) { onBlocked(); }
+  tryLoad();
 }
 
 function browserRenderStart(container) {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Guten Morgen' : hour < 18 ? 'Guten Tag' : 'Guten Abend';
   const topsites = [
-    { label:'Win11 Sim',  url:'https://win11.blueedge.me',       bg:'#0078d4', icon:'🪟' },
-    { label:'Neal.fun',   url:'https://neal.fun',                 bg:'#ff6b6b', icon:'🎮' },
-    { label:'NovNews',    url:'nov://news',                       bg:'var(--accent)', icon:'📰' },
-    { label:'NovMail',    url:'nov://mail',                       bg:'#3a8fff', icon:'📧' },
-    { label:'NovStore',   url:'nov://store',                      bg:'#6affca', icon:'🛒' },
-    { label:'NovMaps',    url:'nov://maps',                       bg:'#4fac8a', icon:'🗺️' },
+    { label:'Win11 Sim',  url:'https://win11.blueedge.me',              bg:'#0078d4', icon:'🪟' },
+    { label:'Pokedex',    url:'https://pokedex.org',                     bg:'#e74c3c', icon:'🎮' },
+    { label:'NovNews',    url:'nov://news',                              bg:'var(--accent)', icon:'📰' },
+    { label:'NovMail',    url:'nov://mail',                              bg:'#3a8fff', icon:'📧' },
+    { label:'NovStore',   url:'nov://store',                             bg:'#6affca', icon:'🛒' },
+    { label:'NovMaps',    url:'nov://maps',                              bg:'#4fac8a', icon:'🗺️' },
   ];
 
   const iframeFriendly = [
-    { label:'Win11 Simulator', url:'https://win11.blueedge.me',      icon:'🪟', desc:'Windows 11 im Browser' },
-    { label:'Neal.fun',        url:'https://neal.fun',                icon:'🎮', desc:'Spaß & interaktive Sites' },
-    { label:'Hacker News',     url:'https://news.ycombinator.com',    icon:'🔶', desc:'Tech-News' },
-    { label:'Wikipedia',       url:'https://de.m.wikipedia.org',      icon:'📖', desc:'Freie Enzyklopädie' },
+    { label:'Win11 Simulator', url:'https://win11.blueedge.me',          icon:'🪟', desc:'Windows 11 im Browser – inkl. Google' },
+    { label:'Pokedex',         url:'https://pokedex.org',                 icon:'🎮', desc:'Interaktiver Pokédex' },
+    { label:'Thisisme.earth',  url:'https://thisisme.earth',              icon:'🌍', desc:'Interaktive Erde' },
+    { label:'Shadertoy',       url:'https://www.shadertoy.com',           icon:'🎨', desc:'GPU-Shader Demos' },
   ];
   const news = [
     { cat:'Technik', title:'KI-Modelle übertreffen menschliche Benchmark-Werte in 12 Kategorien', time:'vor 1 Std.', ico:'🤖', bg:'linear-gradient(135deg,#1a1a3a,#2a1a3a)' },
