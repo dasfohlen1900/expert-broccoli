@@ -361,7 +361,7 @@
 
   /* ══════════════════ TERMINAL ══════════════════ */
   .terminal-body {
-    background:#060610; padding:14px;
+    background:var(--panel); padding:14px;
     font-family:'Courier New',monospace; font-size:12px;
     color:var(--accent3); overflow-y:auto; flex:1; line-height:1.6;
   }
@@ -372,7 +372,7 @@
   .terminal-err { color:var(--accent2); }
   .terminal-input-row {
     display:flex; align-items:center; gap:6px;
-    padding:8px 14px; border-top:1px solid var(--border); background:#060610;
+    padding:8px 14px; border-top:1px solid var(--border); background:var(--panel2);
   }
   .terminal-prompt-inp { color:var(--accent); flex-shrink:0; font-family:'Courier New',monospace; font-size:12px; }
   .terminal-input {
@@ -477,18 +477,18 @@
 
   /* ══════════════════ MUSIC ══════════════════ */
   .music-shell {
-    display:flex; flex:1; overflow:hidden; background:#080812;
+    display:flex; flex:1; overflow:hidden; background:var(--panel);
   }
   .music-sidebar {
     width:190px; flex-shrink:0; border-right:1px solid var(--border);
-    background:#05050e; padding:12px 8px; overflow-y:auto; display:flex; flex-direction:column; gap:2px;
+    background:var(--panel2); padding:12px 8px; overflow-y:auto; display:flex; flex-direction:column; gap:2px;
   }
   .music-nav-section { font-size:9px; font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:1px; padding:12px 8px 4px; }
   .music-nav-item {
     display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:7px;
     cursor:pointer; font-size:12px; color:var(--text2); transition:all 0.12s;
   }
-  .music-nav-item:hover { background:rgba(255,255,255,0.05); color:var(--text); }
+  .music-nav-item:hover { background:var(--border); color:var(--text); }
   .music-nav-item.active { background:rgba(124,106,255,0.18); color:var(--accent); font-weight:600; }
   .music-main-area {
     flex:1; display:flex; flex-direction:column; overflow:hidden;
@@ -504,9 +504,9 @@
   .music-track-row {
     display:grid; grid-template-columns:28px 1fr 1fr 60px;
     align-items:center; gap:12px; padding:8px 10px; border-radius:8px;
-    cursor:pointer; transition:background 0.1s; border-bottom:1px solid rgba(255,255,255,0.03);
+    cursor:pointer; transition:background 0.1s; border-bottom:1px solid var(--border);
   }
-  .music-track-row:hover { background:rgba(255,255,255,0.05); }
+  .music-track-row:hover { background:var(--border); }
   .music-track-row.playing { background:rgba(124,106,255,0.12); }
   .music-track-row .tnum { font-size:11px; color:var(--text2); text-align:center; }
   .music-track-row .tnum.eq { color:var(--accent); animation:eq-pulse 1s ease-in-out infinite; }
@@ -515,7 +515,7 @@
   .music-track-row .tartist { font-size:11px; color:var(--text2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .music-track-row .tdur { font-size:11px; color:var(--text2); text-align:right; }
   .music-player-bar {
-    border-top:1px solid var(--border); background:#05050e; padding:12px 16px;
+    border-top:1px solid var(--border); background:var(--panel2); padding:12px 16px;
     display:flex; flex-direction:column; gap:10px; flex-shrink:0;
   }
   .music-player-top { display:flex; align-items:center; gap:16px; }
@@ -589,7 +589,7 @@
   .about-ver { font-size:11px; color:var(--text2); margin-top:3px; }
 
   /* ══════════════════ CALCULATOR ══════════════════ */
-  .calc-shell { flex:1; display:flex; flex-direction:column; background:#08080f; overflow:hidden; }
+  .calc-shell { flex:1; display:flex; flex-direction:column; background:var(--panel); overflow:hidden; }
   .calc-mode-bar {
     display:flex; border-bottom:1px solid var(--border); background:var(--panel2); flex-shrink:0;
   }
@@ -601,7 +601,7 @@
   .calc-mode-btn.active { color:var(--accent); border-bottom-color:var(--accent); background:rgba(124,106,255,0.07); }
   .calc-display {
     padding:14px 16px 10px; text-align:right; flex-shrink:0;
-    background:linear-gradient(180deg,#0d0d1a,#08080f);
+    background:var(--panel2);
   }
   .calc-history-strip { font-size:10px; color:var(--text2); min-height:14px; opacity:0.7; word-break:break-all; }
   .calc-expr { font-size:12px; color:var(--text2); min-height:16px; margin-bottom:4px; }
@@ -609,21 +609,21 @@
   .calc-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; padding:10px; flex:1; }
   .calc-grid-sci { display:grid; grid-template-columns:repeat(4,1fr); gap:5px; padding:8px; flex:1; }
   .calc-btn {
-    border-radius:10px; border:1px solid rgba(255,255,255,0.06); cursor:pointer;
+    border-radius:10px; border:1px solid var(--border); cursor:pointer;
     font-family:'Inter',sans-serif; font-size:15px; font-weight:500;
-    background:rgba(255,255,255,0.05); color:var(--text);
+    background:var(--panel2); color:var(--text);
     display:flex; align-items:center; justify-content:center; padding:0;
     transition:all 0.08s; min-height:52px;
   }
-  .calc-btn:hover  { background:rgba(255,255,255,0.10); }
-  .calc-btn:active { transform:scale(0.93); background:rgba(255,255,255,0.15); }
+  .calc-btn:hover  { filter:brightness(0.92); }
+  .calc-btn:active { transform:scale(0.93); filter:brightness(0.85); }
   .calc-btn.op   { background:rgba(124,106,255,0.13); color:var(--accent); border-color:rgba(124,106,255,0.25); }
   .calc-btn.op:hover { background:rgba(124,106,255,0.22); }
   .calc-btn.eq   { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:white; border:none; box-shadow:0 4px 20px rgba(124,106,255,0.4); }
   .calc-btn.eq:hover { filter:brightness(1.12); }
   .calc-btn.clr  { color:var(--accent2); background:rgba(255,106,138,0.08); }
-  .calc-btn.sci  { font-size:11px; background:rgba(255,255,255,0.04); color:var(--accent3); border-color:rgba(106,255,202,0.15); }
-  .calc-btn.sci:hover { background:rgba(106,255,202,0.08); }
+  .calc-btn.sci  { font-size:11px; background:rgba(106,255,202,0.06); color:var(--accent3); border-color:rgba(106,255,202,0.15); }
+  .calc-btn.sci:hover { background:rgba(106,255,202,0.12); }
   .calc-btn.span2 { grid-column:span 2; }
   .calc-history-panel {
     max-height:90px; overflow-y:auto; padding:0 12px 8px;
@@ -631,7 +631,7 @@
   }
   .calc-hist-row {
     font-size:10px; color:var(--text2); text-align:right; padding:2px 0;
-    border-bottom:1px solid rgba(255,255,255,0.04); cursor:pointer;
+    border-bottom:1px solid var(--border); cursor:pointer;
   }
   .calc-hist-row:hover { color:var(--accent); }
 
@@ -648,7 +648,7 @@
   .editor-btn:hover { background:var(--border); color:var(--text); }
   .editor-sep { width:1px; height:18px; background:var(--border); margin:0 2px; }
   .editor-area {
-    flex:1; background:#070710; padding:16px; color:var(--text);
+    flex:1; background:var(--panel); padding:16px; color:var(--text);
     font-family:'Courier New',monospace; font-size:13px; line-height:1.7;
     outline:none; resize:none; border:none; overflow-y:auto;
     white-space:pre-wrap; tab-size:2;
@@ -667,7 +667,7 @@
     border-bottom:2px solid transparent; transition:all 0.12s; user-select:none;
   }
   .sysmon-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
-  .sysmon-tab:hover:not(.active) { color:var(--text); background:rgba(255,255,255,0.03); }
+  .sysmon-tab:hover:not(.active) { color:var(--text); background:var(--border); }
   .sysmon-pane { flex:1; overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:12px; min-height:0; }
   .sysmon-overview { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   .sysmon-card {
@@ -677,7 +677,7 @@
   .sysmon-val-row { display:flex; align-items:baseline; gap:6px; margin-bottom:8px; }
   .sysmon-big { font-size:28px; font-weight:700; color:var(--text); line-height:1; }
   .sysmon-sub { font-size:11px; color:var(--text2); }
-  .bar-track { width:100%; height:7px; background:rgba(255,255,255,0.06); border-radius:4px; overflow:hidden; margin-bottom:8px; }
+  .bar-track { width:100%; height:7px; background:var(--border); border-radius:4px; overflow:hidden; margin-bottom:8px; }
   .bar-fill { height:100%; border-radius:4px; transition:width 0.8s ease; }
   .spark-wrap { height:44px; overflow:hidden; position:relative; }
   .spark-canvas { width:100%; height:44px; display:block; }
@@ -686,7 +686,7 @@
   .proc-table th { text-align:left; color:var(--text2); font-weight:600; font-size:10px; text-transform:uppercase; letter-spacing:0.5px; padding:6px 8px; border-bottom:1px solid var(--border); cursor:pointer; user-select:none; }
   .proc-table th:hover { color:var(--text); }
   .proc-table td { padding:7px 8px; color:var(--text); border-bottom:1px solid rgba(255,255,255,0.04); }
-  .proc-table tr:hover td { background:rgba(255,255,255,0.04); }
+  .proc-table tr:hover td { background:var(--border); }
   .proc-table .kill-btn {
     background:rgba(255,80,80,0.15); border:1px solid rgba(255,80,80,0.3); border-radius:4px;
     color:#ff5050; padding:2px 8px; font-size:10px; cursor:pointer; transition:all 0.1s;
@@ -787,24 +787,25 @@
   .gallery-list-row {
     display:grid; grid-template-columns:36px 1fr 80px 80px; align-items:center; gap:12px;
     padding:8px 10px; border-radius:6px; cursor:pointer; transition:background 0.1s;
-    font-size:12px; border-bottom:1px solid rgba(255,255,255,0.03);
+    font-size:12px; border-bottom:1px solid var(--border);
   }
-  .gallery-list-row:hover { background:rgba(255,255,255,0.05); }
+  .gallery-list-row:hover { background:var(--border); }
   .gallery-info-bar {
     border-top:1px solid var(--border); background:var(--panel2); padding:8px 14px;
     display:flex; align-items:center; gap:16px; flex-shrink:0; font-size:11px; color:var(--text2);
   }
 
   /* ══════════════════ WEATHER ══════════════════ */
-  .weather-shell { flex:1; overflow-y:auto; background:linear-gradient(160deg,#0d1a2e 0%,#07060f 60%); display:flex; flex-direction:column; }
+  .weather-shell { flex:1; overflow-y:auto; background:linear-gradient(160deg,#0d1a2e 0%,#07060f 60%); display:flex; flex-direction:column; color:white; }
   .weather-search-bar {
     display:flex; align-items:center; gap:8px; padding:12px 16px;
-    background:rgba(255,255,255,0.04); border-bottom:1px solid rgba(255,255,255,0.06); flex-shrink:0;
+    background:rgba(0,0,0,0.2); border-bottom:1px solid rgba(255,255,255,0.08); flex-shrink:0;
   }
   .weather-search-inp {
-    flex:1; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12);
-    border-radius:20px; padding:7px 14px; color:var(--text); font-family:'Inter',sans-serif; font-size:12px; outline:none; transition:border-color 0.15s;
+    flex:1; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.15);
+    border-radius:20px; padding:7px 14px; color:white; font-family:'Inter',sans-serif; font-size:12px; outline:none; transition:border-color 0.15s;
   }
+  .weather-search-inp::placeholder { color:rgba(255,255,255,0.4); }
   .weather-search-inp:focus { border-color:var(--accent); }
   .weather-hero { padding:24px 24px 16px; text-align:center; }
   .weather-anim-icon { font-size:80px; margin-bottom:4px; line-height:1; filter:drop-shadow(0 8px 24px rgba(0,0,0,0.5)); animation:float-icon 3s ease-in-out infinite; }
@@ -817,7 +818,7 @@
     display:grid; grid-template-columns:repeat(4,1fr); gap:8px; padding:0 16px 16px;
   }
   .weather-stat {
-    background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.08);
+    background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.1);
     border-radius:12px; padding:12px; text-align:center;
   }
   .weather-stat-ico { font-size:18px; margin-bottom:4px; }
@@ -825,15 +826,15 @@
   .weather-stat-label { font-size:9px; color:rgba(255,255,255,0.45); text-transform:uppercase; letter-spacing:0.5px; margin-top:2px; }
   .weather-hourly {
     padding:0 16px 16px; overflow-x:auto; display:flex; gap:0;
-    background:rgba(255,255,255,0.03); border-top:1px solid rgba(255,255,255,0.06);
+    background:rgba(0,0,0,0.15); border-top:1px solid rgba(255,255,255,0.06);
     border-bottom:1px solid rgba(255,255,255,0.06); margin:0;
   }
   .weather-hour {
     flex-shrink:0; width:70px; padding:14px 0; text-align:center; cursor:pointer;
-    transition:background 0.1s; border-right:1px solid rgba(255,255,255,0.04);
+    transition:background 0.1s; border-right:1px solid rgba(255,255,255,0.05);
   }
-  .weather-hour:hover { background:rgba(255,255,255,0.05); }
-  .weather-hour.now { background:rgba(124,106,255,0.15); }
+  .weather-hour:hover { background:rgba(255,255,255,0.07); }
+  .weather-hour.now { background:rgba(124,106,255,0.25); }
   .weather-hour .wh-time { font-size:10px; color:rgba(255,255,255,0.5); }
   .weather-hour .wh-ico  { font-size:20px; margin:6px 0; }
   .weather-hour .wh-temp { font-size:13px; font-weight:600; color:white; }
@@ -842,15 +843,111 @@
   .weather-forecast-title { font-size:10px; font-weight:700; color:rgba(255,255,255,0.4); text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; }
   .forecast-row {
     display:grid; grid-template-columns:80px 1fr 80px 70px; align-items:center; gap:12px;
-    padding:10px 4px; border-bottom:1px solid rgba(255,255,255,0.05);
+    padding:10px 4px; border-bottom:1px solid rgba(255,255,255,0.06);
   }
   .forecast-row:last-child { border-bottom:none; }
-  .forecast-day { font-size:13px; color:rgba(255,255,255,0.8); font-weight:600; }
+  .forecast-day { font-size:13px; color:rgba(255,255,255,0.85); font-weight:600; }
   .forecast-ico  { font-size:20px; }
-  .forecast-bar-wrap { height:4px; background:rgba(255,255,255,0.1); border-radius:2px; position:relative; }
+  .forecast-bar-wrap { height:4px; background:rgba(255,255,255,0.12); border-radius:2px; position:relative; }
   .forecast-bar-fill { position:absolute; top:0; height:100%; background:linear-gradient(90deg,#6affca,#ffca6a); border-radius:2px; }
-  .forecast-temps { font-size:12px; color:rgba(255,255,255,0.7); text-align:right; }
+  .forecast-temps { font-size:12px; color:rgba(255,255,255,0.75); text-align:right; }
   .forecast-temps .low { color:rgba(255,255,255,0.35); margin-left:6px; }
+
+  /* ══════════════════ CLOCK APP ══════════════════ */
+  .clock-shell { flex:1; display:flex; flex-direction:column; overflow:hidden; background:var(--panel); }
+  .clock-tabs { display:flex; border-bottom:1px solid var(--border); background:var(--panel2); flex-shrink:0; }
+  .clock-tab {
+    flex:1; padding:10px 4px; font-size:11px; font-weight:600; background:none; border:none;
+    color:var(--text2); cursor:pointer; transition:all 0.12s; border-bottom:2px solid transparent;
+    font-family:'Inter',sans-serif; text-align:center;
+  }
+  .clock-tab:hover { color:var(--text); }
+  .clock-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+  .clock-pane { flex:1; overflow-y:auto; display:flex; flex-direction:column; align-items:center; padding:16px; gap:16px; }
+
+  /* Analog clock */
+  .analog-face {
+    width:200px; height:200px; border-radius:50%; position:relative; flex-shrink:0;
+    background:radial-gradient(circle at 35% 30%, #1e1e2e, #0d0d1a);
+    border:3px solid rgba(124,106,255,0.3);
+    box-shadow:0 0 0 1px rgba(124,106,255,0.1), 0 8px 40px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.05);
+  }
+  .clock-hand { position:absolute; bottom:50%; left:50%; transform-origin:bottom center; border-radius:3px; }
+  .hand-hour   { width:4px; margin-left:-2px; background:var(--text); box-shadow:0 0 6px rgba(255,255,255,0.2); }
+  .hand-min    { width:2.5px; margin-left:-1.25px; background:var(--accent); box-shadow:0 0 8px rgba(124,106,255,0.5); }
+  .hand-sec    { width:1.5px; margin-left:-.75px; background:var(--accent2); box-shadow:0 0 6px rgba(255,80,120,0.6); }
+  .clock-center { position:absolute; top:50%; left:50%; width:10px; height:10px; border-radius:50%; background:var(--accent2); transform:translate(-50%,-50%); z-index:10; }
+  .clock-dot {
+    position:absolute; width:4px; height:4px; background:rgba(255,255,255,0.5); border-radius:50%;
+    top:50%; left:50%; transform-origin:center;
+  }
+  .clock-number {
+    position:absolute; font-size:11px; font-weight:700; color:rgba(255,255,255,0.6);
+    width:20px; text-align:center; top:50%; left:50%;
+  }
+
+  /* Digital display */
+  .clock-digital {
+    font-size:48px; font-weight:100; letter-spacing:4px; color:var(--text);
+    font-variant-numeric:tabular-nums; line-height:1;
+  }
+  .clock-digital-sm { font-size:13px; color:var(--text2); text-align:center; margin-top:4px; letter-spacing:1px; }
+  .clock-ampm { font-size:18px; color:var(--accent); margin-left:8px; font-weight:600; vertical-align:super; }
+
+  /* World clocks */
+  .world-clock-row {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:12px 16px; background:var(--panel2); border:1px solid var(--border);
+    border-radius:10px; width:100%; box-sizing:border-box; cursor:default;
+    transition:border-color 0.15s;
+  }
+  .world-clock-row:hover { border-color:rgba(124,106,255,0.3); }
+  .wc-city { font-size:13px; font-weight:600; color:var(--text); }
+  .wc-tz { font-size:10px; color:var(--text2); margin-top:2px; }
+  .wc-time { font-size:20px; font-weight:300; color:var(--accent); letter-spacing:2px; font-variant-numeric:tabular-nums; }
+  .wc-offset { font-size:10px; color:var(--text2); text-align:right; margin-top:2px; }
+
+  /* Stopwatch & timer */
+  .sw-display { font-size:56px; font-weight:100; letter-spacing:4px; color:var(--text); font-variant-numeric:tabular-nums; line-height:1; }
+  .sw-ms { font-size:28px; color:var(--accent); }
+  .clock-btn-row { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+  .clock-btn {
+    padding:10px 24px; border-radius:24px; border:1.5px solid var(--border);
+    background:var(--panel2); color:var(--text); font-family:'Inter',sans-serif;
+    font-size:12px; font-weight:600; cursor:pointer; transition:all 0.15s; min-width:90px;
+  }
+  .clock-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .clock-btn.primary { background:var(--accent); border-color:var(--accent); color:white; }
+  .clock-btn.primary:hover { opacity:0.88; }
+  .clock-btn.danger { border-color:var(--accent2); }
+  .clock-btn.danger:hover { color:var(--accent2); }
+  .laps-list { width:100%; max-height:120px; overflow-y:auto; display:flex; flex-direction:column; gap:2px; }
+  .lap-row {
+    display:flex; justify-content:space-between; padding:6px 12px;
+    background:var(--panel2); border-radius:6px; font-size:11px;
+    color:var(--text2); font-variant-numeric:tabular-nums;
+  }
+  .lap-row span:first-child { color:var(--text); font-weight:600; }
+
+  /* Alarm */
+  .alarm-row {
+    display:flex; align-items:center; gap:12px; padding:12px 16px;
+    background:var(--panel2); border:1px solid var(--border); border-radius:10px;
+    width:100%; box-sizing:border-box;
+  }
+  .alarm-time-disp { font-size:22px; font-weight:300; color:var(--text); letter-spacing:2px; flex:1; }
+  .alarm-label { font-size:11px; color:var(--text2); }
+  .alarm-ring { animation:ring-pulse 0.3s ease-in-out infinite alternate; }
+  @keyframes ring-pulse { from{transform:rotate(-8deg)} to{transform:rotate(8deg)} }
+
+  /* Timer ring */
+  .timer-ring-wrap { position:relative; width:180px; height:180px; flex-shrink:0; }
+  .timer-ring-wrap svg { transform:rotate(-90deg); }
+  .timer-ring-bg { fill:none; stroke:var(--border); stroke-width:8; }
+  .timer-ring-fill { fill:none; stroke:var(--accent); stroke-width:8; stroke-linecap:round; transition:stroke-dashoffset 0.9s linear; }
+  .timer-center-text { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .timer-ring-urgent { animation:ring-urgent 0.8s ease-in-out infinite; }
+  @keyframes ring-urgent { 0%,100%{stroke:var(--accent2)} 50%{stroke:#ff0} }
 </style>
 </head>
 <body>
@@ -914,6 +1011,10 @@
       <div class="ico" style="background:linear-gradient(135deg,#3a0a0a,#1f0505)">📋</div>
       <span>NovPDF</span>
     </div>
+    <div class="desk-icon" ondblclick="openApp('clock')">
+      <div class="ico" style="background:linear-gradient(135deg,#0a1a3a,#050d1f)">🕐</div>
+      <span>Uhr</span>
+    </div>
   </div>
 
   <!-- Notifications -->
@@ -947,6 +1048,7 @@
       <div class="sm-app" data-app="sysmon"   onclick="openApp('sysmon');closeStartMenu()"><span class="ico">📊</span><span class="name">Monitor</span></div>
       <div class="sm-app" data-app="settings" onclick="openApp('settings');closeStartMenu()"><span class="ico">⚙️</span><span class="name">Einstellungen</span></div>
       <div class="sm-app" data-app="pdf"      onclick="openApp('pdf');closeStartMenu()"><span class="ico">📋</span><span class="name">NovPDF</span></div>
+      <div class="sm-app" data-app="clock"    onclick="openApp('clock');closeStartMenu()"><span class="ico">🕐</span><span class="name">NovUhr</span></div>
     </div>
     <div class="sm-footer">
       <div class="sm-footer-btn" onclick="closeStartMenu();showNotif('NovOS','Energie-Optionen...')">⚡ Energie</div>
@@ -1293,6 +1395,11 @@ function ccToggle(key, el) {
   if(key==='airplane') { ccAirplane=!ccAirplane; if(ccAirplane){ccWifi=false;ccBluetooth=false;} }
   if(key==='dnd')      { ccDnd=!ccDnd; setSetting('doNotDisturb',ccDnd); }
   renderCC();
+  // Close after a short delay so the toggle animation is visible
+  setTimeout(() => {
+    const cc = document.getElementById('control-center');
+    if(cc) { ccOpen = false; cc.style.display = 'none'; }
+  }, 350);
 }
 
 function ccMuteToggle() {
@@ -1532,6 +1639,7 @@ const appDefs = {
   sysmon:   { title:'Systemmonitor',icon:'📊',w:500, h:440 },
   settings: { title:'Einstellungen',icon:'⚙️',w:560, h:440 },
   pdf:      { title:'NovPDF',      icon:'📋', w:680, h:520 },
+  clock:    { title:'NovUhr',      icon:'🕐', w:480, h:500 },
 };
 
 function openApp(app) {
@@ -1566,6 +1674,7 @@ function openApp(app) {
   if(app==='editor')   setTimeout(()=>initEditor(),10);
   if(app==='settings') setTimeout(()=>initSettingsSidebar(),10);
   if(app==='pdf')      setTimeout(()=>initPDF(),10);
+  if(app==='clock')    setTimeout(()=>initClock(),10);
 }
 
 function buildAppBody(id) {
@@ -1581,6 +1690,7 @@ function buildAppBody(id) {
     case 'sysmon':   return buildSysmon();
     case 'settings': return buildSettings();
     case 'pdf':      return buildPDF();
+    case 'clock':    return buildClock();
     default: return '<div style="padding:20px;color:var(--text2)">Laden...</div>';
   }
 }
@@ -1588,6 +1698,7 @@ function buildAppBody(id) {
 function closeWindow(id) {
   if(id==='music') { clearInterval(musicInterval); musicPlaying=false; }
   if(id==='sysmon') clearInterval(sysmonInterval);
+  if(id==='clock')  { clearInterval(clockInterval); clearInterval(swInterval); clearInterval(timerInterval); }
   document.getElementById('win-'+id)?.remove();
   removeTaskbarBtn(id);
   delete windows[id];
@@ -2724,7 +2835,7 @@ function browserRebuildTabs() {
       <span style="overflow:hidden;text-overflow:ellipsis;flex:1;pointer-events:none">${title}</span>
       <span onclick="browserCloseTab(event,'${tab.id}')"
         style="flex-shrink:0;width:14px;height:14px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:10px;opacity:0.4;transition:opacity 0.1s,background 0.1s;"
-        onmouseover="this.style.opacity=1;this.style.background='rgba(255,255,255,0.15)'"
+        onmouseover="this.style.opacity=1;this.style.background='var(--border)'"
         onmouseout="this.style.opacity=0.4;this.style.background='none'">✕</span>
     </div>`;
   }).join('');
@@ -3263,7 +3374,7 @@ function musicRenderLibrary() {
       <div class="music-lib-header"><div class="music-lib-title">Künstler</div><span style="font-size:11px;color:var(--text2)">${artists.length} Künstler</span></div>
       ${artists.map(artist => {
         const artistTracks = tracks.filter(t=>t.artist===artist);
-        return `<div onclick="musicSetView('library',null)" style="display:flex;align-items:center;gap:14px;padding:12px 8px;border-bottom:1px solid rgba(255,255,255,0.04);cursor:pointer;border-radius:8px;transition:background 0.1s" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background=''">
+        return `<div onclick="musicSetView('library',null)" style="display:flex;align-items:center;gap:14px;padding:12px 8px;border-bottom:1px solid var(--border);cursor:pointer;border-radius:8px;transition:background 0.1s" onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background=''">
           <div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,${trackColors[artists.indexOf(artist)%8][0]},${trackColors[artists.indexOf(artist)%8][1]});display:flex;align-items:center;justify-content:center;font-size:18px">${artistTracks[0].ico}</div>
           <div style="flex:1">
             <div style="font-size:13px;font-weight:600;color:var(--text)">${artist}</div>
@@ -3280,7 +3391,7 @@ function musicRenderLibrary() {
       <div class="music-lib-title">Alle Titel</div>
       <span style="font-size:11px;color:var(--text2)">${tracks.length} Titel</span>
     </div>
-    <div style="display:grid;grid-template-columns:28px 1fr 1fr 60px;align-items:center;gap:12px;padding:4px 10px 8px;border-bottom:1px solid rgba(255,255,255,0.05)">
+    <div style="display:grid;grid-template-columns:28px 1fr 1fr 60px;align-items:center;gap:12px;padding:4px 10px 8px;border-bottom:1px solid var(--border)">
       <span style="font-size:9px;color:var(--text2)">#</span>
       <span style="font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px">Titel</span>
       <span style="font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px">Album</span>
@@ -3668,7 +3779,7 @@ function renderTabs() {
       border-bottom:${tab.id===editorActiveTab?'2px solid var(--accent)':'2px solid transparent'};
       flex-shrink:0;">
       ${tab.unsaved?'●':''} ${tab.name}
-      <span onclick="editorCloseTab(event,'${tab.id}')" style="opacity:0.5;padding:2px 3px;border-radius:3px;font-size:10px;" onmouseover="this.style.opacity=1;this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.opacity=0.5;this.style.background='none'">✕</span>
+      <span onclick="editorCloseTab(event,'${tab.id}')" style="opacity:0.5;padding:2px 3px;border-radius:3px;font-size:10px;" onmouseover="this.style.opacity=1;this.style.background='var(--border)'" onmouseout="this.style.opacity=0.5;this.style.background='none'">✕</span>
     </div>`).join('') +
     `<div onclick="editorNew()" style="display:inline-flex;align-items:center;padding:0 10px;height:34px;cursor:pointer;color:var(--text2);font-size:16px;opacity:0.5;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.5">+</div>`;
 }
@@ -5023,6 +5134,457 @@ function sysmonRenderDisk(c) {
           </div>`).join('')}
       </div>
     </div>`;
+}
+
+// ══════════════════════════════════════
+// CLOCK APP
+// ══════════════════════════════════════
+let clockInterval = null;
+let clockTab = 'clock';
+
+// Stopwatch
+let swRunning = false, swInterval = null;
+let swElapsed = 0; // ms
+let swLaps = [];
+
+// Timer
+let timerInterval = null, timerRunning = false;
+let timerTotal = 0, timerRemaining = 0;
+
+// Alarms
+let alarms = [
+  { time:'07:00', label:'Aufstehen', enabled:true },
+  { time:'09:00', label:'Meeting',   enabled:false },
+  { time:'13:00', label:'Mittagspause', enabled:true },
+];
+
+const worldClocks = [
+  { city:'New York',  tz:'America/New_York',   flag:'🇺🇸' },
+  { city:'London',    tz:'Europe/London',       flag:'🇬🇧' },
+  { city:'Berlin',    tz:'Europe/Berlin',       flag:'🇩🇪' },
+  { city:'Dubai',     tz:'Asia/Dubai',          flag:'🇦🇪' },
+  { city:'Tokio',     tz:'Asia/Tokyo',          flag:'🇯🇵' },
+  { city:'Sydney',    tz:'Australia/Sydney',    flag:'🇦🇺' },
+];
+
+function buildClock() {
+  return `
+    <div class="clock-shell">
+      <div class="clock-tabs">
+        <button class="clock-tab active" id="ct-clock"    onclick="clockSwitchTab('clock',this)">🕐 Uhr</button>
+        <button class="clock-tab"        id="ct-world"    onclick="clockSwitchTab('world',this)">🌍 Weltuhr</button>
+        <button class="clock-tab"        id="ct-stopwatch"onclick="clockSwitchTab('stopwatch',this)">⏱ Stoppuhr</button>
+        <button class="clock-tab"        id="ct-timer"    onclick="clockSwitchTab('timer',this)">⏳ Timer</button>
+        <button class="clock-tab"        id="ct-alarm"    onclick="clockSwitchTab('alarm',this)">🔔 Wecker</button>
+      </div>
+      <div class="clock-pane" id="clock-pane"></div>
+    </div>`;
+}
+
+function initClock() {
+  clockTab = 'clock';
+  clockRenderTab();
+  clockInterval = setInterval(() => {
+    if(clockTab === 'clock') clockRenderAnalog();
+    if(clockTab === 'world') clockRenderWorld();
+    clockCheckAlarms();
+  }, 1000);
+}
+
+function clockSwitchTab(tab, el) {
+  clockTab = tab;
+  document.querySelectorAll('.clock-tab').forEach(t => t.classList.remove('active'));
+  if(el) el.classList.add('active');
+  clockRenderTab();
+}
+
+function clockRenderTab() {
+  const pane = document.getElementById('clock-pane'); if(!pane) return;
+  if(clockTab === 'clock')     { clockRenderMain(pane); }
+  else if(clockTab === 'world'){ clockRenderWorld(pane); }
+  else if(clockTab === 'stopwatch') { clockRenderStopwatch(pane); }
+  else if(clockTab === 'timer'){ clockRenderTimerTab(pane); }
+  else if(clockTab === 'alarm'){ clockRenderAlarms(pane); }
+}
+
+function clockRenderMain(pane) {
+  pane = pane || document.getElementById('clock-pane');
+  if(!pane) return;
+  const now = new Date();
+  const h = now.getHours(), m = now.getMinutes(), s = now.getSeconds();
+  const ms = now.getMilliseconds();
+  const dateStr = now.toLocaleDateString('de-DE', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  const h12 = h % 12 || 12;
+  const ampm = h < 12 ? 'AM' : 'PM';
+  const hAngle = (h % 12) * 30 + m * 0.5;
+  const mAngle = m * 6 + s * 0.1;
+  const sAngle = s * 6 + ms * 0.006;
+
+  // Generate 60 tick dots + 12 hour numbers
+  let dotsHtml = '';
+  for(let i = 0; i < 60; i++) {
+    const angle = i * 6 - 90;
+    const rad = angle * Math.PI / 180;
+    const isMajor = i % 5 === 0;
+    const r = isMajor ? 82 : 86;
+    const x = 100 + r * Math.cos(rad);
+    const y = 100 + r * Math.sin(rad);
+    if(isMajor) {
+      const hr = i / 5 || 12;
+      const nr = 72;
+      const nx = 100 + nr * Math.cos(rad);
+      const ny = 100 + nr * Math.sin(rad);
+      dotsHtml += `<text x="${nx}" y="${ny}" text-anchor="middle" dominant-baseline="central" fill="rgba(255,255,255,0.5)" font-size="10" font-weight="700" font-family="Inter,sans-serif">${hr}</text>`;
+      dotsHtml += `<circle cx="${x}" cy="${y}" r="3" fill="rgba(255,255,255,0.4)"/>`;
+    } else {
+      dotsHtml += `<circle cx="${x}" cy="${y}" r="1" fill="rgba(255,255,255,0.15)"/>`;
+    }
+  }
+
+  pane.innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;gap:20px;width:100%;padding-top:8px">
+      <!-- Analog Clock SVG -->
+      <svg width="220" height="220" viewBox="0 0 200 200" style="filter:drop-shadow(0 8px 32px rgba(0,0,0,0.5))">
+        <!-- Face -->
+        <defs>
+          <radialGradient id="faceGrad" cx="40%" cy="35%" r="70%">
+            <stop offset="0%" stop-color="#1e1e32"/>
+            <stop offset="100%" stop-color="#0a0a16"/>
+          </radialGradient>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="2" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <circle cx="100" cy="100" r="98" fill="#0d0d1a" stroke="rgba(124,106,255,0.2)" stroke-width="1"/>
+        <circle cx="100" cy="100" r="96" fill="url(#faceGrad)"/>
+        <!-- Ticks & numbers -->
+        ${dotsHtml}
+        <!-- Accent ring -->
+        <circle cx="100" cy="100" r="90" fill="none" stroke="rgba(124,106,255,0.08)" stroke-width="1"/>
+        <!-- Hour hand -->
+        <line x1="100" y1="100" x2="${100 + 48 * Math.sin((hAngle)*Math.PI/180)}" y2="${100 - 48 * Math.cos((hAngle)*Math.PI/180)}"
+          stroke="rgba(255,255,255,0.9)" stroke-width="5" stroke-linecap="round" filter="url(#glow)"/>
+        <!-- Minute hand -->
+        <line x1="100" y1="100" x2="${100 + 68 * Math.sin((mAngle)*Math.PI/180)}" y2="${100 - 68 * Math.cos((mAngle)*Math.PI/180)}"
+          stroke="rgba(124,106,255,0.95)" stroke-width="3" stroke-linecap="round" filter="url(#glow)"/>
+        <!-- Second hand -->
+        <line x1="${100 - 18 * Math.sin((sAngle)*Math.PI/180)}" y1="${100 + 18 * Math.cos((sAngle)*Math.PI/180)}"
+          x2="${100 + 80 * Math.sin((sAngle)*Math.PI/180)}" y2="${100 - 80 * Math.cos((sAngle)*Math.PI/180)}"
+          stroke="rgba(255,80,120,0.95)" stroke-width="1.5" stroke-linecap="round" filter="url(#glow)"/>
+        <!-- Center dot -->
+        <circle cx="100" cy="100" r="5" fill="#ff5080"/>
+        <circle cx="100" cy="100" r="2.5" fill="white"/>
+      </svg>
+
+      <!-- Digital time -->
+      <div style="text-align:center">
+        <div class="clock-digital">${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}</div>
+        <div class="clock-digital-sm">${dateStr}</div>
+      </div>
+
+      <!-- Timezone info -->
+      <div style="display:flex;gap:16px;font-size:11px;color:var(--text2)">
+        <span>🌍 ${Intl.DateTimeFormat().resolvedOptions().timeZone.replace('_',' ')}</span>
+        <span>GMT${now.getTimezoneOffset() <= 0 ? '+' : ''}${(-now.getTimezoneOffset()/60).toFixed(0)}</span>
+        <span>KW ${clockGetWeekNum(now)}</span>
+      </div>
+    </div>`;
+}
+
+function clockGetWeekNum(d) {
+  const oneJan = new Date(d.getFullYear(), 0, 1);
+  return Math.ceil((((d - oneJan) / 86400000) + oneJan.getDay() + 1) / 7);
+}
+
+function clockRenderAnalog() {
+  if(clockTab === 'clock') clockRenderMain();
+}
+
+function clockRenderWorld(pane) {
+  pane = pane || document.getElementById('clock-pane');
+  if(!pane || clockTab !== 'world') return;
+  const now = new Date();
+
+  pane.innerHTML = `
+    <div style="width:100%;display:flex;flex-direction:column;gap:8px">
+      <div style="font-size:11px;color:var(--text2);text-align:center;margin-bottom:4px">Lokale Zeit: ${now.toLocaleTimeString('de-DE')}</div>
+      ${worldClocks.map(wc => {
+        const tzTime = new Date().toLocaleTimeString('de-DE', { timeZone: wc.tz, hour:'2-digit', minute:'2-digit' });
+        const tzDate = new Date().toLocaleDateString('de-DE', { timeZone: wc.tz, weekday:'short', day:'numeric', month:'short' });
+        const offsetMin = -new Date().getTimezoneOffset();
+        const tzOffsetMs = now - new Date(now.toLocaleString('en-US', { timeZone: wc.tz }));
+        const tzH = now.toLocaleString('en-US', { timeZone: wc.tz, hour:'numeric', hour12:false });
+        const isDay = parseInt(tzH) >= 6 && parseInt(tzH) < 20;
+        return `<div class="world-clock-row">
+          <div>
+            <div class="wc-city">${wc.flag} ${wc.city}</div>
+            <div class="wc-tz">${wc.tz.replace('/',', ')} · ${isDay ? '☀️ Tag' : '🌙 Nacht'}</div>
+          </div>
+          <div style="text-align:right">
+            <div class="wc-time">${tzTime}</div>
+            <div class="wc-offset">${tzDate}</div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+function clockRenderStopwatch(pane) {
+  pane = pane || document.getElementById('clock-pane');
+  if(!pane) return;
+  const elapsed = swElapsed;
+  const cs = Math.floor(elapsed / 10) % 100;
+  const s = Math.floor(elapsed / 1000) % 60;
+  const m = Math.floor(elapsed / 60000) % 60;
+  const h = Math.floor(elapsed / 3600000);
+
+  const timeStr = h > 0
+    ? `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
+    : `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+
+  pane.innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;gap:20px;padding-top:12px;width:100%">
+      <div style="text-align:center">
+        <div class="sw-display">${timeStr}<span class="sw-ms">.${String(cs).padStart(2,'0')}</span></div>
+      </div>
+      <div class="clock-btn-row">
+        <button class="clock-btn ${swRunning ? 'danger' : 'primary'}" onclick="swToggle()">${swRunning ? '⏸ Pause' : (swElapsed > 0 ? '▶ Weiter' : '▶ Start')}</button>
+        ${swRunning ? `<button class="clock-btn" onclick="swLap()">🏁 Runde</button>` : ''}
+        ${!swRunning && swElapsed > 0 ? `<button class="clock-btn" onclick="swReset()">↺ Zurücksetzen</button>` : ''}
+      </div>
+      ${swLaps.length > 0 ? `
+        <div style="width:100%">
+          <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:flex;justify-content:space-between;padding:0 12px">
+            <span>Runde</span><span>Rundenzeit</span><span>Gesamt</span>
+          </div>
+          <div class="laps-list">
+            ${[...swLaps].reverse().map((lap, ri) => {
+              const i = swLaps.length - 1 - ri;
+              const prev = i > 0 ? swLaps[i-1].total : 0;
+              const lapTime = lap.total - prev;
+              return `<div class="lap-row" style="${ri === 0 ? 'background:rgba(124,106,255,0.1);' : ''}">
+                <span>Runde ${i+1}</span>
+                <span>${swFormatTime(lapTime)}</span>
+                <span>${swFormatTime(lap.total)}</span>
+              </div>`;
+            }).join('')}
+          </div>
+        </div>` : ''}
+    </div>`;
+}
+
+function swFormatTime(ms) {
+  const cs = Math.floor(ms / 10) % 100;
+  const s = Math.floor(ms / 1000) % 60;
+  const m = Math.floor(ms / 60000) % 60;
+  const h = Math.floor(ms / 3600000);
+  return (h > 0 ? String(h).padStart(2,'0')+':' : '') +
+    String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0') + '.' + String(cs).padStart(2,'0');
+}
+
+let swLastTick = 0;
+function swToggle() {
+  if(swRunning) {
+    clearInterval(swInterval); swRunning = false;
+  } else {
+    swLastTick = Date.now() - swElapsed;
+    swRunning = true;
+    swInterval = setInterval(() => {
+      swElapsed = Date.now() - swLastTick;
+      if(clockTab === 'stopwatch') clockRenderStopwatch();
+    }, 50);
+  }
+  clockRenderStopwatch();
+}
+function swLap() {
+  swLaps.push({ total: swElapsed });
+  clockRenderStopwatch();
+}
+function swReset() {
+  clearInterval(swInterval); swRunning = false; swElapsed = 0; swLaps = [];
+  clockRenderStopwatch();
+}
+
+function clockRenderTimerTab(pane) {
+  pane = pane || document.getElementById('clock-pane');
+  if(!pane) return;
+
+  const rem = timerRemaining;
+  const total = timerTotal || 1;
+  const frac = Math.max(0, Math.min(1, rem / total));
+  const circumference = 2 * Math.PI * 80;
+  const dashOffset = circumference * (1 - frac);
+  const urgent = rem <= 10000 && rem > 0 && timerRunning;
+
+  const s = Math.floor(rem / 1000) % 60;
+  const m = Math.floor(rem / 60000) % 60;
+  const h = Math.floor(rem / 3600000);
+  const timeStr = h > 0
+    ? `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
+    : `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+
+  pane.innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;gap:20px;padding-top:12px;width:100%">
+      <!-- Ring -->
+      <div class="timer-ring-wrap">
+        <svg width="180" height="180" viewBox="0 0 180 180">
+          <circle class="timer-ring-bg" cx="90" cy="90" r="80"/>
+          <circle class="timer-ring-fill ${urgent ? 'timer-ring-urgent' : ''}" cx="90" cy="90" r="80"
+            stroke-dasharray="${circumference.toFixed(1)}"
+            stroke-dashoffset="${dashOffset.toFixed(1)}"
+            transform="rotate(-90 90 90)"/>
+        </svg>
+        <div class="timer-center-text">
+          <div class="sw-display" style="font-size:38px">${timeStr}</div>
+          <div style="font-size:10px;color:var(--text2);margin-top:4px">${timerRunning ? '⏱ Läuft' : rem === 0 && timerTotal > 0 ? '✅ Fertig' : '⏸ Bereit'}</div>
+        </div>
+      </div>
+
+      <!-- Preset buttons -->
+      ${!timerRunning && timerRemaining === 0 ? `
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+        ${[[1,'1 Min'],[3,'3 Min'],[5,'5 Min'],[10,'10 Min'],[15,'15 Min'],[25,'25 Min'],[30,'30 Min'],[60,'1 Std']].map(([min,label])=>
+          `<button class="clock-btn" style="min-width:70px;padding:8px 12px" onclick="timerSetMin(${min})">${label}</button>`
+        ).join('')}
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <input type="number" id="timer-custom-h" placeholder="hh" min="0" max="23" style="width:48px;text-align:center;background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:6px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;outline:none">
+        <span style="color:var(--text2)">:</span>
+        <input type="number" id="timer-custom-m" placeholder="mm" min="0" max="59" style="width:48px;text-align:center;background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:6px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;outline:none">
+        <span style="color:var(--text2)">:</span>
+        <input type="number" id="timer-custom-s" placeholder="ss" min="0" max="59" style="width:48px;text-align:center;background:var(--panel2);border:1px solid var(--border);border-radius:6px;padding:6px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;outline:none">
+        <button class="clock-btn primary" onclick="timerSetCustom()">▶ Start</button>
+      </div>` : ''}
+
+      <div class="clock-btn-row">
+        ${timerTotal > 0 ? `
+          <button class="clock-btn ${timerRunning ? 'danger' : 'primary'}" onclick="timerToggle()">
+            ${timerRunning ? '⏸ Pause' : '▶ ' + (timerRemaining === timerTotal ? 'Start' : 'Weiter')}
+          </button>
+          <button class="clock-btn" onclick="timerReset()">↺ Zurücksetzen</button>
+        ` : ''}
+      </div>
+    </div>`;
+}
+
+function timerSetMin(min) {
+  timerTotal = min * 60000;
+  timerRemaining = timerTotal;
+  timerRunning = false;
+  clearInterval(timerInterval);
+  clockRenderTimerTab();
+  // Auto-start
+  timerToggle();
+}
+function timerSetCustom() {
+  const h = parseInt(document.getElementById('timer-custom-h')?.value) || 0;
+  const m = parseInt(document.getElementById('timer-custom-m')?.value) || 0;
+  const s = parseInt(document.getElementById('timer-custom-s')?.value) || 0;
+  const ms = (h*3600 + m*60 + s)*1000;
+  if(ms <= 0) return;
+  timerTotal = ms; timerRemaining = ms;
+  clearInterval(timerInterval); timerRunning = false;
+  clockRenderTimerTab();
+  timerToggle();
+}
+function timerToggle() {
+  if(timerRunning) {
+    clearInterval(timerInterval); timerRunning = false;
+    clockRenderTimerTab();
+  } else if(timerRemaining > 0) {
+    timerRunning = true;
+    const tickRate = 250;
+    timerInterval = setInterval(() => {
+      timerRemaining = Math.max(0, timerRemaining - tickRate);
+      if(timerRemaining <= 0) {
+        clearInterval(timerInterval); timerRunning = false;
+        showNotif('NovUhr', '⏰ Timer abgelaufen!', '#ffca6a');
+      }
+      if(clockTab === 'timer') clockRenderTimerTab();
+    }, tickRate);
+    clockRenderTimerTab();
+  }
+}
+function timerReset() {
+  clearInterval(timerInterval); timerRunning = false;
+  timerRemaining = timerTotal;
+  clockRenderTimerTab();
+}
+
+function clockRenderAlarms(pane) {
+  pane = pane || document.getElementById('clock-pane');
+  if(!pane) return;
+
+  pane.innerHTML = `
+    <div style="width:100%;display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <div style="font-size:13px;font-weight:700;color:var(--text)">Wecker</div>
+        <button class="clock-btn primary" style="padding:6px 14px" onclick="alarmAdd()">＋ Neu</button>
+      </div>
+      ${alarms.length === 0 ? '<div style="text-align:center;color:var(--text2);padding:24px">Kein Wecker eingestellt</div>' : ''}
+      ${alarms.map((al, i) => `
+        <div class="alarm-row" style="opacity:${al.enabled ? '1' : '0.45'}">
+          <div style="flex:1">
+            <div class="alarm-time-disp">${al.time}</div>
+            <div class="alarm-label">${al.label}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div class="toggle ${al.enabled?'on':''}" onclick="alarmToggle(${i})" style="cursor:pointer"></div>
+            <button class="clock-btn danger" style="min-width:auto;padding:6px 10px" onclick="alarmDelete(${i})">✕</button>
+          </div>
+        </div>`).join('')}
+      <div style="font-size:10px;color:var(--text2);text-align:center;margin-top:8px">
+        Nächster Wecker: ${alarmNext()}
+      </div>
+    </div>`;
+}
+
+function alarmNext() {
+  const enabled = alarms.filter(a => a.enabled);
+  if(!enabled.length) return '—';
+  const now = new Date();
+  const nowMin = now.getHours()*60 + now.getMinutes();
+  const sorted = [...enabled].sort((a,b) => {
+    const [ah,am] = a.time.split(':').map(Number);
+    const [bh,bm] = b.time.split(':').map(Number);
+    const da = (ah*60+am - nowMin + 1440) % 1440;
+    const db = (bh*60+bm - nowMin + 1440) % 1440;
+    return da - db;
+  });
+  return sorted[0].time + ' – ' + sorted[0].label;
+}
+
+async function alarmAdd() {
+  const time = await novDialog({ icon:'🔔', title:'Neuer Wecker', msg:'Uhrzeit (HH:MM):', input:true, inputDefault:'07:00', confirmLabel:'Hinzufügen' });
+  if(!time) return;
+  const label = await novDialog({ icon:'🏷️', title:'Bezeichnung', msg:'Bezeichnung (optional):', input:true, inputDefault:'Wecker', confirmLabel:'Speichern' });
+  if(label === null) return;
+  alarms.push({ time: time.trim(), label: label || 'Wecker', enabled: true });
+  if(clockTab === 'alarm') clockRenderAlarms();
+}
+
+function alarmToggle(i) {
+  alarms[i].enabled = !alarms[i].enabled;
+  if(clockTab === 'alarm') clockRenderAlarms();
+}
+
+async function alarmDelete(i) {
+  const ok = await novDialog({ icon:'🗑️', title:'Wecker löschen', msg:`"${alarms[i].time} – ${alarms[i].label}" löschen?`, danger:true, confirmLabel:'Löschen' });
+  if(!ok) return;
+  alarms.splice(i, 1);
+  if(clockTab === 'alarm') clockRenderAlarms();
+}
+
+let _lastAlarmCheck = '';
+function clockCheckAlarms() {
+  const now = new Date();
+  const timeStr = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+  if(now.getSeconds() !== 0 || timeStr === _lastAlarmCheck) return;
+  _lastAlarmCheck = timeStr;
+  alarms.filter(a => a.enabled && a.time === timeStr).forEach(a => {
+    showNotif('⏰ Wecker', a.label + ' – ' + a.time, '#ffca6a');
+  });
 }
 
 // Settings UI
