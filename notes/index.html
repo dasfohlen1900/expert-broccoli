@@ -2,85 +2,144 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>aeroNotes — aeroCloud Save</title>
+    <title>aeroNotes Pro — aeroCloud</title>
     <style>
         @font-face {
             font-family: 'Aeropus Sans Web';
-            src: url('../AeropusSansWeb.woff2') format('woff2');
+            src: url('/AeropusSansWeb.woff2') format('woff2');
             font-weight: normal; font-style: normal;
         }
 
         :root {
             --bg: #ffffff;
+            --sidebar: #f8fafc;
             --text: #1e293b;
             --accent: #0ea5e9;
+            --cloud: #10b981;
             --border: #e2e8f0;
         }
 
         body {
             font-family: 'Aeropus Sans Web', sans-serif;
-            background: var(--bg);
-            color: var(--text);
             margin: 0;
             display: flex;
-            flex-direction: column;
             height: 100vh;
+            overflow: hidden;
         }
 
-        header {
-            padding: 1rem 2rem;
+        /* SIDEBAR */
+        aside {
+            width: 260px;
+            background: var(--sidebar);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+        }
+
+        .logo { font-family: 'Poppins'; font-weight: 900; font-size: 1.2rem; margin-bottom: 2rem; }
+        .logo span { color: var(--accent); }
+
+        .note-list { flex-grow: 1; overflow-y: auto; }
+        .note-item { 
+            padding: 0.8rem; 
+            margin-bottom: 0.5rem; 
+            border-radius: 12px; 
+            cursor: pointer; 
+            font-size: 0.9rem;
+            transition: background 0.2s;
+            border: 1px solid transparent;
+        }
+        .note-item:hover { background: #f1f5f9; }
+        .note-item.active { background: white; border-color: var(--border); font-weight: bold; }
+
+        /* MAIN CONTENT */
+        main { flex-grow: 1; display: flex; flex-direction: column; background: white; }
+
+        .toolbar {
+            padding: 0.75rem 2rem;
+            border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid var(--border);
         }
 
-        .status {
-            font-size: 0.7rem;
-            font-weight: 800;
-            color: var(--accent);
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-        }
+        .tool-group { display: flex; gap: 0.5rem; }
 
         #editor {
             flex-grow: 1;
-            padding: 3rem;
-            font-size: 1.2rem;
-            line-height: 1.6;
+            padding: 4rem;
+            font-size: 1.1rem;
+            line-height: 1.8;
             border: none;
             outline: none;
-            resize: none;
             font-family: 'Aeropus Sans Web', sans-serif;
-            background: transparent;
+            resize: none;
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
         }
 
-        .saving-indicator {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            font-size: 0.8rem;
-            opacity: 0.5;
-            transition: opacity 0.3s;
+        footer {
+            padding: 0.5rem 2rem;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .btn-new {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.6rem;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-bottom: 1rem;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
 
-<header>
-    <div style="font-family: Poppins; font-weight: 900; font-size: 1.2rem;">aero<span>Notes</span></div>
-    <div class="status" id="cloud-status">Cloud verbunden</div>
-</header>
+<aside>
+    <div class="logo">aero<span>Notes</span></div>
+    <button class="btn-new" onclick="createNewNote()">+ Neue Notiz</button>
+    <div class="note-list" id="note-list">
+        </div>
+</aside>
 
-<textarea id="editor" placeholder="Schreib etwas..."></textarea>
-<div class="saving-indicator" id="save-hint">Synchronisiert...</div>
+<main>
+    <header class="toolbar">
+        <div class="tool-group">
+    <button class="tool-btn" onclick="insertMD('**', '**')" title="Fett (Strg+B)"><b>B</b></button>
+    <button class="tool-btn" onclick="insertMD('*', '*')" title="Kursiv (Strg+I)"><i>I</i></button>
+    <button class="tool-btn" onclick="insertMD('<u>', '</u>')" title="Unterstrichen"><u>U</u></button>
+    <button class="tool-btn" onclick="insertMD('~~', '~~')" title="Durchgestrichen"><strike>S</strike></button>
+    
+    <div class="separator"></div>
+
+    <button class="tool-btn" onclick="insertMD('# ', '')">H1</button>
+    <button class="tool-btn" onclick="insertMD('## ', '')">H2</button>
+    <button class="tool-btn" onclick="insertMD('> ', '')">Zitat</button>
+    <button class="tool-btn" onclick="insertMD('- ', '')">Liste</button>
+</div>
+    </header>
+
+    <textarea id="editor" placeholder="Schreibe etwas..."></textarea>
+
+    <footer>
+        <div id="word-count">0 Wörter</div>
+        <div id="save-status">Warten auf Eingabe...</div>
+    </footer>
+</main>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 
 <script>
-    // 1. Firebase Config (deine Config nutzen)
     const firebaseConfig = {
         apiKey: "AIzaSyB-6oB6_gM4-HquuHD6XV9dqa0zygQjU34",
         authDomain: "aeropusoffice.firebaseapp.com",
@@ -91,42 +150,120 @@
     const db = firebase.database();
     const auth = firebase.auth();
 
+    let currentNoteId = 'default';
     const editor = document.getElementById('editor');
-    const saveHint = document.getElementById('save-hint');
-    const cloudStatus = document.getElementById('cloud-status');
+    const filenameInput = document.getElementById('filename');
 
-    // 2. Query Handling
-    const noteId = new URLSearchParams(window.location.search).get('id') || 'default';
+    // Wortzähler
+    editor.addEventListener('input', () => {
+        const text = editor.value.trim();
+        const words = text ? text.split(/\s+/).length : 0;
+        document.getElementById('word-count').innerText = `${words} Wörter`;
+    });
 
+    // Neue Notiz erstellen
+    function createNewNote() {
+        const name = prompt("Name der Notiz:");
+        if(name) {
+            currentNoteId = name.replace(/\s+/g, '_');
+            filenameInput.value = currentNoteId;
+            editor.value = "";
+            saveNote();
+        }
+    }
+
+    // MD Export (Lokal speichern)
+    function exportMD() {
+        const blob = new Blob([editor.value], {type: 'text/markdown'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${filenameInput.value}.md`;
+        a.click();
+    }
+
+    // Firebase Logik
     auth.onAuthStateChanged(user => {
         if (user) {
-            const noteRef = db.ref(`users/${user.uid}/notes/${noteId}`);
-            
-            // Daten laden
-            noteRef.once('value').then(snap => {
-                if (snap.exists()) editor.value = snap.val().content;
+            // Liste laden
+            db.ref(`users/${user.uid}/aeroCloud`).on('value', snap => {
+                const list = document.getElementById('note-list');
+                list.innerHTML = "";
+                snap.forEach(child => {
+                    const div = document.createElement('div');
+                    div.className = `note-item ${child.key === currentNoteId ? 'active' : ''}`;
+                    div.innerText = child.key + ".md";
+                    div.onclick = () => loadNote(child.key);
+                    list.appendChild(div);
+                });
             });
 
-            // Auto-Save Logik
-            let timeout = null;
+            window.loadNote = (id) => {
+                currentNoteId = id;
+                filenameInput.value = id;
+                db.ref(`users/${user.uid}/aeroCloud/${id}`).once('value').then(snap => {
+                    editor.value = snap.val() ? snap.val().content : "";
+                });
+            };
+
+            window.saveNote = () => {
+                db.ref(`users/${user.uid}/aeroCloud/${currentNoteId}`).set({
+                    content: editor.value,
+                    lastModified: Date.now()
+                });
+            };
+
+            let timeout;
             editor.addEventListener('input', () => {
-                saveHint.style.opacity = "1";
                 clearTimeout(timeout);
-                
-                timeout = setTimeout(() => {
-                    noteRef.set({
-                        content: editor.value,
-                        lastUpdate: Date.now()
-                    }).then(() => {
-                        saveHint.style.opacity = "0";
-                    });
-                }, 800); // Speichert 800ms nach dem letzten Tastendruck
+                timeout = setTimeout(saveNote, 1000);
             });
-
-        } else {
-            window.location.href = "/auth/?redirect=aeronotes";
         }
     });
+
+    function insertMD(pre, suf) {
+    const el = document.getElementById('editor');
+    const start = el.selectionStart;
+    const end = el.selectionEnd;
+    const selectedText = el.value.substring(start, end);
+    
+    // Den neuen Text zusammensetzen
+    const replacement = pre + selectedText + suf;
+    
+    // Den Wert im Editor ändern
+    el.value = el.value.substring(0, start) + replacement + el.value.substring(end);
+    
+    // Cursor-Position berechnen:
+    // Wenn Text markiert war, dahinter springen. 
+    // Wenn nichts markiert war, zwischen pre und suf springen.
+    const newCursorPos = selectedText.length > 0 ? start + replacement.length : start + pre.length;
+    
+    el.setSelectionRange(newCursorPos, newCursorPos);
+    el.focus();
+
+    // Manuelles Trigger des Input-Events für das Auto-Save
+    el.dispatchEvent(new Event('input'));
+}
+
+// BONUS: Tastenkürzel hinzufügen (Strg+B, Strg+I)
+document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey || e.metaKey) { // MetaKey für Mac (Cmd)
+        switch (e.key.toLowerCase()) {
+            case 'b':
+                e.preventDefault();
+                insertMD('**', '**');
+                break;
+            case 'i':
+                e.preventDefault();
+                insertMD('*', '*');
+                break;
+            case 'u':
+                e.preventDefault();
+                insertMD('<u>', '</u>');
+                break;
+        }
+    }
+});
 </script>
 </body>
 </html>
