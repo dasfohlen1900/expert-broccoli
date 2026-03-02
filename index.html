@@ -1,190 +1,193 @@
 <!doctype html>
 <html lang="de">
-  <head>
-    <title>Schön, dass du da bist</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
-<style>
-  @font-face {
-    font-family: 'Aeropus Sans Web';
-    src: url('AeropusSansWeb.woff2') format('woff2'); 
-    font-weight: normal;
-    font-style: normal;
-  }
+<head>
+  <meta charset="UTF-8">
+  <title>aeropus — aeroApps Hub</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Poppins:wght@900&display=swap" rel="stylesheet">
+  <style>
+    @font-face {
+      font-family: 'Aeropus Sans Web';
+      src: url('/AeropusSansWeb.woff2') format('woff2'); 
+      font-weight: normal;
+      font-style: normal;
+    }
 
-  :root {
-    --bg: #ffffff;
-    --card-bg: #f8fafc;
-    --card-border: #e2e8f0;
-    --text-main: #1e293b;
-    --text-muted: #64748b;
-    --accent: #0ea5e9; /* Ein klares, helles Blau */
-    --accent-hover: #0284c7;
-  }
-  
-  .signup {
-    font-family: 'Olymps Grotesk', cursive;
-    background: var(--card-bg);
-    padding: 2.5rem;
-    border-radius: 24px;
-    border: 1px solid var(--card-border);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    display: flex;
-    flex-direction: column;
-  }
+    :root {
+      --bg: #ffffff;
+      --card-bg: #f8fafc;
+      --card-border: #e2e8f0;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --accent: #0ea5e9;
+      --cloud: #10b981;
+    }
 
-  body {
-    font-family: 'Aeropus Sans Web', 'Inter', sans-serif; 
-    background-color: var(--bg);
-    color: var(--text-main);
-    margin: 0;
-    line-height: 1.6;
-    display: flex;
-    justify-content: center;
-    padding-top: 5vh;
-  }
+    body {
+      font-family: 'Aeropus Sans Web', 'Inter', sans-serif; 
+      background-color: var(--bg);
+      color: var(--text-main);
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      padding-top: 5vh;
+    }
 
-  .container {
-    max-width: 1000px;
-    width: 90%;
-    padding: 2rem;
-  }
+    .container {
+      max-width: 1100px;
+      width: 90%;
+      padding: 2rem;
+    }
 
-  .intro {
-    margin-bottom: 5rem;
-  }
+    .intro { margin-bottom: 4rem; }
 
-  .intro h1 {
-    font-family: 'Poppins', sans-serif;
-    font-size: clamp(2.5rem, 8vw, 4rem);
-    font-weight: 900;
-    letter-spacing: -0.04em;
-    margin-bottom: 1rem;
-    color: var(--text-main);
-  }
+    .intro h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: clamp(3rem, 10vw, 5rem);
+      font-weight: 900;
+      letter-spacing: -0.05em;
+      margin: 0;
+    }
 
-  .intro p {
-    font-size: 1.25rem;
-    color: var(--text-muted);
-    max-width: 600px;
-  }
+    .intro p {
+      font-size: 1.2rem;
+      color: var(--text-muted);
+      max-width: 500px;
+      margin-top: 1rem;
+    }
 
-  .apps {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2rem;
-  }
+    .apps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
 
-  .app {
-    background: var(--card-bg);
-    padding: 2.5rem;
-    border-radius: 24px;
-    border: 1px solid var(--card-border);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    display: flex;
-    flex-direction: column;
-  }
+    .app {
+      background: var(--card-bg);
+      padding: 2rem;
+      border-radius: 28px;
+      border: 1px solid var(--card-border);
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+      display: flex;
+      flex-direction: column;
+    }
 
-  .app:hover {
-    background: #ffffff;
-    border-color: var(--accent);
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
-    transform: translateY(-8px);
-  }
+    .app:hover {
+      background: #ffffff;
+      border-color: var(--accent);
+      transform: translateY(-8px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.05);
+    }
 
-  .app h3 {
-    margin: 0 0 1rem 0;
-    font-size: 1.75rem;
-    font-family: 'Poppins', sans-serif;
-  }
+    .app h3 {
+      margin: 0.5rem 0;
+      font-size: 1.5rem;
+      font-family: 'Poppins', sans-serif;
+    }
 
-  .app p {
-    color: var(--text-muted);
-    font-size: 1rem;
-    flex-grow: 1;
-    margin-bottom: 2rem;
-  }
+    .app p {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      flex-grow: 1;
+      margin-bottom: 1.5rem;
+    }
 
-  .app a {
-    font-weight: 700;
-    color: var(--accent);
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    transition: color 0.2s;
-  }
+    .tag {
+      font-size: 0.65rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.5rem;
+      display: inline-block;
+    }
 
-  .app a:hover {
-    color: var(--accent-hover);
-  }
-
-  .app a::after {
-    content: '→';
-    transition: transform 0.2s;
-  }
-
-  .app a:hover::after {
-    transform: translateX(5px);
-  }
-
-  footer {
-    margin-top: 6rem;
-    padding-bottom: 3rem;
-    border-top: 1px solid var(--card-border);
-    padding-top: 2rem;
-    font-size: 0.9rem;
-    color: var(--text-muted);
-    display: flex;
-    justify-content: space-between;
-  }
-</style>
+    footer {
+      margin-top: 6rem;
+      padding: 2rem 0;
+      border-top: 1px solid var(--card-border);
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+    }
+  </style>
+</head>
 <body>
+
 <div class="container">
   <section class="intro">
     <h1>aeropus</h1>
-    <p>
-      Digitales Handwerk trifft auf Leichtigkeit. <br>
-      Drei Web-Apps, die Klarheit in den digitalen Alltag bringen.
-    </p>
+    <p>Minimalistische Werkzeuge für den modernen Browser. Vernetzt über deine AeroID.</p>
   </section>
 
   <section class="apps">
-    <article class="app">
+    <a href="https://sites.google.com/view/villochat" target="_blank" class="app">
+      <span class="tag" style="color: var(--accent);">Social</span>
       <h3>Villochat</h3>
-      <p>Minimalistischer Chatraum für schnelle Kommunikation ohne Anmeldung. Perfekt für spontane Gruppen.</p>
-      <a href="https://sites.google.com/view/villochat" target="_blank">Chat starten</a>
-    </article>
+      <p>Schneller Chat ohne Ballast. Keine Anmeldung nötig.</p>
+      <span style="font-weight:bold; color:var(--accent)">Öffnen →</span>
+    </a>
 
-    <article class="app">
+    <a href="/auth/?redirect=aeronotes" class="app" style="border-left: 4px solid var(--cloud);">
+      <span class="tag" style="color: var(--cloud);">aeroCloud</span>
+      <h3>aeroNotes</h3>
+      <p>Sichere Notizen, die überall mitkommen. Echtzeit-Sync inklusive.</p>
+      <span style="font-weight:bold; color:var(--cloud)">Schreiben →</span>
+    </a>
+
+    <a href="https://klassenblatt-editor.vercel.app/" target="_blank" class="app">
+      <span class="tag">Editor</span>
       <h3>KlassenBlatt</h3>
-      <p>Flexibler Editor für Arbeitsblätter und Listen. Läuft komplett lokal in deinem Browser.</p>
-      <a href="https://klassenblatt-editor.vercel.app/" target="_blank">Editor öffnen</a>
-    </article>
+      <p>Materialerstellung für Lehrkräfte. Lokal und sicher.</p>
+      <span style="font-weight:bold;">Starten →</span>
+    </a>
 
-    <article class="app">
+    <a href="/auth/?redirect=novos" class="app">
+      <span class="tag">System</span>
       <h3>NovOS</h3>
-      <p>Ein experimentelles Betriebssystem direkt im Browser. Die Zukunft von aeroOS.</p>
-      <a href="/novos/startup.html" target="_blank">System booten</a>
-    </article>
-    <article href="/auth/?redirect=aeronotes" class="app">
-    <span class="tag" style="color: #10b981;">aeroCloud</span> <h3>aeroNotes</h3>
-    <p>Deine Gedanken, sicher in der aeroCloud. Synchronisiert in Echtzeit zwischen all deinen Geräten.</p>
-    </article>
-    <article class="app">
+      <p>Das Betriebssystem der Zukunft, direkt in deinem Tab.</p>
+      <span style="font-weight:bold;">Booten →</span>
+    </a>
+
+    <a href="/auth" class="app" id="id-card">
+      <span class="tag">Account</span>
       <h3>aeroID</h3>
-      <p>Anmelden</p>
-      <a href="/auth" target="_blank">Anmelden</a>
-    </article>
+      <p id="id-status">Nicht angemeldet</p>
+      <span style="font-weight:bold;">Verwalten →</span>
+    </a>
   </section>
 
   <footer>
-    &copy; 2026 aeropus // Built with Aeropus Sans Web 
+    <span>&copy; 2026 aeropus // aeroCloud active</span>
+    <span>Powered by Aeropus Sans Web</span>
   </footer>
 </div>
-  
-    <script>
-      console.log('Apple ist misst')
-    </script>
-  </body>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script>
+  // Firebase Init (wie in deiner Auth-Seite)
+  const firebaseConfig = {
+      apiKey: "AIzaSyB-6oB6_gM4-HquuHD6XV9dqa0zygQjU34",
+      authDomain: "aeropusoffice.firebaseapp.com",
+      projectId: "aeropusoffice"
+  };
+  firebase.initializeApp(firebaseConfig);
+
+  // Status Check für AeroID
+  firebase.auth().onAuthStateChanged(user => {
+    if (user) {
+      document.getElementById('id-status').innerText = "Angemeldet als " + user.email.split('@')[0];
+      document.getElementById('id-card').style.borderColor = "var(--accent)";
+    }
+  });
+
+  console.log('Apple ist misst'); // Dein Easteregg beibehalten
+</script>
+
+</body>
+</html>
