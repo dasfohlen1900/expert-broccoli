@@ -5,97 +5,146 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
-    <style>
-      @font-face {
-  font-family: 'Aeropus Sans Web';
-  src: url('AeropusSansWeb.woff2') format('woff2'); /* [cite: 1] */
-  font-weight: normal;
-  font-style: normal;
-}
+  <style>
+  @font-face {
+    font-family: 'Aeropus Sans Web';
+    src: url('AeropusSansWeb.woff2') format('woff2'); /*  */
+    font-weight: normal;
+    font-style: normal;
+  }
+
+  :root {
+    --bg: #0f172a;
+    --card-bg: #1e293b;
+    --text: #f8fafc;
+    --accent: #38bdf8; /* Ein klares Aero-Blau */
+  }
+
   body {
-    font-family: 'Aeropus Sans Web', Inter;
-    margin: 2rem;
+    font-family: 'Aeropus Sans Web', 'Inter', sans-serif; /*  */
+    background-color: var(--bg);
+    color: var(--text);
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
     line-height: 1.6;
   }
 
+  .container {
+    max-width: 900px;
+    padding: 2rem;
+  }
+
+  .intro {
+    text-align: center;
+    margin-bottom: 4rem;
+  }
+
   .intro h1 {
-    font-family: Poppins;
-    margin-bottom: 0.5rem;
+    font-family: 'Poppins', sans-serif;
+    font-size: 3rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin-bottom: 1rem;
+    background: linear-gradient(to right, #38bdf8, #818cf8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
 
   .apps {
-    margin-top: 2rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
   }
 
   .app {
-    margin-bottom: 1.5rem;
-    padding: 1rem;
-    border-radius: 8px;
-    background: #f5f5f5;
+    background: var(--card-bg);
+    padding: 2rem;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: transform 0.3s ease, border-color 0.3s ease;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .app:hover {
+    transform: translateY(-5px);
+    border-color: var(--accent);
+  }
+
+  .app h3 {
+    margin-top: 0;
+    font-size: 1.5rem;
+    color: var(--accent);
+  }
+
+  .app p {
+    flex-grow: 1;
+    font-size: 0.95rem;
+    opacity: 0.8;
   }
 
   .app a {
-    color: #0066cc;
+    display: inline-block;
+    margin-top: 1.5rem;
+    padding: 0.75rem 1.5rem;
+    background: var(--accent);
+    color: var(--bg);
     text-decoration: none;
-    font-weight: 600;
+    font-weight: 700;
+    border-radius: 8px;
+    text-align: center;
+    transition: opacity 0.2s;
   }
 
   .app a:hover {
-    text-decoration: underline;
+    opacity: 0.9;
   }
 
-    </style>
-  </head>
-  <body>
-    <section class="intro">
-  <h1>Schön, dass du da bist</h1>
-  <p>
-    Willkommen! Hier findest du zwei kleine, aber feine Web‑Apps, die dir den Alltag
-    erleichtern und gleichzeitig Freude machen. Beide laufen direkt im Browser und
-    konzentrieren sich auf Klarheit, Geschwindigkeit und Einfachheit.
-  </p>
-</section>
+  footer {
+    text-align: center;
+    margin-top: 4rem;
+    font-size: 0.8rem;
+    opacity: 0.4;
+  }
+</style>
+<body>
+<div class="container">
+  <section class="intro">
+    <h1>aeropus</h1>
+    <p>
+      Digitales Handwerk trifft auf Leichtigkeit. <br>
+      Drei Web-Apps, die Klarheit in den digitalen Alltag bringen.
+    </p>
+  </section>
 
-<section class="apps">
-  <h2>Apps</h2>
+  <section class="apps">
+    <article class="app">
+      <h3>Villochat</h3>
+      <p>Minimalistischer Chatraum für schnelle Kommunikation ohne Anmeldung. Perfekt für spontane Gruppen.</p>
+      <a href="https://sites.google.com/view/villochat" target="_blank">Chat starten</a>
+    </article>
 
-  <article class="app">
-    <h3>Villochat</h3>
-    <p>
-      Ein minimalistischer Chatraum für schnelle Kommunikation ohne Anmeldung.
-      Perfekt für spontane Gruppen, Unterrichtssituationen oder kleine Communities.
-    </p>
-    <p>
-      <a href="https://sites.google.com/view/villochat" target="_blank">
-        Villochat öffnen
-      </a>
-    </p>
-  </article>
+    <article class="app">
+      <h3>KlassenBlatt</h3>
+      <p>Flexibler Editor für Arbeitsblätter und Listen. Läuft komplett lokal in deinem Browser.</p>
+      <a href="https://klassenblatt-editor.vercel.app/" target="_blank">Editor öffnen</a>
+    </article>
 
-  <article class="app">
-    <h3>KlassenBlatt</h3>
-    <p>
-      Ein flexibler Editor zum Erstellen von Arbeitsblättern, Listen und
-      Unterrichtsmaterial. Läuft komplett im Browser und speichert lokal.
-    </p>
-    <p>
-      <a href="https://klassenblatt-editor.vercel.app/" target="_blank">
-        KlassenBlatt öffnen
-      </a>
-    </p>
-  </article>
-   <article class="app">
-    <h3>NovOS</h3>
-    <p>
-      Ein kleines Betriebssystem im Browser. Vielleicht besser als aeroOS
-    </p>
-    <p>
-      <a href="/novos/startup.html" target="_blank">
-        NovOS booten
-      </a>
-    </p>
-  </article>
-</section>
+    <article class="app">
+      <h3>NovOS</h3>
+      <p>Ein experimentelles Betriebssystem direkt im Browser. Die Zukunft von aeroOS.</p>
+      <a href="/novos/startup.html" target="_blank">System booten</a>
+    </article>
+  </section>
+
+  <footer>
+    &copy; 2026 aeropus // Built with Aeropus Sans Web 
+  </footer>
+</div>
+  
     <script>
       console.log('Apple ist misst')
     </script>
