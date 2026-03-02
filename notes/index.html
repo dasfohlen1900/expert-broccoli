@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>aeroNotes — aeroCloud Save</title>
+    <style>
+        @font-face {
+            font-family: 'Aeropus Sans Web';
+            src: url('../AeropusSansWeb.woff2') format('woff2');
+            font-weight: normal; font-style: normal;
+        }
+
+        :root {
+            --bg: #ffffff;
+            --text: #1e293b;
+            --accent: #0ea5e9;
+            --border: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Aeropus Sans Web', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        header {
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .status {
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        #editor {
+            flex-grow: 1;
+            padding: 3rem;
+            font-size: 1.2rem;
+            line-height: 1.6;
+            border: none;
+            outline: none;
+            resize: none;
+            font-family: 'Aeropus Sans Web', sans-serif;
+            background: transparent;
+        }
+
+        .saving-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            font-size: 0.8rem;
+            opacity: 0.5;
+            transition: opacity 0.3s;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div style="font-family: Poppins; font-weight: 900; font-size: 1.2rem;">aero<span>Notes</span></div>
+    <div class="status" id="cloud-status">Cloud verbunden</div>
+</header>
+
+<textarea id="editor" placeholder="Schreib etwas..."></textarea>
+<div class="saving-indicator" id="save-hint">Synchronisiert...</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
+<script>
+    // 1. Firebase Config (deine Config nutzen)
+    const firebaseConfig = {
+        apiKey: "AIzaSyB-6oB6_gM4-HquuHD6XV9dqa0zygQjU34",
+        authDomain: "aeropusoffice.firebaseapp.com",
+        databaseURL: "https://aeropusoffice-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "aeropusoffice",
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const auth = firebase.auth();
+
+    const editor = document.getElementById('editor');
+    const saveHint = document.getElementById('save-hint');
+    const cloudStatus = document.getElementById('cloud-status');
+
+    // 2. Query Handling
+    const noteId = new URLSearchParams(window.location.search).get('id') || 'default';
+
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            const noteRef = db.ref(`users/${user.uid}/notes/${noteId}`);
+            
+            // Daten laden
+            noteRef.once('value').then(snap => {
+                if (snap.exists()) editor.value = snap.val().content;
+            });
+
+            // Auto-Save Logik
+            let timeout = null;
+            editor.addEventListener('input', () => {
+                saveHint.style.opacity = "1";
+                clearTimeout(timeout);
+                
+                timeout = setTimeout(() => {
+                    noteRef.set({
+                        content: editor.value,
+                        lastUpdate: Date.now()
+                    }).then(() => {
+                        saveHint.style.opacity = "0";
+                    });
+                }, 800); // Speichert 800ms nach dem letzten Tastendruck
+            });
+
+        } else {
+            window.location.href = "/auth/?redirect=aeronotes";
+        }
+    });
+</script>
+</body>
+</html>
