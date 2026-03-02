@@ -5,109 +5,134 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
-  <style>
+ Alles klar, wir schwenken um auf den Light-Mode! Ein helles Design passt hervorragend zum Namen aeropus, da es Frische, Klarheit und „Luftigkeit“ ausstrahlt.
+
+Hier ist das Update für deinen Code. Ich habe die Kontraste sanft gewählt (kein hartes Schwarz-Weiß), damit es modern und professionell wirkt, während die Aeropus Sans Web  im Fließtext ihre volle Wirkung entfalten kann.
+
+Der „Aero-Light“ Code
+HTML
+<style>
   @font-face {
     font-family: 'Aeropus Sans Web';
-    src: url('AeropusSansWeb.woff2') format('woff2'); /*  */
+    src: url('AeropusSansWeb.woff2') format('woff2'); 
     font-weight: normal;
     font-style: normal;
   }
 
   :root {
-    --bg: #0f172a;
-    --card-bg: #1e293b;
-    --text: #f8fafc;
-    --accent: #38bdf8; /* Ein klares Aero-Blau */
+    --bg: #ffffff;
+    --card-bg: #f8fafc;
+    --card-border: #e2e8f0;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --accent: #0ea5e9; /* Ein klares, helles Blau */
+    --accent-hover: #0284c7;
   }
 
   body {
-    font-family: 'Aeropus Sans Web', 'Inter', sans-serif; /*  */
+    font-family: 'Aeropus Sans Web', 'Inter', sans-serif; 
     background-color: var(--bg);
-    color: var(--text);
+    color: var(--text-main);
     margin: 0;
+    line-height: 1.6;
     display: flex;
     justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    line-height: 1.6;
+    padding-top: 5vh;
   }
 
   .container {
-    max-width: 900px;
+    max-width: 1000px;
+    width: 90%;
     padding: 2rem;
   }
 
   .intro {
-    text-align: center;
-    margin-bottom: 4rem;
+    margin-bottom: 5rem;
   }
 
   .intro h1 {
     font-family: 'Poppins', sans-serif;
-    font-size: 3rem;
-    font-weight: 800;
-    letter-spacing: -0.03em;
+    font-size: clamp(2.5rem, 8vw, 4rem);
+    font-weight: 900;
+    letter-spacing: -0.04em;
     margin-bottom: 1rem;
-    background: linear-gradient(to right, #38bdf8, #818cf8);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    color: var(--text-main);
+  }
+
+  .intro p {
+    font-size: 1.25rem;
+    color: var(--text-muted);
+    max-width: 600px;
   }
 
   .apps {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
   }
 
   .app {
     background: var(--card-bg);
-    padding: 2rem;
-    border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: transform 0.3s ease, border-color 0.3s ease;
+    padding: 2.5rem;
+    border-radius: 24px;
+    border: 1px solid var(--card-border);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     flex-direction: column;
   }
 
   .app:hover {
-    transform: translateY(-5px);
+    background: #ffffff;
     border-color: var(--accent);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
+    transform: translateY(-8px);
   }
 
   .app h3 {
-    margin-top: 0;
-    font-size: 1.5rem;
-    color: var(--accent);
+    margin: 0 0 1rem 0;
+    font-size: 1.75rem;
+    font-family: 'Poppins', sans-serif;
   }
 
   .app p {
+    color: var(--text-muted);
+    font-size: 1rem;
     flex-grow: 1;
-    font-size: 0.95rem;
-    opacity: 0.8;
+    margin-bottom: 2rem;
   }
 
   .app a {
-    display: inline-block;
-    margin-top: 1.5rem;
-    padding: 0.75rem 1.5rem;
-    background: var(--accent);
-    color: var(--bg);
-    text-decoration: none;
     font-weight: 700;
-    border-radius: 8px;
-    text-align: center;
-    transition: opacity 0.2s;
+    color: var(--accent);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: color 0.2s;
   }
 
   .app a:hover {
-    opacity: 0.9;
+    color: var(--accent-hover);
+  }
+
+  .app a::after {
+    content: '→';
+    transition: transform 0.2s;
+  }
+
+  .app a:hover::after {
+    transform: translateX(5px);
   }
 
   footer {
-    text-align: center;
-    margin-top: 4rem;
-    font-size: 0.8rem;
-    opacity: 0.4;
+    margin-top: 6rem;
+    padding-bottom: 3rem;
+    border-top: 1px solid var(--card-border);
+    padding-top: 2rem;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    display: flex;
+    justify-content: space-between;
   }
 </style>
 <body>
