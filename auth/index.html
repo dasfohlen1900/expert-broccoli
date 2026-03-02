@@ -10,7 +10,7 @@
     <style>
         @font-face {
             font-family: 'Aeropus Sans Web';
-            src: url('/AeropusSansWeb.woff2') format('woff2'); /* Pfad zu deiner Datei prüfen! */
+            src: url('/AeropusSansWeb.woff2') format('woff2'); 
             font-weight: normal;
             font-style: normal;
         }
@@ -36,7 +36,6 @@
             position: relative;
         }
 
-        /* Hintergrund-Animation: Fließende Querys */
         .query-bg {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -59,7 +58,6 @@
             to { transform: translateX(-100%); }
         }
 
-        /* Auth Card */
         .auth-card {
             position: relative;
             z-index: 10;
@@ -196,7 +194,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 
     <script>
-        // 1. Firebase Initialisierung
         const firebaseConfig = {
             apiKey: "AIzaSyB-6oB6_gM4-HquuHD6XV9dqa0zygQjU34",
             authDomain: "aeropusoffice.firebaseapp.com",
@@ -208,7 +205,6 @@
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
 
-        // 2. Query Parameter Logik
         const urlParams = new URLSearchParams(window.location.search);
         let mode = urlParams.get('mode') || 'login'; 
         const redirect = urlParams.get('redirect') || 'home';
@@ -231,7 +227,6 @@
 
         updateUI();
 
-        // Mode Switcher (ändert Query ohne Page Reload)
         document.getElementById('switch-mode').addEventListener('click', (e) => {
             e.preventDefault();
             mode = (mode === 'login') ? 'signup' : 'login';
@@ -240,48 +235,32 @@
             updateUI();
         });
 
-        // 3. Authentifizierungs-Prozess
         document.getElementById('auth-form').addEventListener('submit', (e) => {
             e.preventDefault();
             const email = document.getElementById('email').value;
             const pass = document.getElementById('password').value;
             const errorDiv = document.getElementById('error-msg');
-            
             errorDiv.style.display = 'none';
 
             const authAction = (mode === 'signup') 
                 ? auth.createUserWithEmailAndPassword(email, pass)
                 : auth.signInWithEmailAndPassword(email, pass);
 
-            // Im Auth-Prozess innerhalb von .then((result) => { ... })
+            authAction.then((result) => {
+                let targetPath;
+                switch(redirect) {
+                    case 'novos': targetPath = '/novos/startup.html'; break;
+                    case 'aeronotes': targetPath = '/aeronotes/index.html'; break;
+                    case 'villochat': targetPath = 'https://sites.google.com/view/villochat'; break;
+                    default: targetPath = '/';
+                }
+                window.location.href = `${targetPath}?auth=success&uid=${result.user.uid}&user=${result.user.email.split('@')[0]}&mode=${mode}`;
+            }).catch((err) => {
+                errorDiv.innerText = "AeroID Fehler: " + err.message;
+                errorDiv.style.display = 'block';
+            });
+        }); // Schließende Klammer für den Event-Listener korrigiert
 
-authAction.then((result) => {
-    // Dynamische Pfad-Ermittlung basierend auf dem 'redirect' Query-Parameter
-    let targetPath;
-    
-    switch(redirect) {
-        case 'novos':
-            targetPath = '/novos/startup.html';
-            break;
-        case 'aeronotes':
-            targetPath = '/aeronotes/index.html';
-            break;
-        case 'villochat':
-            targetPath = 'https://sites.google.com/view/villochat'; // Falls du hier auch ID willst
-            break;
-        default:
-            targetPath = '/';
-    }
-
-    // Weiterleitung mit den geliebten Querys
-    window.location.href = `${targetPath}?auth=success&uid=${result.user.uid}&user=${result.user.email.split('@')[0]}&mode=${mode}`;
-
-}).catch((err) => {
-    errorDiv.innerText = "AeroID Fehler: " + err.message;
-    errorDiv.style.display = 'block';
-});
-
-        // 4. Background Query-Engine (Animation)
         const createParticle = () => {
             const queries = [`?uid=${Math.random().toString(36).substr(2,9)}`, `?redirect=${redirect}`, `?v=2.1`, `?auth_state=pending`, `?port=443`, `?mode=${mode}`];
             const p = document.createElement('div');
@@ -292,7 +271,6 @@ authAction.then((result) => {
             p.style.animationDuration = (Math.random() * 8 + 4) + 's';
             p.style.opacity = Math.random() * 0.5;
             document.getElementById('particles').appendChild(p);
-            
             setTimeout(() => p.remove(), 12000);
         };
         setInterval(createParticle, 800);
