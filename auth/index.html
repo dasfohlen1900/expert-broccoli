@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>AeroID — Authentifizierung</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;900&display=swap" rel="stylesheet">
+    <style>
+        @font-face {
+            font-family: 'Aeropus Sans Web';
+            src: url('../AeropusSansWeb.woff2') format('woff2'); /* Pfad zu deiner Datei prüfen! */
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        :root {
+            --bg: #ffffff;
+            --accent: #0ea5e9;
+            --text: #1e293b;
+            --muted: #64748b;
+            --card-border: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Aeropus Sans Web', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Hintergrund-Animation: Fließende Querys */
+        .query-bg {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 1;
+            opacity: 0.08;
+            pointer-events: none;
+            font-family: monospace;
+            font-size: 13px;
+        }
+
+        .query-particle {
+            position: absolute;
+            white-space: nowrap;
+            animation: move linear infinite;
+            color: var(--accent);
+        }
+
+        @keyframes move {
+            from { transform: translateX(100vw); }
+            to { transform: translateX(-100%); }
+        }
+
+        /* Auth Card */
+        .auth-card {
+            position: relative;
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+            padding: 2.5rem;
+            border-radius: 28px;
+            width: 100%;
+            max-width: 380px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .auth-header h1 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 2rem;
+            margin: 0;
+            letter-spacing: -1.5px;
+            font-weight: 900;
+        }
+
+        .auth-header h1 span { color: var(--accent); }
+
+        .input-group { margin-bottom: 1.2rem; }
+
+        .input-group label {
+            display: block;
+            font-size: 0.7rem;
+            font-weight: 800;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.4rem;
+            color: var(--muted);
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            font-family: 'Aeropus Sans Web', sans-serif;
+            font-size: 1rem;
+            box-sizing: border-box;
+            background: #f8fafc;
+            transition: all 0.2s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1);
+        }
+
+        .btn-auth {
+            width: 100%;
+            padding: 1rem;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: transform 0.2s, background 0.3s;
+        }
+
+        .btn-auth:hover {
+            background: #0284c7;
+            transform: translateY(-2px);
+        }
+
+        .auth-footer {
+            margin-top: 2rem;
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+
+        .auth-footer a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        #error-msg {
+            color: #ef4444;
+            background: #fef2f2;
+            padding: 0.75rem;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            margin-bottom: 1rem;
+            display: none;
+            border: 1px solid #fee2e2;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="query-bg" id="particles"></div>
+
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1 id="auth-title">Aero<span>ID</span></h1>
+            <p id="auth-subtitle" style="margin-top: 0.5rem;">Authentifizierung erforderlich</p>
+        </div>
+
+        <div id="error-msg"></div>
+
+        <form id="auth-form">
+            <div class="input-group">
+                <label>AEROID EMAIL</label>
+                <input type="email" id="email" placeholder="benutzer@aero.de" required>
+            </div>
+            <div class="input-group">
+                <label>PASSWORT</label>
+                <input type="password" id="password" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn-auth" id="submit-btn">Login starten</button>
+        </form>
+
+        <div class="auth-footer">
+            <span id="footer-text">Neu bei aeroapps?</span> 
+            <a href="#" id="switch-mode">Account erstellen</a>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
+    <script>
+        // 1. Firebase Initialisierung
+        const firebaseConfig = {
+            apiKey: "AIzaSyB-6oB6_gM4-HquuHD6XV9dqa0zygQjU34",
+            authDomain: "aeropusoffice.firebaseapp.com",
+            projectId: "aeropusoffice",
+            storageBucket: "aeropusoffice.firebasestorage.app",
+            messagingSenderId: "689907296537",
+            appId: "1:689907296537:web:e4bd110a7edc0366863d88"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+
+        // 2. Query Parameter Logik
+        const urlParams = new URLSearchParams(window.location.search);
+        let mode = urlParams.get('mode') || 'login'; 
+        const redirect = urlParams.get('redirect') || 'home';
+
+        const updateUI = () => {
+            if (mode === 'signup') {
+                document.getElementById('auth-title').innerHTML = "Aero<span>ID</span> Sign";
+                document.getElementById('auth-subtitle').innerText = "Erstelle deinen globalen Zugang";
+                document.getElementById('submit-btn').innerText = "Registrieren";
+                document.getElementById('footer-text').innerText = "Bereits dabei?";
+                document.getElementById('switch-mode').innerText = "Anmelden";
+            } else {
+                document.getElementById('auth-title').innerHTML = "Aero<span>ID</span> Login";
+                document.getElementById('auth-subtitle').innerText = "Fortfahren zu " + redirect.toUpperCase();
+                document.getElementById('submit-btn').innerText = "Einloggen";
+                document.getElementById('footer-text').innerText = "Noch kein Account?";
+                document.getElementById('switch-mode').innerText = "Erstellen";
+            }
+        };
+
+        updateUI();
+
+        // Mode Switcher (ändert Query ohne Page Reload)
+        document.getElementById('switch-mode').addEventListener('click', (e) => {
+            e.preventDefault();
+            mode = (mode === 'login') ? 'signup' : 'login';
+            const newUrl = `${window.location.pathname}?mode=${mode}&redirect=${redirect}`;
+            window.history.pushState({}, '', newUrl);
+            updateUI();
+        });
+
+        // 3. Authentifizierungs-Prozess
+        document.getElementById('auth-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('password').value;
+            const errorDiv = document.getElementById('error-msg');
+            
+            errorDiv.style.display = 'none';
+
+            const authAction = (mode === 'signup') 
+                ? auth.createUserWithEmailAndPassword(email, pass)
+                : auth.signInWithEmailAndPassword(email, pass);
+
+            authAction.then((result) => {
+                // ERFOLG: Weiterleitung mit Query-Parametern für die Ziel-App
+                const target = (redirect === 'novos') ? '/novos/startup.html' : '/';
+                window.location.href = `${target}?auth=success&uid=${result.user.uid}&mode=${mode}`;
+            }).catch((err) => {
+                errorDiv.innerText = "Fehler: " + err.message;
+                errorDiv.style.display = 'block';
+            });
+        });
+
+        // 4. Background Query-Engine (Animation)
+        const createParticle = () => {
+            const queries = [`?uid=${Math.random().toString(36).substr(2,9)}`, `?redirect=${redirect}`, `?v=2.1`, `?auth_state=pending`, `?port=443`, `?mode=${mode}`];
+            const p = document.createElement('div');
+            p.className = 'query-particle';
+            p.innerText = queries[Math.floor(Math.random() * queries.length)];
+            p.style.top = Math.random() * 100 + 'vh';
+            p.style.left = '100vw';
+            p.style.animationDuration = (Math.random() * 8 + 4) + 's';
+            p.style.opacity = Math.random() * 0.5;
+            document.getElementById('particles').appendChild(p);
+            
+            setTimeout(() => p.remove(), 12000);
+        };
+        setInterval(createParticle, 800);
+    </script>
+</body>
+</html>
