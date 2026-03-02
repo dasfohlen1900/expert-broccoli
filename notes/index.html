@@ -99,6 +99,78 @@
             margin-bottom: 1rem;
             font-weight: bold;
         }
+        /* Die Toolbar als schwebende Einheit */
+.toolbar {
+    padding: 0.8rem 1.5rem;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px); /* Glas-Effekt */
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.tool-group {
+    display: flex;
+    gap: 4px; /* Enger für kompakten Look */
+    background: #f1f5f9;
+    padding: 4px;
+    border-radius: 12px;
+}
+
+/* Die neuen Buttons: Flat, dezent, animiert */
+.tool-btn {
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-family: 'Aeropus Sans Web', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 38px;
+}
+
+.tool-btn:hover {
+    background: white;
+    color: var(--accent);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transform: translateY(-1px);
+}
+
+.tool-btn:active {
+    transform: translateY(0) scale(0.95);
+    background: rgba(255, 255, 255, 0.5);
+}
+
+/* Spezielle Akzente für Export/Save */
+.btn-primary-aero {
+    background: var(--accent);
+    color: white !important;
+    padding: 6px 16px;
+    margin-left: 10px;
+}
+
+.btn-primary-aero:hover {
+    background: var(--accent-hover);
+    box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
+}
+
+.separator {
+    width: 1px;
+    height: 18px;
+    background: rgba(0, 0, 0, 0.1);
+    margin: 0 8px;
+    align-self: center;
+}
     </style>
 </head>
 <body>
