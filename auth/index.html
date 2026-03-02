@@ -253,15 +253,33 @@
                 ? auth.createUserWithEmailAndPassword(email, pass)
                 : auth.signInWithEmailAndPassword(email, pass);
 
-            authAction.then((result) => {
-                // ERFOLG: Weiterleitung mit Query-Parametern für die Ziel-App
-                const target = (redirect === 'novos') ? '/novos/startup.html' : '/';
-                window.location.href = `${target}?auth=success&uid=${result.user.uid}&mode=${mode}`;
-            }).catch((err) => {
-                errorDiv.innerText = "Fehler: " + err.message;
-                errorDiv.style.display = 'block';
-            });
-        });
+            // Im Auth-Prozess innerhalb von .then((result) => { ... })
+
+authAction.then((result) => {
+    // Dynamische Pfad-Ermittlung basierend auf dem 'redirect' Query-Parameter
+    let targetPath;
+    
+    switch(redirect) {
+        case 'novos':
+            targetPath = '/novos/startup.html';
+            break;
+        case 'aeronotes':
+            targetPath = '/aeronotes/index.html';
+            break;
+        case 'villochat':
+            targetPath = 'https://sites.google.com/view/villochat'; // Falls du hier auch ID willst
+            break;
+        default:
+            targetPath = '/';
+    }
+
+    // Weiterleitung mit den geliebten Querys
+    window.location.href = `${targetPath}?auth=success&uid=${result.user.uid}&user=${result.user.email.split('@')[0]}&mode=${mode}`;
+
+}).catch((err) => {
+    errorDiv.innerText = "AeroID Fehler: " + err.message;
+    errorDiv.style.display = 'block';
+});
 
         // 4. Background Query-Engine (Animation)
         const createParticle = () => {
