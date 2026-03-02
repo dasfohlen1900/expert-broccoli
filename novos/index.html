@@ -3129,8 +3129,8 @@ function browserNavigateTo(url, pushState) {
   // Proxy list to try in order
   const PROXIES = [
     raw => raw,                                                      // 1. Direct
-    raw => `https://corsproxy.io/?${encodeURIComponent(raw)}`,      // 2. corsproxy.io
-    raw => `https://api.allorigins.win/raw?url=${encodeURIComponent(raw)}`, // 3. allorigins
+    raw => `https://novbrowser.53217974lu850329.workers.dev/?url=${encodeURIComponent(raw)}`, // 2. NovProxy
+    raw => `https://corsproxy.io/?${encodeURIComponent(raw)}`,      // 3. corsproxy.io fallback
   ];
   let proxyIdx = 0;
 
