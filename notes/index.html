@@ -2,7 +2,11 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>aeroNotes Pro — aeroCloud</title>
+    <title>aeroNotes — aeroCloud Editor</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;900&display=swap" rel="stylesheet">
     <style>
         @font-face {
             font-family: 'Aeropus Sans Web';
@@ -17,174 +21,68 @@
             --accent: #0ea5e9;
             --cloud: #10b981;
             --border: #e2e8f0;
+            --hover: rgba(14, 165, 233, 0.08);
         }
 
         body {
             font-family: 'Aeropus Sans Web', sans-serif;
-            margin: 0;
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
+            margin: 0; display: flex; height: 100vh; overflow: hidden;
+            background: var(--bg); color: var(--text);
         }
 
-        /* SIDEBAR */
+        /* SIDEBAR 2026 Look */
         aside {
-            width: 260px;
-            background: var(--sidebar);
+            width: 280px; background: var(--sidebar);
             border-right: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            padding: 1.5rem;
+            display: flex; flex-direction: column; padding: 1.5rem;
         }
 
-        .logo { font-family: 'Poppins'; font-weight: 900; font-size: 1.2rem; margin-bottom: 2rem; }
+        .logo { font-family: 'Poppins'; font-weight: 900; font-size: 1.4rem; margin-bottom: 2rem; letter-spacing: -1px; }
         .logo span { color: var(--accent); }
 
-        .note-list { flex-grow: 1; overflow-y: auto; }
-        .note-item { 
-            padding: 0.8rem; 
-            margin-bottom: 0.5rem; 
-            border-radius: 12px; 
-            cursor: pointer; 
-            font-size: 0.9rem;
-            transition: background 0.2s;
-            border: 1px solid transparent;
+        .btn-new {
+            background: var(--accent); color: white; border: none;
+            padding: 0.8rem; border-radius: 14px; font-weight: 700;
+            cursor: pointer; margin-bottom: 1.5rem; transition: transform 0.2s;
         }
-        .note-item:hover { background: #f1f5f9; }
-        .note-item.active { background: white; border-color: var(--border); font-weight: bold; }
+        .btn-new:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(14,165,233,0.2); }
 
-        /* MAIN CONTENT */
-        main { flex-grow: 1; display: flex; flex-direction: column; background: white; }
+        .note-list { flex-grow: 1; overflow-y: auto; }
+        .note-item {
+            padding: 0.75rem 1rem; margin-bottom: 0.4rem; border-radius: 12px;
+            cursor: pointer; font-size: 0.9rem; transition: all 0.2s;
+            border: 1px solid transparent; display: flex; align-items: center; gap: 8px;
+        }
+        .note-item:hover { background: var(--hover); color: var(--accent); }
+        .note-item.active { background: white; border-color: var(--border); font-weight: 700; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+
+        /* MAIN AREA */
+        main { flex-grow: 1; display: flex; flex-direction: column; position: relative; }
 
         .toolbar {
-            padding: 0.75rem 2rem;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            padding: 0.8rem 2rem; background: rgba(255,255,255,0.8);
+            backdrop-filter: blur(10px); border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
         }
 
-        .tool-group { display: flex; gap: 0.5rem; }
+        .tool-group { display: flex; gap: 4px; background: #f1f5f9; padding: 4px; border-radius: 12px; }
+        .tool-btn {
+            background: transparent; border: none; padding: 6px 12px;
+            border-radius: 8px; cursor: pointer; font-weight: 700; font-family: inherit;
+            transition: all 0.2s; min-width: 36px;
+        }
+        .tool-btn:hover { background: white; color: var(--accent); }
 
-        /* Das Schreibblatt */
-#editor {
-    flex-grow: 1;
-    padding: 6rem 4rem;
-    font-size: 1.15rem;
-    line-height: 1.8;
-    outline: none;
-    font-family: 'Aeropus Sans Web', sans-serif;
-    background: transparent;
-    width: 100%;
-    max-width: 850px;
-    margin: 0 auto;
-    overflow-y: auto;
-    color: var(--text);
-}
-
-/* Styling für die Elemente im Editor (Live-Vorschau) */
-#editor h1 { font-family: 'Poppins'; font-size: 2.5rem; margin-bottom: 1rem; }
-#editor b { font-weight: 800; color: var(--accent); }
-#editor i { font-style: italic; opacity: 0.9; }
-#editor u { text-decoration: underline; text-decoration-color: var(--accent); }
-
-[placeholder]:empty:before {
-    content: attr(placeholder);
-    color: var(--muted);
-    opacity: 0.5;
-    cursor: text;
-}
-        footer {
-            padding: 0.5rem 2rem;
-            font-size: 0.7rem;
-            color: var(--text-muted);
-            border-top: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
+        #editor {
+            flex-grow: 1; padding: 5rem 15%; outline: none;
+            font-size: 1.15rem; line-height: 1.8; overflow-y: auto;
         }
 
-        .btn-new {
-            background: var(--accent);
-            color: white;
-            border: none;
-            padding: 0.6rem;
-            border-radius: 10px;
-            cursor: pointer;
-            margin-bottom: 1rem;
-            font-weight: bold;
-        }
-        /* Die Toolbar als schwebende Einheit */
-.toolbar {
-    padding: 0.8rem 1.5rem;
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(20px); /* Glas-Effekt */
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-}
-
-.tool-group {
-    display: flex;
-    gap: 4px; /* Enger für kompakten Look */
-    background: #f1f5f9;
-    padding: 4px;
-    border-radius: 12px;
-}
-
-/* Die neuen Buttons: Flat, dezent, animiert */
-.tool-btn {
-    background: transparent;
-    border: none;
-    border-radius: 8px;
-    padding: 6px 12px;
-    cursor: pointer;
-    font-family: 'Aeropus Sans Web', sans-serif;
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--text);
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 38px;
-}
-
-.tool-btn:hover {
-    background: white;
-    color: var(--accent);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    transform: translateY(-1px);
-}
-
-.tool-btn:active {
-    transform: translateY(0) scale(0.95);
-    background: rgba(255, 255, 255, 0.5);
-}
-
-/* Spezielle Akzente für Export/Save */
-.btn-primary-aero {
-    background: var(--accent);
-    color: white !important;
-    padding: 6px 16px;
-    margin-left: 10px;
-}
-
-.btn-primary-aero:hover {
-    background: var(--accent-hover);
-    box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
-}
-
-.separator {
-    width: 1px;
-    height: 18px;
-    background: rgba(0, 0, 0, 0.1);
-    margin: 0 8px;
-    align-self: center;
-}
+        /* WYSIWYG Styles im Editor */
+        #editor h1 { font-family: 'Poppins'; font-size: 2.4rem; margin: 0 0 1rem 0; }
+        #editor h2 { font-family: 'Poppins'; font-size: 1.8rem; margin: 1.5rem 0 0.5rem 0; }
+        #editor blockquote { border-left: 4px solid var(--accent); margin: 0; padding-left: 1rem; font-style: italic; opacity: 0.8; }
+        #editor b { font-weight: 900; }
     </style>
 </head>
 <body>
@@ -192,33 +90,29 @@
 <aside>
     <div class="logo">aero<span>Notes</span></div>
     <button class="btn-new" onclick="createNewNote()">+ Neue Notiz</button>
-    <div class="note-list" id="note-list">
-        </div>
+    <div class="note-list" id="note-list"></div>
 </aside>
 
 <main>
     <header class="toolbar">
+        <input type="text" id="filename" style="border:none; font-weight:900; outline:none; font-size:1.1rem; width: 200px;" value="unbenannt">
+        
         <div class="tool-group">
-    <button class="tool-btn" onclick="insertMD('**', '**')" title="Fett (Strg+B)"><b>B</b></button>
-    <button class="tool-btn" onclick="insertMD('*', '*')" title="Kursiv (Strg+I)"><i>I</i></button>
-    <button class="tool-btn" onclick="insertMD('<u>', '</u>')" title="Unterstrichen"><u>U</u></button>
-    <button class="tool-btn" onclick="insertMD('~~', '~~')" title="Durchgestrichen"><strike>S</strike></button>
-    
-    <div class="separator"></div>
+            <button class="tool-btn" onclick="exec('bold')">B</button>
+            <button class="tool-btn" onclick="exec('italic')">I</button>
+            <button class="tool-btn" onclick="exec('underline')">U</button>
+            <button class="tool-btn" onclick="exec('strikeThrough')">S</button>
+            <div style="width:1px; background:var(--border); margin: 0 4px;"></div>
+            <button class="tool-btn" onclick="exec('formatBlock', 'h1')">H1</button>
+            <button class="tool-btn" onclick="exec('formatBlock', 'h2')">H2</button>
+            <button class="tool-btn" onclick="exec('formatBlock', 'blockquote')">“</button>
+            <button class="tool-btn" onclick="exec('insertUnorderedList')">•</button>
+        </div>
 
-    <button class="tool-btn" onclick="insertMD('# ', '')">H1</button>
-    <button class="tool-btn" onclick="insertMD('## ', '')">H2</button>
-    <button class="tool-btn" onclick="insertMD('> ', '')">Zitat</button>
-    <button class="tool-btn" onclick="insertMD('- ', '')">Liste</button>
-</div>
+        <button class="tool-btn" style="background:var(--accent); color:white; border-radius:10px;" onclick="exportMD()">Export</button>
     </header>
 
-    <textarea id="editor" placeholder="Schreibe etwas..."></textarea>
-
-    <footer>
-        <div id="word-count">0 Wörter</div>
-        <div id="save-status">Warten auf Eingabe...</div>
-    </footer>
+    <div id="editor" contenteditable="true" spellcheck="false"></div>
 </main>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -240,116 +134,68 @@
     const editor = document.getElementById('editor');
     const filenameInput = document.getElementById('filename');
 
-    // Wortzähler
-    editor.addEventListener('input', () => {
-        const text = editor.value.trim();
-        const words = text ? text.split(/\s+/).length : 0;
-        document.getElementById('word-count').innerText = `${words} Wörter`;
-    });
+    function exec(cmd, val = null) {
+        document.execCommand(cmd, false, val);
+        editor.focus();
+    }
 
-    // Neue Notiz erstellen
     function createNewNote() {
         const name = prompt("Name der Notiz:");
         if(name) {
             currentNoteId = name.replace(/\s+/g, '_');
             filenameInput.value = currentNoteId;
-            editor.value = "";
+            editor.innerHTML = "<h1>" + name + "</h1><p>Starte hier...</p>";
             saveNote();
         }
     }
 
-    // MD Export (Lokal speichern)
-    function exportMD() {
-        const blob = new Blob([editor.value], {type: 'text/markdown'});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${filenameInput.value}.md`;
-        a.click();
-    }
-
-    // Firebase Logik
     auth.onAuthStateChanged(user => {
-        if (user) {
-            // Liste laden
-            db.ref(`users/${user.uid}/aeroCloud`).on('value', snap => {
-                const list = document.getElementById('note-list');
-                list.innerHTML = "";
-                snap.forEach(child => {
-                    const div = document.createElement('div');
-                    div.className = `note-item ${child.key === currentNoteId ? 'active' : ''}`;
-                    div.innerText = child.key + ".md";
-                    div.onclick = () => loadNote(child.key);
-                    list.appendChild(div);
-                });
+        if (!user) window.location.href = "/auth/?redirect=aeronotes";
+        
+        const cloudRef = db.ref(`users/${user.uid}/aeroCloud`);
+
+        // Liste live laden
+        cloudRef.on('value', snap => {
+            const list = document.getElementById('note-list');
+            list.innerHTML = "";
+            snap.forEach(child => {
+                const div = document.createElement('div');
+                div.className = `note-item ${child.key === currentNoteId ? 'active' : ''}`;
+                div.innerHTML = `<span>📄</span> ${child.key}.md`;
+                div.onclick = () => loadNote(child.key);
+                list.appendChild(div);
             });
+        });
 
-            window.loadNote = (id) => {
-                currentNoteId = id;
-                filenameInput.value = id;
-                db.ref(`users/${user.uid}/aeroCloud/${id}`).once('value').then(snap => {
-                    editor.value = snap.val() ? snap.val().content : "";
-                });
-            };
-
-            window.saveNote = () => {
-                db.ref(`users/${user.uid}/aeroCloud/${currentNoteId}`).set({
-                    content: editor.value,
-                    lastModified: Date.now()
-                });
-            };
-
-            let timeout;
-            editor.addEventListener('input', () => {
-                clearTimeout(timeout);
-                timeout = setTimeout(saveNote, 1000);
+        window.loadNote = (id) => {
+            currentNoteId = id;
+            filenameInput.value = id;
+            cloudRef.child(id).once('value').then(snap => {
+                editor.innerHTML = snap.val() ? snap.val().html : "<h1>Neue Notiz</h1>";
             });
-        }
+        };
+
+        window.saveNote = () => {
+            cloudRef.child(currentNoteId).set({
+                html: editor.innerHTML,
+                lastUpdate: Date.now()
+            });
+        };
+
+        let timeout;
+        editor.addEventListener('input', () => {
+            clearTimeout(timeout);
+            timeout = setTimeout(saveNote, 1000);
+        });
     });
 
-    function insertMD(pre, suf) {
-    const el = document.getElementById('editor');
-    const start = el.selectionStart;
-    const end = el.selectionEnd;
-    const selectedText = el.value.substring(start, end);
-    
-    // Den neuen Text zusammensetzen
-    const replacement = pre + selectedText + suf;
-    
-    // Den Wert im Editor ändern
-    el.value = el.value.substring(0, start) + replacement + el.value.substring(end);
-    
-    // Cursor-Position berechnen:
-    // Wenn Text markiert war, dahinter springen. 
-    // Wenn nichts markiert war, zwischen pre und suf springen.
-    const newCursorPos = selectedText.length > 0 ? start + replacement.length : start + pre.length;
-    
-    el.setSelectionRange(newCursorPos, newCursorPos);
-    el.focus();
-
-    // Manuelles Trigger des Input-Events für das Auto-Save
-    el.dispatchEvent(new Event('input'));
-}
-
-// BONUS: Tastenkürzel hinzufügen (Strg+B, Strg+I)
-document.addEventListener('keydown', function(e) {
-    if (e.ctrlKey || e.metaKey) { // MetaKey für Mac (Cmd)
-        switch (e.key.toLowerCase()) {
-            case 'b':
-                e.preventDefault();
-                insertMD('**', '**');
-                break;
-            case 'i':
-                e.preventDefault();
-                insertMD('*', '*');
-                break;
-            case 'u':
-                e.preventDefault();
-                insertMD('<u>', '</u>');
-                break;
-        }
+    function exportMD() {
+        const blob = new Blob([editor.innerText], {type: 'text/markdown'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = filenameInput.value + ".md";
+        a.click();
     }
-});
 </script>
 </body>
 </html>
