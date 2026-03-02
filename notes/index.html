@@ -18,6 +18,7 @@
             --bg: #ffffff;
             --sidebar: #f8fafc;
             --text: #1e293b;
+            --muted: #64748b;
             --accent: #0ea5e9;
             --cloud: #10b981;
             --border: #e2e8f0;
@@ -30,11 +31,12 @@
             background: var(--bg); color: var(--text);
         }
 
-        /* SIDEBAR 2026 Look */
+        /* SIDEBAR */
         aside {
             width: 280px; background: var(--sidebar);
             border-right: 1px solid var(--border);
             display: flex; flex-direction: column; padding: 1.5rem;
+            z-index: 10;
         }
 
         .logo { font-family: 'Poppins'; font-weight: 900; font-size: 1.4rem; margin-bottom: 2rem; letter-spacing: -1px; }
@@ -49,40 +51,71 @@
 
         .note-list { flex-grow: 1; overflow-y: auto; }
         .note-item {
-            padding: 0.75rem 1rem; margin-bottom: 0.4rem; border-radius: 12px;
-            cursor: pointer; font-size: 0.9rem; transition: all 0.2s;
-            border: 1px solid transparent; display: flex; align-items: center; gap: 8px;
+            padding: 12px 15px; margin-bottom: 0.5rem; border-radius: 14px;
+            cursor: pointer; transition: all 0.2s; border: 1px solid transparent;
+            display: flex; justify-content: space-between; align-items: center;
+            position: relative;
         }
-        .note-item:hover { background: var(--hover); color: var(--accent); }
-        .note-item.active { background: white; border-color: var(--border); font-weight: 700; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .note-item:hover { background: var(--hover); }
+        .note-item.active { background: white; border-color: var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
 
-        /* MAIN AREA */
-        main { flex-grow: 1; display: flex; flex-direction: column; position: relative; }
+        .note-info { display: flex; flex-direction: column; gap: 2px; }
+        .note-name { font-weight: 700; font-size: 0.9rem; }
+        .note-date { font-size: 0.7rem; color: var(--muted); }
+
+        .delete-btn {
+            opacity: 0; color: #ef4444; padding: 5px; font-size: 0.8rem;
+            transition: opacity 0.2s; cursor: pointer;
+        }
+        .note-item:hover .delete-btn { opacity: 1; }
+
+        /* MAIN CONTENT */
+        main { flex-grow: 1; display: flex; flex-direction: column; background: white; }
 
         .toolbar {
             padding: 0.8rem 2rem; background: rgba(255,255,255,0.8);
-            backdrop-filter: blur(10px); border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(15px); border-bottom: 1px solid var(--border);
             display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 5;
+        }
+
+        #filename {
+            border: none; font-weight: 900; font-family: 'Aeropus Sans Web';
+            font-size: 1.1rem; outline: none; background: transparent; width: 200px;
         }
 
         .tool-group { display: flex; gap: 4px; background: #f1f5f9; padding: 4px; border-radius: 12px; }
         .tool-btn {
             background: transparent; border: none; padding: 6px 12px;
-            border-radius: 8px; cursor: pointer; font-weight: 700; font-family: inherit;
-            transition: all 0.2s; min-width: 36px;
+            border-radius: 8px; cursor: pointer; font-weight: 700;
+            transition: all 0.2s; min-width: 36px; font-family: inherit;
         }
         .tool-btn:hover { background: white; color: var(--accent); }
 
+        /* USER PROFILE */
+        .user-profile {
+            display: flex; align-items: center; gap: 10px; padding: 5px 12px;
+            border-radius: 20px; background: var(--sidebar); cursor: pointer;
+            border: 1px solid transparent; transition: 0.2s;
+        }
+        .user-profile:hover { border-color: var(--accent); background: white; }
+        .avatar {
+            width: 26px; height: 26px; background: var(--accent); color: white;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 0.75rem; font-weight: 900;
+        }
+
+        /* EDITOR */
         #editor {
             flex-grow: 1; padding: 5rem 15%; outline: none;
             font-size: 1.15rem; line-height: 1.8; overflow-y: auto;
+            color: var(--text);
         }
-
-        /* WYSIWYG Styles im Editor */
-        #editor h1 { font-family: 'Poppins'; font-size: 2.4rem; margin: 0 0 1rem 0; }
-        #editor h2 { font-family: 'Poppins'; font-size: 1.8rem; margin: 1.5rem 0 0.5rem 0; }
-        #editor blockquote { border-left: 4px solid var(--accent); margin: 0; padding-left: 1rem; font-style: italic; opacity: 0.8; }
-        #editor b { font-weight: 900; }
+        #editor h1 { font-family: 'Poppins'; font-size: 2.5rem; margin-top: 0; }
+        #editor h2 { font-family: 'Poppins'; font-size: 1.8rem; }
+        #editor b { font-weight: 900; color: var(--text); }
+        #editor u { text-decoration-color: var(--accent); }
+        #editor blockquote { border-left: 4px solid var(--accent); margin: 0; padding-left: 1.5rem; font-style: italic; opacity: 0.8; }
     </style>
 </head>
 <body>
@@ -95,24 +128,35 @@
 
 <main>
     <header class="toolbar">
-        <input type="text" id="filename" style="border:none; font-weight:900; outline:none; font-size:1.1rem; width: 200px;" value="unbenannt">
-        
+        <div style="display:flex; align-items:center; gap:10px;">
+            <input type="text" id="filename" spellcheck="false" value="default">
+            <div id="sync-icon" style="width:8px; height:8px; background:var(--cloud); border-radius:50%; opacity:0.5;"></div>
+        </div>
+
         <div class="tool-group">
             <button class="tool-btn" onclick="exec('bold')">B</button>
             <button class="tool-btn" onclick="exec('italic')">I</button>
             <button class="tool-btn" onclick="exec('underline')">U</button>
             <button class="tool-btn" onclick="exec('strikeThrough')">S</button>
-            <div style="width:1px; background:var(--border); margin: 0 4px;"></div>
+            <div style="width:1px; background:var(--border); margin:0 5px;"></div>
             <button class="tool-btn" onclick="exec('formatBlock', 'h1')">H1</button>
             <button class="tool-btn" onclick="exec('formatBlock', 'h2')">H2</button>
             <button class="tool-btn" onclick="exec('formatBlock', 'blockquote')">“</button>
             <button class="tool-btn" onclick="exec('insertUnorderedList')">•</button>
+            <button class="tool-btn" onclick="exec('insertOrderedList')">1.</button>
+            <button class="tool-btn" onclick="exec('insertDate')">🌐</button>
         </div>
 
-        <button class="tool-btn" style="background:var(--accent); color:white; border-radius:10px;" onclick="exportMD()">Export</button>
+        <div style="display:flex; align-items:center; gap:15px;">
+            <button class="tool-btn" style="background:var(--accent); color:white; border-radius:10px;" onclick="exportMD()">Export</button>
+            <div class="user-profile" onclick="window.location.href='/auth'">
+                <span style="font-size:0.8rem; font-weight:700;" id="user-name">Gast</span>
+                <div class="avatar" id="user-initial">?</div>
+            </div>
+        </div>
     </header>
 
-    <div id="editor" contenteditable="true" spellcheck="false"></div>
+    <div id="editor" contenteditable="true" spellcheck="false" placeholder="Schreibe etwas..."></div>
 </main>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -124,7 +168,7 @@
         apiKey: "AIzaSyB-6oB6_gM4-HquuHD6XV9dqa0zygQjU34",
         authDomain: "aeropusoffice.firebaseapp.com",
         databaseURL: "https://aeropusoffice-default-rtdb.europe-west1.firebasedatabase.app",
-        projectId: "aeropusoffice",
+        projectId: "aeropusoffice"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
@@ -139,29 +183,36 @@
         editor.focus();
     }
 
-    function createNewNote() {
-        const name = prompt("Name der Notiz:");
-        if(name) {
-            currentNoteId = name.replace(/\s+/g, '_');
-            filenameInput.value = currentNoteId;
-            editor.innerHTML = "<h1>" + name + "</h1><p>Starte hier...</p>";
-            saveNote();
-        }
+    function formatDate(ts) {
+        if(!ts) return "unbekannt";
+        return new Date(ts).toLocaleDateString('de-DE', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'});
     }
 
     auth.onAuthStateChanged(user => {
-        if (!user) window.location.href = "/auth/?redirect=aeronotes";
-        
+        if (!user) { window.location.href = "/auth/?redirect=aeronotes"; return; }
+
+        // User UI Update
+        const name = user.email.split('@')[0];
+        document.getElementById('user-name').innerText = name;
+        document.getElementById('user-initial').innerText = name.charAt(0).toUpperCase();
+
         const cloudRef = db.ref(`users/${user.uid}/aeroCloud`);
 
-        // Liste live laden
+        // Sidebar live laden
         cloudRef.on('value', snap => {
             const list = document.getElementById('note-list');
             list.innerHTML = "";
             snap.forEach(child => {
+                const data = child.val();
                 const div = document.createElement('div');
                 div.className = `note-item ${child.key === currentNoteId ? 'active' : ''}`;
-                div.innerHTML = `<span>📄</span> ${child.key}.md`;
+                div.innerHTML = `
+                    <div class="note-info">
+                        <span class="note-name">📄 ${child.key}</span>
+                        <span class="note-date">${formatDate(data.lastUpdate)}</span>
+                    </div>
+                    <span class="delete-btn" onclick="deleteNote(event, '${child.key}')">✕</span>
+                `;
                 div.onclick = () => loadNote(child.key);
                 list.appendChild(div);
             });
@@ -171,23 +222,57 @@
             currentNoteId = id;
             filenameInput.value = id;
             cloudRef.child(id).once('value').then(snap => {
-                editor.innerHTML = snap.val() ? snap.val().html : "<h1>Neue Notiz</h1>";
+                editor.innerHTML = snap.exists() ? snap.val().html : "<h1>" + id + "</h1>";
             });
+        };
+
+        window.deleteNote = (e, id) => {
+            e.stopPropagation();
+            if(confirm(`"${id}" wirklich löschen?`)) cloudRef.child(id).remove();
         };
 
         window.saveNote = () => {
+            document.getElementById('sync-icon').style.opacity = "1";
             cloudRef.child(currentNoteId).set({
                 html: editor.innerHTML,
                 lastUpdate: Date.now()
+            }).then(() => {
+                setTimeout(() => document.getElementById('sync-icon').style.opacity = "0.3", 500);
             });
         };
 
+        // Auto-Save
         let timeout;
         editor.addEventListener('input', () => {
             clearTimeout(timeout);
             timeout = setTimeout(saveNote, 1000);
         });
+
+        // Rename Funktion
+        filenameInput.addEventListener('change', () => {
+            const newId = filenameInput.value.replace(/\s+/g, '_');
+            if(newId && newId !== currentNoteId) {
+                cloudRef.child(currentNoteId).once('value').then(snap => {
+                    cloudRef.child(newId).set(snap.val());
+                    cloudRef.child(currentNoteId).remove();
+                    currentNoteId = newId;
+                });
+            }
+        });
+
+        // Initial load
+        loadNote(currentNoteId);
     });
+
+    function createNewNote() {
+        const n = prompt("Name der Notiz:");
+        if(n) {
+            currentNoteId = n.replace(/\s+/g, '_');
+            filenameInput.value = currentNoteId;
+            editor.innerHTML = "<h1>" + n + "</h1><p>Schreibe hier...</p>";
+            window.saveNote();
+        }
+    }
 
     function exportMD() {
         const blob = new Blob([editor.innerText], {type: 'text/markdown'});
