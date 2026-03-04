@@ -1780,9 +1780,20 @@ function openApp(app) {
   if(app==='settings') setTimeout(()=>initSettingsSidebar(),10);
   if(app==='pdf')      setTimeout(()=>initPDF(),10);
   if(app==='clock')    setTimeout(()=>initClock(),10);
+  if(app==='novpiano')   setTimeout(()=>pianoInit(),50);
+  if(app==='novsnake')   setTimeout(()=>snakeStart(),50);
+  if(app==='novmemo')    setTimeout(()=>memoInit(),50);
+  if(app==='novpaint')   setTimeout(()=>paintInit(),100);
+  if(app==='novnotes')   setTimeout(()=>{
+    const saved=JSON.parse(localStorage.getItem('novnotes_data')||'{}');
+    const t=document.getElementById('novnotes-title'),b=document.getElementById('novnotes-body');
+    if(t&&saved.t)t.value=saved.t; if(b&&saved.b){b.value=saved.b;const c=document.getElementById('novnotes-count');if(c)c.textContent=saved.b.length+' Zeichen';}
+  },50);
 }
 
 function buildAppBody(id) {
+  // Check store apps first
+  if(typeof STORE_APP_DEFS !== 'undefined' && STORE_APP_DEFS[id]?.body) return STORE_APP_DEFS[id].body();
   switch(id) {
     case 'terminal': return buildTerminal();
     case 'files':    return buildFiles();
@@ -3025,25 +3036,30 @@ function browserCloseTab(e, id) {
 function browserGo(raw) {
   let url = (raw||'').trim();
   if(!url) return;
-  // nov:// → internal
+  // nov:// internal
   if(url.startsWith('nov://')) { /* keep */ }
-  // has :// already
-  else if(url.includes('://')) { /* keep */ }
-  // looks like a domain (contains dot, no spaces)
+  // has :// - check for search engines to intercept
+  else if(url.includes('://')) {
+    try {
+      const u = new URL(url);
+      const h = u.hostname.replace(/^www\./,'');
+      if((h==='google.com'||h.startsWith('google.')) && u.searchParams.get('q'))
+        url = 'nov://search?q=' + encodeURIComponent(u.searchParams.get('q'));
+      else if(h==='bing.com' && u.searchParams.get('q'))
+        url = 'nov://search?q=' + encodeURIComponent(u.searchParams.get('q'));
+      else if(h==='duckduckgo.com' && u.searchParams.get('q'))
+        url = 'nov://search?q=' + encodeURIComponent(u.searchParams.get('q'));
+      else if(h==='google.com'||h==='google.de'||h==='www.google.com')
+        url = 'nov://search?q=';
+    } catch(e2) {}
+  }
+  // domain without protocol
   else if(/^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}/.test(url) && !url.includes(' ')) {
     url = 'https://' + url;
   }
-  // search
+  // plain search query -> NovSearch
   else {
-    const engines = {
-      'DuckDuckGo':'https://duckduckgo.com/?q=',
-      'Google':'https://www.google.com/search?q=',
-      'Bing':'https://www.bing.com/search?q=',
-      'Ecosia':'https://www.ecosia.org/search?q=',
-      'Startpage':'https://www.startpage.com/search?q=',
-    };
-    const base = engines[NovSettings.browserSearch] || engines.DuckDuckGo;
-    url = base + encodeURIComponent(url);
+    url = 'nov://search?q=' + encodeURIComponent(url);
   }
   const tab = browserGetActiveTab();
   if(tab) {
@@ -3055,7 +3071,6 @@ function browserGo(raw) {
   browserNavigateTo(url, true);
   browserSaveState();
 }
-
 function browserNavigateTo(url, pushState) {
   // Update address bar
   const urlInp = document.getElementById('browser-url');
@@ -3457,15 +3472,74 @@ function browserPage(url) {
 
   if(url.startsWith('nov://search')) {
     const q = decodeURIComponent((url.split('?q=')[1]||''));
-    const engine = NovSettings.browserSearch || 'DuckDuckGo';
-    const engines = {'DuckDuckGo':'https://duckduckgo.com/?q=','Google':'https://www.google.com/search?q=','Bing':'https://www.bing.com/search?q=','Ecosia':'https://www.ecosia.org/search?q='};
-    const realUrl = (engines[engine]||engines.DuckDuckGo) + encodeURIComponent(q);
-    // Redirect to real search engine in iframe immediately
-    setTimeout(()=>{ const tab=browserGetActiveTab(); if(tab){tab.url=realUrl;tab.history[tab.histPos]=realUrl;} browserNavigateTo(realUrl,false); }, 50);
-    return `<div class="browser-page"><p style="color:var(--text2)">Suche nach „${q}" mit ${engine}…</p></div>`;
-  }
-
-  if(url==='nov://news') return `<div class="browser-page">
+    if(!q) return '<div class="browser-page"><p>Kein Suchbegriff.</p></div>';
+    setTimeout(async () => {
+      const cont = document.getElementById('novsearch-results');
+      if(!cont) return;
+      try {
+        const ddgUrl = 'https://duckduckgo.com/html/?q=' + encodeURIComponent(q);
+        const proxyUrl = 'https://novbrowser.53217974lu850329.workers.dev/?url=' + encodeURIComponent(ddgUrl);
+        const res = await fetch(proxyUrl);
+        const html = await res.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const results = [];
+        doc.querySelectorAll('.result').forEach(r => {
+          const titleEl = r.querySelector('.result__title a, .result__a');
+          const snippetEl = r.querySelector('.result__snippet');
+          const urlEl = r.querySelector('.result__url');
+          if(titleEl && snippetEl) {
+            const href = titleEl.href || titleEl.getAttribute('href') || '';
+            const realHref = href.includes('uddg=') ? decodeURIComponent(href.split('uddg=')[1].split('&')[0]) : href;
+            results.push({ title: titleEl.textContent.trim(), snippet: snippetEl.textContent.trim(), url: realHref || (urlEl ? urlEl.textContent.trim() : '') });
+          }
+        });
+        if(!results.length) {
+          cont.innerHTML = '<div style="color:var(--text2);text-align:center;padding:32px">Keine Ergebnisse gefunden.</div>';
+          return;
+        }
+        cont.innerHTML = results.map(r => {
+          const su = r.url.replace(/'/g,'&#39;');
+          return '<div onclick="browserGo(\'' + su + '\')" style="padding:12px 8px;border-bottom:1px solid var(--border);cursor:pointer;border-radius:6px;transition:background 0.1s" onmouseover="this.style.background=\'var(--panel2)\'" onmouseout="this.style.background=\'transparent\'">'
+            +'<div style="font-size:10px;color:var(--text2);margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+r.url+'</div>'
+            +'<div style="font-size:14px;font-weight:600;color:var(--accent);margin-bottom:4px;line-height:1.3">'+r.title+'</div>'
+            +'<div style="font-size:12px;color:var(--text2);line-height:1.6">'+r.snippet+'</div>'
+            +'</div>';
+        }).join('');
+      } catch(e) {
+        const c = document.getElementById('novsearch-results');
+        if(c) c.innerHTML = '<div style="color:var(--text2);text-align:center;padding:32px">Fehler beim Laden der Ergebnisse.</div>';
+      }
+    }, 0);
+    const qe = encodeURIComponent(q);
+    const qs = q.replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    return '<div style="height:100%;display:flex;flex-direction:column;background:var(--panel)">'
+      +'<div style="display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--panel2);flex-shrink:0">'
+        +'<div style="font-size:16px;font-weight:900;flex-shrink:0;letter-spacing:-0.5px">'
+          +'<span style="background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent">Nov</span>'
+          +'<span style="color:var(--text)">Search</span></div>'
+        +'<div style="flex:1;display:flex;align-items:center;gap:8px;background:var(--panel);border:1.5px solid var(--accent);border-radius:22px;padding:6px 14px;box-shadow:0 0 0 3px rgba(124,106,255,0.08)">'
+          +'<span style="color:var(--accent);font-size:12px">&#128269;</span>'
+          +'<input id="novsearch-inp" value="'+qs+'" style="flex:1;background:none;border:none;outline:none;color:var(--text);font-family:Inter,sans-serif;font-size:13px" onkeydown="if(event.key===\'Enter\')browserGo(this.value.trim())">'
+          +'<button onclick="browserGo(document.getElementById(\'novsearch-inp\').value.trim())" style="background:var(--accent);border:none;border-radius:14px;padding:3px 11px;color:white;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit">Go</button>'
+        +'</div>'
+        +'<span style="font-size:11px;padding:4px 10px;border-radius:18px;background:var(--accent);color:white;flex-shrink:0">Web</span>'
+      +'</div>'
+      +'<div style="display:flex;gap:6px;padding:7px 16px;border-bottom:1px solid var(--border);background:var(--panel);overflow-x:auto;scrollbar-width:none;flex-shrink:0">'
+        +'<span style="font-size:10px;color:var(--text2);align-self:center;white-space:nowrap;margin-right:4px">Suchen in:</span>'
+        +'<button onclick="browserGo(\'https://win11.blueedge.me\')" style="padding:3px 10px;border-radius:18px;background:var(--panel2);border:1px solid var(--border);color:var(--text2);cursor:pointer;font-size:11px;white-space:nowrap;font-family:inherit">&#129583; Win11</button>'
+        +'<button onclick="browserGo(\'https://de.wikipedia.org/w/index.php?search=\'+qe)" style="padding:3px 10px;border-radius:18px;background:var(--panel2);border:1px solid var(--border);color:var(--text2);cursor:pointer;font-size:11px;white-space:nowrap;font-family:inherit">&#128218; Wikipedia</button>'
+        +'<button onclick="window.open(\'https://www.youtube.com/results?search_query=\'+qe,\'_blank\')" style="padding:3px 10px;border-radius:18px;background:var(--panel2);border:1px solid var(--border);color:var(--text2);cursor:pointer;font-size:11px;white-space:nowrap;font-family:inherit">&#9654; YouTube &#8599;</button>'
+        +'<button onclick="window.open(\'https://www.google.com/search?q=\'+qe,\'_blank\')" style="padding:3px 10px;border-radius:18px;background:var(--panel2);border:1px solid var(--border);color:var(--text2);cursor:pointer;font-size:11px;white-space:nowrap;font-family:inherit">&#128269; Google &#8599;</button>'
+      +'</div>'
+      +'<div style="flex:1;overflow-y:auto"><div style="max-width:680px;padding:14px 18px 32px" id="novsearch-results">'
+        +'<div style="display:flex;align-items:center;gap:10px;color:var(--text2);font-size:12px;padding:18px 0">'
+          +'<span style="font-size:15px;display:inline-block;animation:spin 0.9s linear infinite">&#8635;</span>'
+          +' Suche nach \u201e<strong style="color:var(--text)">'+qs+'</strong>\u201c\u2026'
+        +'</div>'
+      +'</div></div>'
+    +'</div>';
+  }if(url==='nov://news') return `<div class="browser-page">
     <h1>📰 NovNews</h1>
     <div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap">
       ${['Alle','Technik','Wissenschaft','Sport','Wirtschaft'].map(t=>`<span style="padding:4px 12px;border-radius:20px;background:var(--panel2);border:1px solid var(--border);font-size:11px;cursor:pointer;color:var(--text2);transition:all 0.1s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">${t}</span>`).join('')}
@@ -3493,14 +3567,9 @@ function browserPage(url) {
       <button class="setting-btn" onclick="this.textContent='Lädt…';setTimeout(()=>{this.textContent='Spielen';showNotif('NovGames','${n} gestartet 🎮')},900)" style="flex-shrink:0">${p}</button>
     </div>`).join('')}</div>`;
 
-  if(url==='nov://store') return `<div class="browser-page"><h1>🛒 NovStore</h1>
-    <h2 style="margin-bottom:12px">Empfohlen für dich</h2>
-    ${[['📊','DataVis Pro','Datenvisualisierung & Charts','9,99 €','#7c6aff'],['🎨','PixelForge','Bild- & Vektorbearbeitung','14,99 €','#ff6a8a'],['🔐','VaultPass','Passwort-Manager','Kostenlos','#6affca'],['📡','NetScanner','Netzwerk-Analyse','Kostenlos','#ffca6a'],['🧠','MindMap Pro','Gedanken organisieren','4,99 €','#a78bfa']].map(([i,n,g,p,c])=>`
-    <div style="display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid var(--border)">
-      <div style="width:44px;height:44px;border-radius:10px;background:${c}22;border:1px solid ${c}44;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">${i}</div>
-      <div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--text)">${n}</div><div style="font-size:11px;color:var(--text2)">${g}</div></div>
-      <button class="setting-btn" onclick="this.textContent='Installiert ✓';this.disabled=true;showNotif('NovStore','${n} installiert ✓','#6affca')" style="flex-shrink:0;min-width:70px">${p}</button>
-    </div>`).join('')}</div>`;
+  if(url==='nov://store') {
+    return renderNovStore();
+  }
 
   if(url==='nov://maps') return `<div class="browser-page"><h1>🗺️ NovMaps</h1>
     <div style="display:flex;gap:8px;margin-bottom:16px">
@@ -6115,6 +6184,518 @@ function renderSettingsWP() {
     if(el) el.style.border=`2px solid ${NovSettings.wallpaperIdx===i?'white':'transparent'}`;
   });
 }
+
+// ══════════════════ NOVSTORE SYSTEM ══════════════════
+const STORE_APP_DEFS = {
+  novnotes:    { title:'NovNotes',    icon:'📒', w:480, h:420,
+    body:()=>'<div style="display:flex;flex-direction:column;height:100%;background:var(--panel)">'
+      +'<div style="padding:8px 12px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center;background:var(--panel2)">'
+        +'<input id="novnotes-title" placeholder="Titel…" style="flex:1;background:none;border:none;outline:none;color:var(--text);font-size:13px;font-weight:600;font-family:Inter,sans-serif">'
+        +'<button class="setting-btn" onclick="novNotesSave()" style="font-size:11px;padding:4px 10px">&#128190; Speichern</button>'
+        +'<button class="setting-btn" onclick="novNotesClear()" style="font-size:11px;padding:4px 8px">&#128465;&#65039;</button>'
+      +'</div>'
+      +'<textarea id="novnotes-body" placeholder="Notiz eingeben…" style="flex:1;background:var(--panel);color:var(--text);border:none;outline:none;padding:14px;font-family:Courier New,monospace;font-size:13px;resize:none;line-height:1.7" oninput="novNotesCount(this.value)"></textarea>'
+      +'<div style="padding:6px 12px;border-top:1px solid var(--border);background:var(--panel2);display:flex;gap:8px">'
+        +'<button class="setting-btn" onclick="novNotesTogglePreview()" style="font-size:11px;padding:3px 9px">&#128065; Vorschau</button>'
+        +'<span style="font-size:10px;color:var(--text2);align-self:center" id="novnotes-count">0 Zeichen</span>'
+      +'</div>'
+      +'<div id="novnotes-preview" style="display:none;flex:1;overflow-y:auto;padding:14px;font-size:13px;color:var(--text);line-height:1.7;border-top:1px solid var(--border)"></div>'
+    +'</div>'
+  },
+  novpomodoro: { title:'Pomodoro', icon:'⏱️', w:320, h:360,
+    body:()=>'<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;background:var(--panel);gap:16px;padding:24px">'
+      +'<div style="font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1.5px" id="pomo-mode">Fokus</div>'
+      +'<div style="font-size:68px;font-weight:200;color:var(--text);font-variant-numeric:tabular-nums" id="pomo-display">25:00</div>'
+      +'<div style="display:flex;gap:6px">'
+        +[1,2,3,4].map(i=>'<div id="pomo-dot-'+i+'" style="width:10px;height:10px;border-radius:50%;background:var(--border)"></div>').join('')
+      +'</div>'
+      +'<div style="display:flex;gap:10px">'
+        +'<button class="setting-btn" onclick="pomoToggle()" id="pomo-btn" style="min-width:90px;font-size:12px">&#9654; Start</button>'
+        +'<button class="setting-btn" onclick="pomoReset()" style="font-size:12px">&#8635; Reset</button>'
+      +'</div>'
+      +'<div style="font-size:10px;color:var(--text2);text-align:center;line-height:1.8">Fokus: 25 Min &nbsp;·&nbsp; Pause: 5 Min<br>Nach 4 Runden: 15 Min Pause</div>'
+    +'</div>'
+  },
+  novsnake:    { title:'NovSnake', icon:'🐍', w:340, h:400,
+    body:()=>'<div style="display:flex;flex-direction:column;align-items:center;height:100%;background:var(--panel);padding:12px;gap:10px">'
+      +'<div style="display:flex;justify-content:space-between;width:100%;align-items:center">'
+        +'<div style="font-size:11px;color:var(--text2)">Score: <strong id="snake-score" style="color:var(--accent)">0</strong></div>'
+        +'<div style="font-size:11px;color:var(--text2)">Hi: <strong id="snake-hi" style="color:var(--accent2)">0</strong></div>'
+        +'<button class="setting-btn" onclick="snakeStart()" id="snake-btn" style="font-size:11px;padding:4px 10px">&#9654; Start</button>'
+      +'</div>'
+      +'<canvas id="snake-canvas" width="300" height="300" style="border:1px solid var(--border);border-radius:8px;background:#0a0a12;cursor:pointer" onclick="snakeStart()"></canvas>'
+      +'<div style="font-size:10px;color:var(--text2)">&#8593;&#8595;&#8592;&#8594; oder WASD steuern</div>'
+    +'</div>'
+  },
+  novmemo:     { title:'Memo', icon:'🃏', w:420, h:440,
+    body:()=>'<div style="display:flex;flex-direction:column;height:100%;background:var(--panel);padding:12px;gap:10px">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center">'
+        +'<div style="font-size:11px;color:var(--text2)">Paare: <strong id="memo-pairs" style="color:var(--accent)">0</strong>/8 &nbsp; Z&#252;ge: <strong id="memo-moves">0</strong></div>'
+        +'<button class="setting-btn" onclick="memoInit()" style="font-size:11px;padding:4px 10px">&#8635; Neu</button>'
+      +'</div>'
+      +'<div id="memo-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;flex:1"></div>'
+    +'</div>'
+  },
+  novpaint:    { title:'NovPaint', icon:'🎨', w:620, h:500,
+    body:()=>'<div style="display:flex;flex-direction:column;height:100%;background:var(--panel)">'
+      +'<div style="display:flex;align-items:center;gap:8px;padding:7px 12px;background:var(--panel2);border-bottom:1px solid var(--border);flex-wrap:wrap">'
+        +'<input type="color" id="paint-color" value="#7c6aff" style="width:30px;height:26px;border:none;background:none;cursor:pointer;border-radius:4px">'
+        +'<input type="range" id="paint-size" min="1" max="40" value="4" style="width:70px">'
+        +'<button class="setting-btn" onclick="setPaintTool(this,0)" style="font-size:11px;padding:3px 8px">&#9998; Stift</button>'
+        +'<button class="setting-btn" onclick="setPaintTool(this,1)" style="font-size:11px;padding:3px 8px">Radierer</button>'
+        +'<button class="setting-btn" onclick="paintFill()" style="font-size:11px;padding:3px 8px">&#129531; F&#252;llen</button>'
+        +'<button class="setting-btn" onclick="paintClear()" style="font-size:11px;padding:3px 8px">&#128465;&#65039; Leeren</button>'
+        +'<button class="setting-btn" onclick="paintSave()" style="font-size:11px;padding:3px 8px">&#128190; Speichern</button>'
+      +'</div>'
+      +'<canvas id="paint-canvas" style="flex:1;cursor:crosshair;touch-action:none"></canvas>'
+    +'</div>'
+  },
+  novpiano:    { title:'NovPiano', icon:'🎹', w:560, h:380,
+    body:()=>'<div style="display:flex;flex-direction:column;height:100%;background:var(--panel);padding:14px;gap:12px">'
+      +'<div style="display:flex;align-items:center;gap:10px">'
+        +'<div style="font-size:13px;font-weight:700;color:var(--text)">&#127929; NovPiano</div>'
+        +'<select id="piano-wave" style="background:var(--panel2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:4px 8px;font-size:11px;font-family:inherit">'
+          +'<option>sine</option><option>triangle</option><option>square</option><option>sawtooth</option>'
+        +'</select>'
+        +'<span style="font-size:10px;color:var(--text2);margin-left:auto">Klicken oder A–L auf Tastatur</span>'
+      +'</div>'
+      +'<div id="piano-keys" style="display:flex;gap:3px;justify-content:center;flex:1;align-items:flex-end;padding-bottom:8px"></div>'
+      +'<div id="piano-note" style="text-align:center;font-size:22px;color:var(--accent);min-height:30px;font-weight:700"></div>'
+    +'</div>'
+  },
+  novqr:       { title:'QR-Generator', icon:'📱', w:360, h:420,
+    body:()=>'<div style="display:flex;flex-direction:column;height:100%;background:var(--panel);padding:16px;gap:12px;align-items:center">'
+      +'<div style="font-size:13px;font-weight:700;color:var(--text);align-self:flex-start">&#128241; QR-Code Generator</div>'
+      +'<input id="qr-input" placeholder="Text oder URL eingeben…" oninput="qrGenerate(this.value)" style="width:100%;background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:12px;font-family:inherit;outline:none;box-sizing:border-box">'
+      +'<div id="qr-output" style="width:200px;height:200px;background:white;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#666;border:1px solid var(--border);overflow:hidden">QR-Code erscheint hier</div>'
+      +'<div style="font-size:10px;color:var(--text2);text-align:center">Generiert via QR-API &nbsp;&#183;&nbsp; Bild anklicken zum Herunterladen</div>'
+    +'</div>'
+  },
+  novmarkdown: { title:'MarkdownViewer', icon:'📄', w:580, h:460,
+    body:()=>'<div style="display:flex;height:100%;background:var(--panel)">'
+      +'<div style="flex:1;display:flex;flex-direction:column;border-right:1px solid var(--border)">'
+        +'<div style="padding:7px 12px;background:var(--panel2);border-bottom:1px solid var(--border);font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px">Markdown</div>'
+        +'<textarea id="md-input" style="flex:1;background:var(--panel);color:var(--text);border:none;outline:none;padding:12px;font-family:monospace;font-size:12px;resize:none;line-height:1.6" oninput="mdRender(this.value)" placeholder="# Titel&#10;**fett**, *kursiv*, `code`&#10;- Liste"></textarea>'
+      +'</div>'
+      +'<div style="flex:1;display:flex;flex-direction:column">'
+        +'<div style="padding:7px 12px;background:var(--panel2);border-bottom:1px solid var(--border);font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px">Vorschau</div>'
+        +'<div id="md-preview" style="flex:1;overflow-y:auto;padding:12px;font-size:13px;color:var(--text);line-height:1.7"></div>'
+      +'</div>'
+    +'</div>'
+  },
+};
+
+
+function renderNovStore() {
+  const installed = JSON.parse(localStorage.getItem('novos_store_installed')||'[]');
+  const apps = [
+    {id:'novnotes',    icon:'📒', name:'NovNotes',       cat:'Produktivität', desc:'Notizen mit Markdown & Vorschau',   col:'#ffca6a'},
+    {id:'novpomodoro', icon:'⏱️', name:'Pomodoro',        cat:'Produktivität', desc:'25-Min Fokus-Timer Methode',        col:'#ff9f43'},
+    {id:'novsnake',    icon:'🐍', name:'NovSnake',        cat:'Spiele',        desc:'Klassisches Snake mit Highscore',   col:'#2ecc71'},
+    {id:'novmemo',     icon:'🃏', name:'Memo',            cat:'Spiele',        desc:'Memory: 8 Emoji-Paare finden',      col:'#f39c12'},
+    {id:'novpaint',    icon:'🎨', name:'NovPaint',        cat:'Kreativität',   desc:'Zeichenprogramm mit Speichern',     col:'#6affca'},
+    {id:'novpiano',    icon:'🎹', name:'NovPiano',        cat:'Kreativität',   desc:'Virtuelles Piano, Maus + Tastatur', col:'#3a8fff'},
+    {id:'novqr',       icon:'📱', name:'QR-Generator',   cat:'Werkzeuge',     desc:'QR-Codes aus Text und URLs',        col:'#e74c3c'},
+    {id:'novmarkdown', icon:'📄', name:'MarkdownViewer', cat:'Werkzeuge',     desc:'Markdown live rendern',             col:'#a78bfa'},
+  ];
+
+  const el = document.createElement('div');
+  el.style.cssText = 'height:100%;display:flex;flex-direction:column;background:var(--panel)';
+
+  // Header
+  const header = document.createElement('div');
+  header.style.cssText = 'padding:14px 20px 0;background:var(--panel2);border-bottom:1px solid var(--border);flex-shrink:0';
+  header.innerHTML = `
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+      <div style="font-size:20px;font-weight:900;letter-spacing:-0.5px">
+        <span style="background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent">Nov</span>
+        <span style="color:var(--text)">Store</span>
+      </div>
+      <div style="flex:1;background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:6px 12px;display:flex;align-items:center;gap:6px;max-width:280px">
+        <span style="font-size:11px;color:var(--text2)">🔍</span>
+        <input id="store-search" placeholder="Apps suchen…" oninput="storeFilter(this.value)"
+          style="flex:1;background:none;border:none;outline:none;color:var(--text);font-size:12px;font-family:Inter,sans-serif">
+      </div>
+      <div style="font-size:11px;color:var(--text2);margin-left:auto">${installed.length}/${apps.length} installiert</div>
+    </div>
+    <div style="display:flex;gap:2px;overflow-x:auto;scrollbar-width:none" id="store-cats"></div>`;
+  el.appendChild(header);
+
+  // Category tabs
+  const cats = ['Alle','Spiele','Produktivität','Kreativität','Werkzeuge'];
+  const catBar = header.querySelector('#store-cats');
+  cats.forEach((c,i) => {
+    const btn = document.createElement('button');
+    btn.id = 'storecat-' + c;
+    btn.textContent = c;
+    btn.onclick = () => storeSetCat(c);
+    btn.style.cssText = 'padding:5px 14px;border-radius:20px 20px 0 0;border:none;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit;white-space:nowrap;transition:all 0.1s;background:transparent;color:var(--text2)';
+    if(i===0) { btn.style.background='var(--panel)'; btn.style.color='var(--accent)'; btn.style.borderBottom='2px solid var(--accent)'; }
+    catBar.appendChild(btn);
+  });
+
+  // Banner
+  const banner = document.createElement('div');
+  banner.style.cssText = 'margin:14px 18px 0;background:linear-gradient(135deg,rgba(124,106,255,0.12),rgba(106,255,202,0.06));border:1px solid rgba(124,106,255,0.18);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0';
+  banner.innerHTML = `
+    <div style="font-size:28px">✦</div>
+    <div>
+      <div style="font-size:12px;font-weight:700;color:var(--text)">NovOS App-Bibliothek</div>
+      <div style="font-size:10px;color:var(--text2);margin-top:2px">Installierte Apps erscheinen sofort auf dem Desktop &amp; im Startmenü</div>
+    </div>`;
+  el.appendChild(banner);
+
+  // App grid
+  const grid = document.createElement('div');
+  grid.style.cssText = 'flex:1;overflow-y:auto;padding:12px 18px 24px';
+  const cards = document.createElement('div');
+  cards.id = 'store-cards';
+  cards.style.cssText = 'display:flex;flex-direction:column;gap:8px';
+
+  apps.forEach(app => {
+    const isInst = installed.includes(app.id);
+    const card = document.createElement('div');
+    card.className = 'store-card';
+    card.dataset.cat = app.cat;
+    card.style.cssText = 'display:flex;align-items:center;gap:14px;padding:12px 14px;background:var(--panel2);border:1px solid var(--border);border-radius:12px;transition:border-color 0.15s;cursor:default';
+    card.onmouseover = () => card.style.borderColor = 'var(--accent)';
+    card.onmouseout  = () => card.style.borderColor = 'var(--border)';
+
+    const ico = document.createElement('div');
+    ico.style.cssText = `width:50px;height:50px;border-radius:13px;background:${app.col}22;border:1.5px solid ${app.col}55;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0`;
+    ico.textContent = app.icon;
+
+    const info = document.createElement('div');
+    info.style.cssText = 'flex:1;min-width:0';
+    info.innerHTML = `
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px">${app.name}</div>
+      <div style="font-size:10px;color:var(--accent);margin-bottom:3px;text-transform:uppercase;letter-spacing:0.5px">${app.cat}</div>
+      <div style="font-size:11px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${app.desc}</div>`;
+
+    const btn = document.createElement('button');
+    btn.id = 'storebtn-' + app.id;
+    btn.style.cssText = `flex-shrink:0;min-width:90px;padding:7px 12px;border-radius:8px;border:none;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;transition:all 0.15s;${isInst ? 'background:var(--panel);color:var(--text2);border:1px solid var(--border)' : `background:${app.col};color:white`}`;
+    btn.innerHTML = isInst ? '✓ Öffnen' : 'Installieren';
+    btn.onclick = () => storeInstall(app.id, app.icon, app.name, app.cat, app.col);
+
+    card.appendChild(ico);
+    card.appendChild(info);
+    card.appendChild(btn);
+    cards.appendChild(card);
+  });
+
+  const empty = document.createElement('div');
+  empty.id = 'store-empty';
+  empty.style.cssText = 'display:none;text-align:center;padding:40px;color:var(--text2)';
+  empty.innerHTML = '<div style="font-size:32px;margin-bottom:10px">🔍</div>Keine Apps gefunden';
+  cards.appendChild(empty);
+
+  grid.appendChild(cards);
+  el.appendChild(grid);
+
+  return el.outerHTML;
+}
+
+function storeInstall(id, ico, name, cat, col) {
+  const installed = JSON.parse(localStorage.getItem('novos_store_installed')||'[]');
+  const def = STORE_APP_DEFS[id];
+  if(!appDefs[id] && def) appDefs[id] = { title:def.title, icon:def.icon, w:def.w, h:def.h };
+  if(!installed.includes(id)) {
+    installed.push(id);
+    localStorage.setItem('novos_store_installed', JSON.stringify(installed));
+    storeAddDesktopIcon(id, ico, name);
+    storeAddStartMenu(id, ico, name);
+    showNotif('NovStore', name + ' installiert ✓', col||'#6affca');
+    const btn = document.getElementById('storebtn-'+id);
+    if(btn) { btn.innerHTML='&#10003; &Ouml;ffnen'; btn.style.background='var(--panel)'; btn.style.color='var(--text2)'; btn.style.border='1px solid var(--border)'; }
+    // Update installed counter
+    const old = document.querySelector('#br-statusbar'); // just a ref check
+    setTimeout(()=>openApp(id), 400);
+  } else {
+    openApp(id);
+  }
+}
+
+function storeAddDesktopIcon(id, ico, name) {
+  const desk = document.getElementById('desktop');
+  if(!desk) return; if(desk.querySelector('[data-store-app="'+id+'"]')) return;
+  const d = document.createElement('div');
+  d.className='desk-icon';
+  d.dataset.storeApp = id;
+  d.setAttribute('ondblclick',"openApp('"+id+"')");
+  d.innerHTML='<div class="desk-icon-img" style="font-size:28px">'+ico+'</div><div class="desk-icon-label">'+name+'</div>';
+  desk.appendChild(d);
+}
+
+function storeAddStartMenu(id, ico, name) {
+  const sm = document.querySelector('.sm-apps');
+  if(!sm||sm.querySelector('[data-app="'+id+'"]')) return;
+  const d = document.createElement('div');
+  d.className='sm-app'; d.setAttribute('data-app',id);
+  d.setAttribute('onclick',"openApp('"+id+"');closeStartMenu()");
+  d.innerHTML='<span class="ico">'+ico+'</span><span class="name">'+name+'</span>';
+  sm.appendChild(d);
+}
+
+function storeRestoreInstalled() {
+  const installed = JSON.parse(localStorage.getItem('novos_store_installed')||'[]');
+  for(const id of installed) {
+    const def = STORE_APP_DEFS[id];
+    if(!def) continue;
+    if(!appDefs[id]) appDefs[id] = { title:def.title, icon:def.icon, w:def.w, h:def.h };
+    storeAddDesktopIcon(id, def.icon, def.title);
+    storeAddStartMenu(id, def.icon, def.title);
+  }
+}
+
+function storeFilter(q) {
+  const lq = q.toLowerCase();
+  let shown = 0;
+  document.querySelectorAll('.store-card').forEach(c=>{
+    const m = !q || c.textContent.toLowerCase().includes(lq);
+    c.style.display = m ? 'flex':'none';
+    if(m) shown++;
+  });
+  const e = document.getElementById('store-empty');
+  if(e) e.style.display = shown===0?'block':'none';
+}
+
+function storeSetCat(cat) {
+  document.querySelectorAll('[id^="storecat-"]').forEach(b=>{
+    b.style.background='transparent'; b.style.color='var(--text2)'; b.style.borderBottom='none';
+  });
+  const a = document.getElementById('storecat-'+cat);
+  if(a){a.style.background='var(--panel)';a.style.color='var(--accent)';a.style.borderBottom='2px solid var(--accent)';}
+  let shown=0;
+  document.querySelectorAll('.store-card').forEach(c=>{
+    const m = cat==='Alle'||c.dataset.cat===cat;
+    c.style.display=m?'flex':'none'; if(m)shown++;
+  });
+  const e=document.getElementById('store-empty');
+  if(e) e.style.display=shown===0?'block':'none';
+}
+
+
+
+// ── NovNotes ──
+function novNotesSave(){
+  const t=document.getElementById('novnotes-title')?.value||'';
+  const b=document.getElementById('novnotes-body')?.value||'';
+  localStorage.setItem('novnotes_data',JSON.stringify({t,b}));
+  showNotif('NovNotes','Gespeichert 💾','#ffca6a');
+}
+function novNotesClear(){
+  const b=document.getElementById('novnotes-body'); if(b){b.value='';novNotesCount('');}
+}
+function novNotesCount(txt){
+  const c=document.getElementById('novnotes-count'); if(c) c.textContent=txt.length+' Zeichen';
+}
+function novNotesTogglePreview(){
+  const ta=document.getElementById('novnotes-body');
+  const pre=document.getElementById('novnotes-preview');
+  if(!ta||!pre) return;
+  if(pre.style.display==='block'){pre.style.display='none';ta.style.display='';}
+  else{
+    pre.style.display='block';ta.style.display='none';
+    let h=ta.value.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/^### (.+)$/gm,'<h3 style="color:var(--text)">$1</h3>')
+      .replace(/^## (.+)$/gm,'<h2 style="color:var(--text)">$1</h2>')
+      .replace(/^# (.+)$/gm,'<h1 style="color:var(--accent)">$1</h1>')
+      .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>')
+      .replace(/`(.+?)`/g,'<code style="background:var(--panel2);padding:1px 5px;border-radius:3px">$1</code>')
+      .replace(/^- (.+)$/gm,'<li style="margin-left:16px">$1</li>').replace(/\n/g,'<br>');
+    pre.innerHTML=h;
+  }
+}
+
+// ── Pomodoro ──
+let pomoState={running:false,secs:25*60,mode:'focus',round:1,timer:null};
+function pomoToggle(){
+  if(pomoState.running){clearInterval(pomoState.timer);pomoState.running=false;document.getElementById('pomo-btn').innerHTML='&#9654; Weiter';}
+  else{pomoState.running=true;document.getElementById('pomo-btn').innerHTML='&#9646;&#9646; Pause';pomoState.timer=setInterval(pomoTick,1000);}
+}
+function pomoTick(){
+  pomoState.secs--;
+  if(pomoState.secs<0){
+    clearInterval(pomoState.timer);pomoState.running=false;
+    if(pomoState.mode==='focus'){
+      pomoState.round++;const isLong=pomoState.round>4;
+      pomoState.mode=isLong?'longbreak':'break';pomoState.secs=isLong?15*60:5*60;
+      if(isLong)pomoState.round=1;showNotif('Pomodoro','Pause! 🎉','#ff9f43');
+    }else{pomoState.mode='focus';pomoState.secs=25*60;showNotif('Pomodoro','Fokus! 💪','#ff9f43');}
+    const mEl=document.getElementById('pomo-mode');if(mEl)mEl.textContent=pomoState.mode==='focus'?'Fokus':pomoState.mode==='break'?'Kurze Pause':'Lange Pause';
+    const bEl=document.getElementById('pomo-btn');if(bEl)bEl.innerHTML='&#9654; Start';
+    for(let i=1;i<=4;i++){const d=document.getElementById('pomo-dot-'+i);if(d)d.style.background=i<pomoState.round?'var(--accent)':'var(--border)';}
+  }
+  const m=Math.floor(pomoState.secs/60),s=pomoState.secs%60;
+  const el=document.getElementById('pomo-display');
+  if(el)el.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}
+function pomoReset(){
+  clearInterval(pomoState.timer);pomoState={running:false,secs:25*60,mode:'focus',round:1,timer:null};
+  const d=document.getElementById('pomo-display');if(d)d.textContent='25:00';
+  const b=document.getElementById('pomo-btn');if(b)b.innerHTML='&#9654; Start';
+  const m=document.getElementById('pomo-mode');if(m)m.textContent='Fokus';
+}
+
+// ── Snake ──
+let snakeGame=null;
+function snakeStart(){
+  const canvas=document.getElementById('snake-canvas');if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  if(snakeGame)clearInterval(snakeGame.loop);
+  const CELL=15,COLS=20,ROWS=20;
+  let snake=[{x:10,y:10}],dir={x:1,y:0},nextDir={x:1,y:0};
+  const rndFood=s=>{let f;do{f={x:Math.floor(Math.random()*COLS),y:Math.floor(Math.random()*ROWS)}}while(s.some(p=>p.x===f.x&&p.y===f.y));return f;};
+  let food=rndFood(snake),score=0;
+  const hi=parseInt(localStorage.getItem('snake_hi')||'0');
+  const hiEl=document.getElementById('snake-hi');if(hiEl)hiEl.textContent=hi;
+  function draw(){
+    ctx.fillStyle='#0a0a12';ctx.fillRect(0,0,300,300);
+    ctx.fillStyle='#ff6a8a';ctx.beginPath();ctx.arc(food.x*CELL+CELL/2,food.y*CELL+CELL/2,CELL/2-1,0,Math.PI*2);ctx.fill();
+    snake.forEach((p,i)=>{ctx.fillStyle=i===0?'#6affca':'#3adc8a';ctx.beginPath();ctx.roundRect(p.x*CELL+1,p.y*CELL+1,CELL-2,CELL-2,3);ctx.fill();});
+  }
+  function tick(){
+    dir=nextDir;const head={x:snake[0].x+dir.x,y:snake[0].y+dir.y};
+    if(head.x<0||head.x>=COLS||head.y<0||head.y>=ROWS||snake.some(p=>p.x===head.x&&p.y===head.y)){
+      clearInterval(snakeGame.loop);
+      ctx.fillStyle='rgba(0,0,0,0.65)';ctx.fillRect(0,100,300,80);
+      ctx.fillStyle='white';ctx.font='bold 17px Inter,sans-serif';ctx.textAlign='center';
+      ctx.fillText('Game Over – '+score+' Punkte',150,142);
+      ctx.font='11px Inter,sans-serif';ctx.fillStyle='rgba(255,255,255,0.55)';ctx.fillText('Klicken zum Neustart',150,162);
+      if(score>hi){localStorage.setItem('snake_hi',score);if(hiEl)hiEl.textContent=score;}
+      return;
+    }
+    snake.unshift(head);
+    if(head.x===food.x&&head.y===food.y){score++;food=rndFood(snake);document.getElementById('snake-score').textContent=score;}
+    else snake.pop();
+    draw();
+  }
+  snakeGame={loop:setInterval(tick,120)};
+  document.onkeydown=e=>{const m={ArrowUp:{x:0,y:-1},ArrowDown:{x:0,y:1},ArrowLeft:{x:-1,y:0},ArrowRight:{x:1,y:0},w:{x:0,y:-1},s:{x:0,y:1},a:{x:-1,y:0},d:{x:1,y:0}};const nd=m[e.key];if(nd&&!(nd.x===-dir.x&&nd.y===-dir.y)){nextDir=nd;e.preventDefault();}};
+  const btn=document.getElementById('snake-btn');if(btn)btn.textContent='↺ Neu';
+  draw();
+}
+
+// ── Memo ──
+let memoState={cards:[],flipped:[],matched:[],moves:0,locked:false};
+const MEMO_E=['🦊','🐬','🌺','⚡','🍎','🎸','🚀','🌙'];
+function memoInit(){
+  const grid=document.getElementById('memo-grid');if(!grid)return;
+  const pairs=[...MEMO_E,...MEMO_E].sort(()=>Math.random()-0.5);
+  memoState={cards:pairs,flipped:[],matched:[],moves:0,locked:false};
+  document.getElementById('memo-pairs').textContent='0';
+  document.getElementById('memo-moves').textContent='0';
+  grid.innerHTML=pairs.map((e,i)=>'<div id="memo-'+i+'" onclick="memoFlip('+i+')" style="aspect-ratio:1;background:var(--panel2);border:1px solid var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;transition:all 0.18s;user-select:none">?</div>').join('');
+}
+function memoFlip(i){
+  if(memoState.locked||memoState.flipped.includes(i)||memoState.matched.includes(i))return;
+  const el=document.getElementById('memo-'+i);
+  el.textContent=memoState.cards[i];el.style.background='rgba(124,106,255,0.12)';el.style.borderColor='var(--accent)';
+  memoState.flipped.push(i);
+  if(memoState.flipped.length===2){
+    memoState.moves++;document.getElementById('memo-moves').textContent=memoState.moves;
+    memoState.locked=true;const[a,b]=memoState.flipped;
+    if(memoState.cards[a]===memoState.cards[b]){
+      memoState.matched.push(a,b);document.getElementById('memo-pairs').textContent=memoState.matched.length/2;
+      memoState.flipped=[];memoState.locked=false;
+      [a,b].forEach(x=>{const e=document.getElementById('memo-'+x);e.style.background='rgba(106,255,202,0.15)';e.style.borderColor='var(--accent2)';});
+      if(memoState.matched.length===16)setTimeout(()=>showNotif('Memo','Gewonnen in '+memoState.moves+' Zügen! 🎉','#6affca'),200);
+    }else{
+      setTimeout(()=>{[a,b].forEach(x=>{const e=document.getElementById('memo-'+x);e.textContent='?';e.style.background='var(--panel2)';e.style.borderColor='var(--border)';});memoState.flipped=[];memoState.locked=false;},850);
+    }
+  }
+}
+
+// ── Piano ──
+let pianoCtx=null;
+const PIANO_NOTES=[
+  {n:'C4',f:261.63,k:'a',b:false},{n:'C#4',f:277.18,k:'w',b:true},
+  {n:'D4',f:293.66,k:'s',b:false},{n:'D#4',f:311.13,k:'e',b:true},
+  {n:'E4',f:329.63,k:'d',b:false},{n:'F4',f:349.23,k:'f',b:false},
+  {n:'F#4',f:369.99,k:'t',b:true},{n:'G4',f:392.00,k:'g',b:false},
+  {n:'G#4',f:415.30,k:'y',b:true},{n:'A4',f:440.00,k:'h',b:false},
+  {n:'A#4',f:466.16,k:'u',b:true},{n:'B4',f:493.88,k:'j',b:false},
+  {n:'C5',f:523.25,k:'k',b:false},
+];
+function pianoInit(){
+  const c=document.getElementById('piano-keys');if(!c)return;
+  c.innerHTML='';
+  PIANO_NOTES.filter(n=>!n.b).forEach(n=>{
+    const key=document.createElement('div');
+    key.style.cssText='width:38px;height:110px;background:white;border:1px solid #bbb;border-radius:0 0 7px 7px;cursor:pointer;display:flex;align-items:flex-end;justify-content:center;padding-bottom:8px;font-size:9px;color:#888;user-select:none;transition:background 0.05s';
+    key.textContent=n.k.toUpperCase();
+    key.onmousedown=()=>{key.style.background='#e8e0ff';pianoPlay(n.f,n.n);};
+    key.onmouseup=()=>key.style.background='white';
+    key.onmouseleave=()=>key.style.background='white';
+    c.appendChild(key);
+  });
+  document.addEventListener('keydown',e=>{const nd=PIANO_NOTES.find(n=>n.k===e.key.toLowerCase());if(nd)pianoPlay(nd.f,nd.n);});
+}
+function pianoPlay(freq,noteName){
+  if(!pianoCtx)pianoCtx=new(window.AudioContext||window.webkitAudioContext)();
+  const wave=document.getElementById('piano-wave')?.value||'sine';
+  const osc=pianoCtx.createOscillator(),gain=pianoCtx.createGain();
+  osc.connect(gain);gain.connect(pianoCtx.destination);
+  osc.type=wave;osc.frequency.value=freq;
+  gain.gain.setValueAtTime(0.4,pianoCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001,pianoCtx.currentTime+1.2);
+  osc.start();osc.stop(pianoCtx.currentTime+1.2);
+  const el=document.getElementById('piano-note');if(el){el.textContent=noteName;setTimeout(()=>{if(el.textContent===noteName)el.textContent='';},600);}
+}
+
+// ── QR ──
+function qrGenerate(txt){
+  const out=document.getElementById('qr-output');if(!out)return;
+  if(!txt.trim()){out.innerHTML='QR-Code erscheint hier';return;}
+  const u='https://api.qrserver.com/v1/create-qr-code/?size=180x180&data='+encodeURIComponent(txt);
+  const img=document.createElement('img');
+  img.src=u; img.style.cssText='width:180px;height:180px;border-radius:8px;cursor:pointer';
+  img.onclick=()=>window.open(u,'_blank');
+  out.innerHTML=''; out.appendChild(img);
+}
+
+// ── Markdown ──
+function mdRender(txt){
+  const pre=document.getElementById('md-preview');if(!pre)return;
+  let h=txt.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/^### (.+)$/gm,'<h3 style="color:var(--text)">$1</h3>')
+    .replace(/^## (.+)$/gm,'<h2 style="color:var(--text)">$1</h2>')
+    .replace(/^# (.+)$/gm,'<h1 style="color:var(--accent)">$1</h1>')
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em style="color:var(--accent2)">$1</em>')
+    .replace(/`(.+?)`/g,'<code style="background:var(--panel2);padding:1px 5px;border-radius:3px;font-size:11px">$1</code>')
+    .replace(/^---$/gm,'<hr style="border:none;border-top:1px solid var(--border);margin:12px 0">')
+    .replace(/^- (.+)$/gm,'<li style="margin-left:16px">$1</li>').replace(/\n/g,'<br>');
+  pre.innerHTML=h;
+}
+
+// ── Paint ──
+let paintTool='pen',paintDrawing=false,paintCtx=null;
+function paintInit(){
+  const canvas=document.getElementById('paint-canvas');if(!canvas)return;
+  const par=canvas.parentElement;
+  canvas.width=par.offsetWidth-2;canvas.height=par.offsetHeight-2;
+  paintCtx=canvas.getContext('2d');
+  paintCtx.fillStyle='#ffffff';paintCtx.fillRect(0,0,canvas.width,canvas.height);
+  const gp=e=>{const r=canvas.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top};};
+  canvas.onpointerdown=e=>{paintDrawing=true;const p=gp(e);paintCtx.beginPath();paintCtx.moveTo(p.x,p.y);};
+  canvas.onpointermove=e=>{if(!paintDrawing)return;const p=gp(e);
+    const sz=parseInt(document.getElementById('paint-size')?.value||4);
+    const col=document.getElementById('paint-color')?.value||'#7c6aff';
+    paintCtx.strokeStyle=paintTool==='eraser'?'#ffffff':col;
+    paintCtx.lineWidth=paintTool==='eraser'?sz*3:sz;
+    paintCtx.lineCap='round';paintCtx.lineTo(p.x,p.y);paintCtx.stroke();};
+  canvas.onpointerup=()=>paintDrawing=false;
+  canvas.onpointerleave=()=>paintDrawing=false;
+}
+function setPaintTool(btn,n){paintTool=n===0?'pen':'eraser';}
+function paintFill(){if(!paintCtx)return;const c=document.getElementById('paint-color')?.value||'#7c6aff';const cv=document.getElementById('paint-canvas');paintCtx.fillStyle=c;paintCtx.fillRect(0,0,cv.width,cv.height);}
+function paintClear(){if(!paintCtx)return;const cv=document.getElementById('paint-canvas');paintCtx.fillStyle='#ffffff';paintCtx.fillRect(0,0,cv.width,cv.height);}
+function paintSave(){const cv=document.getElementById('paint-canvas');if(!cv)return;const a=document.createElement('a');a.download='novpaint.png';a.href=cv.toDataURL();a.click();}
+
+// Restore on page load
+document.addEventListener('DOMContentLoaded', storeRestoreInstalled);
+setTimeout(storeRestoreInstalled, 300);
 </script>
 </body>
 </html>
