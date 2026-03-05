@@ -129,6 +129,40 @@
     transition:all 0.2s; border:1.5px solid rgba(255,255,255,0.15);
   }
   .page-dot.active { background:rgba(124,106,255,0.9); border-color:rgba(124,106,255,0.6); width:18px; border-radius:4px; }
+  .page-nav-btn {
+    position:absolute; top:50%; transform:translateY(-50%);
+    width:32px; height:52px; background:rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.1); border-radius:10px;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; z-index:50; font-size:14px; color:rgba(255,255,255,0.5);
+    transition:all 0.18s; user-select:none; pointer-events:all;
+    bottom:calc(var(--taskbar-h) + 60px); top:auto;
+  }
+  .page-nav-btn:hover { background:rgba(124,106,255,0.18); border-color:rgba(124,106,255,0.4); color:rgba(255,255,255,0.9); }
+  .page-nav-btn:active { transform:scale(0.92); }
+  #page-nav-left  { left:10px; }
+  #page-nav-right { right:10px; }
+  .page-nav-btn.hidden { opacity:0; pointer-events:none; }
+
+  /* ── Boot / Shutdown screen ── */
+  #boot-screen {
+    position:fixed; inset:0; z-index:99999;
+    background:#07060f; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:0;
+    transition:opacity 0.5s ease;
+  }
+  #boot-screen.fade-out { opacity:0; pointer-events:none; }
+  .boot-logo { font-size:64px; margin-bottom:8px; }
+  .boot-title { font-size:22px; font-weight:700; color:var(--text); letter-spacing:-0.5px; }
+  .boot-sub   { font-size:11px; color:var(--text2); margin-top:4px; margin-bottom:32px; }
+  .boot-spinner {
+    width:36px; height:36px; border-radius:50%;
+    border:3px solid rgba(124,106,255,0.2);
+    border-top-color:var(--accent);
+    animation:spin 0.8s linear infinite;
+  }
+  .boot-msg { font-size:11px; color:var(--text2); margin-top:14px; min-height:16px; }
+  @keyframes spin { to { transform:rotate(360deg); } }
 
   /* ── Touch / Mobile Mode ── */
   body.touch-mode .desk-icon { width:88px; height:96px; padding:10px 4px 8px; }
@@ -317,18 +351,35 @@
     cursor:pointer; font-size:11px; color:var(--text2); transition:all 0.15s;
   }
   .sm-footer-btn:hover { border-color:var(--accent); color:var(--text); }
+  .sm-footer-btn.danger:hover { border-color:#ff4a6a; color:#ff4a6a; background:rgba(255,74,106,0.1); }
+  .sm-power-row {
+    display:flex; align-items:center; justify-content:space-between;
+    background:var(--panel2); border:1px solid var(--border); border-radius:10px;
+    padding:8px 12px; margin-bottom:10px; cursor:default;
+  }
+  .sm-power-btn {
+    width:30px; height:30px; border-radius:50%;
+    border:1px solid var(--border); background:rgba(255,255,255,0.04);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; font-size:14px; transition:all 0.15s; color:var(--text2);
+  }
+  .sm-power-btn:hover { background:rgba(255,74,106,0.15); border-color:#ff4a6a; color:#ff4a6a; }
 
   /* ══════════════════ WINDOW ══════════════════ */
   .window {
     position:absolute; background:var(--panel); border:1px solid var(--border);
-    border-radius:var(--radius); box-shadow:0 24px 80px rgba(0,0,0,0.7),0 0 0 1px rgba(255,255,255,0.04);
-    display:flex; flex-direction:column; overflow:hidden; transition:box-shadow 0.2s;
+    border-radius:var(--radius); box-shadow:0 12px 40px rgba(0,0,0,0.5),0 0 0 1px rgba(255,255,255,0.03);
+    display:flex; flex-direction:column; overflow:hidden; transition:box-shadow 0.2s, border-color 0.2s;
     min-width:280px; min-height:200px;
   }
   .window.focused {
     box-shadow:0 24px 80px rgba(0,0,0,0.8),0 0 0 1px rgba(124,106,255,0.3),0 0 60px rgba(124,106,255,0.05);
     border-color:rgba(124,106,255,0.3);
   }
+  .window:not(.focused) { opacity:0.82; }
+  .window:not(.focused) .win-titlebar { background:rgba(20,20,32,0.7); }
+  .window:not(.focused) .win-btn { filter:saturate(0) brightness(0.6); }
+  .window:not(.focused) .win-title { color:rgba(255,255,255,0.3); }
   .win-titlebar {
     height:38px; background:var(--panel2); border-bottom:1px solid var(--border);
     display:flex; align-items:center; padding:0 12px; gap:8px;
@@ -348,6 +399,21 @@
     content:''; position:absolute; bottom:4px; right:4px;
     width:8px; height:8px; border-right:2px solid var(--text2); border-bottom:2px solid var(--text2); border-radius:1px;
   }
+
+  /* ── Split View ── */
+  #split-menu {
+    position:fixed; z-index:9500; background:rgba(14,14,24,0.97);
+    backdrop-filter:blur(20px); border:1px solid var(--border);
+    border-radius:12px; padding:6px; box-shadow:0 16px 48px rgba(0,0,0,0.7);
+    min-width:160px; display:none; animation:ctxIn 0.12s ease;
+  }
+  #split-menu.open { display:block; }
+  .split-item {
+    padding:8px 12px; border-radius:7px; cursor:pointer;
+    font-size:12px; color:var(--text2);
+    display:flex; align-items:center; gap:10px; transition:all 0.1s;
+  }
+  .split-item:hover { background:rgba(124,106,255,0.15); color:var(--text); }
 
   /* ══════════════════ CONTEXT MENU ══════════════════ */
   #ctx-menu {
@@ -1126,14 +1192,34 @@
 <body>
 
 <!-- ══ LOGIN SCREEN ══ -->
+<!-- ── BOOT SCREEN ── -->
+<div id="boot-screen">
+  <div class="boot-logo">🌀</div>
+  <div class="boot-title">NovOS</div>
+  <div class="boot-sub">Version 3.1</div>
+  <div class="boot-spinner"></div>
+  <div class="boot-msg" id="boot-msg">Starte NovOS…</div>
+</div>
+
 <div id="login-screen">
   <div class="login-stars"></div>
   <div class="login-time" id="login-time">00:00</div>
   <div class="login-date" id="login-date">Montag, 1. Januar</div>
   <div class="login-avatar">👤</div>
-  <div class="login-name">Nova User</div>
+  <div class="login-name" id="login-name-el">Nova User</div>
   <div class="login-sub">NovOS 3.1 · Willkommen zurück</div>
+  <div id="login-pass-wrap" style="display:none;flex-direction:column;align-items:center;gap:8px;margin-bottom:4px">
+    <input id="login-pass-inp" type="password" placeholder="Passwort eingeben…"
+      style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:10px;padding:10px 16px;color:#fff;font-family:inherit;font-size:13px;outline:none;width:220px;text-align:center"
+      onkeydown="if(event.key==='Enter')doLogin()"
+      oninput="document.getElementById('login-err').textContent=''">
+    <div id="login-err" style="font-size:11px;color:#ff6a8a;min-height:16px"></div>
+  </div>
   <button class="login-btn" onclick="doLogin()">Anmelden</button>
+  <div style="position:absolute;bottom:24px;display:flex;gap:12px">
+    <div onclick="doRestart()" title="Neustart" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;transition:all 0.15s" onmouseover="this.style.background='rgba(255,255,255,0.12)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'">🔄</div>
+    <div onclick="novDlgShutdown()" title="Energie" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;transition:all 0.15s" onmouseover="this.style.background='rgba(255,74,106,0.2)';this.style.borderColor='rgba(255,74,106,0.4)'" onmouseout="this.style.background='rgba(255,255,255,0.06)';this.style.borderColor='rgba(255,255,255,0.1)'">⏻</div>
+  </div>
 </div>
 
 <!-- ══ DESKTOP ══ -->
@@ -1153,9 +1239,27 @@
   </div>
   <!-- Page indicator dots -->
   <div id="page-dots"></div>
+  <!-- Page nav arrows -->
+  <div id="page-nav-left"  class="page-nav-btn" onclick="desktopGoPage(currentPage-1)">&#8249;</div>
+  <div id="page-nav-right" class="page-nav-btn" onclick="desktopGoPage(currentPage+1)">&#8250;</div>
 
   <!-- Notifications -->
   <div id="notif-area"></div>
+
+  <!-- Split View Menu -->
+  <div id="split-menu">
+    <div class="split-item" onclick="splitWindow(_splitApp,'left')">◧ Links (50%)</div>
+    <div class="split-item" onclick="splitWindow(_splitApp,'right')">◨ Rechts (50%)</div>
+    <div class="split-item" onclick="splitWindow(_splitApp,'top')">⬒ Oben (50%)</div>
+    <div class="split-item" onclick="splitWindow(_splitApp,'bottom')">⬓ Unten (50%)</div>
+    <div style="height:1px;background:var(--border);margin:4px 0"></div>
+    <div class="split-item" onclick="splitWindow(_splitApp,'tl')">◰ Oben links</div>
+    <div class="split-item" onclick="splitWindow(_splitApp,'tr')">◳ Oben rechts</div>
+    <div class="split-item" onclick="splitWindow(_splitApp,'bl')">◱ Unten links</div>
+    <div class="split-item" onclick="splitWindow(_splitApp,'br')">◲ Unten rechts</div>
+    <div style="height:1px;background:var(--border);margin:4px 0"></div>
+    <div class="split-item" onclick="maximizeWindow(_splitApp);closeSplitMenu()">⛶ Vollbild</div>
+  </div>
 
   <!-- Context Menu -->
   <div id="ctx-menu">
@@ -1176,7 +1280,19 @@
 
   <!-- Start Menu -->
   <div id="start-menu">
-    <div class="sm-header">NovOS 3.1</div>
+    <div class="sm-power-row">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:16px">👤</div>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--text)">Nova User</div>
+          <div style="font-size:10px;color:var(--text2)">NovOS 3.1</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <div class="sm-power-btn" title="Neustart" onclick="closeStartMenu();doRestart()">🔄</div>
+        <div class="sm-power-btn" title="Herunterfahren / Energie" onclick="closeStartMenu();novDlgShutdown()">⏻</div>
+      </div>
+    </div>
     <input class="sm-search" type="text" placeholder="🔍 Apps durchsuchen..." id="sm-search-inp" oninput="filterStartMenu(this.value)">
     <div class="sm-section">Apps</div>
     <div class="sm-apps" id="sm-apps-grid">
@@ -1194,9 +1310,8 @@
       <div class="sm-app" data-app="clock"    onclick="openApp('clock');closeStartMenu()"><span class="ico">🕐</span><span class="name">NovUhr</span></div>
     </div>
     <div class="sm-footer">
-      <div class="sm-footer-btn" onclick="closeStartMenu();showNotif('NovOS','Energie-Optionen...')">⚡ Energie</div>
       <div class="sm-footer-btn" onclick="closeStartMenu();doLogout()">🔴 Abmelden</div>
-      <div class="sm-footer-btn" onclick="closeStartMenu();showNotif('NovOS','Neustart...')">🔄 Neustart</div>
+      <div class="sm-footer-btn" onclick="closeStartMenu();openApp('settings')">⚙️ Einstellungen</div>
     </div>
   </div>
 
@@ -1328,6 +1443,14 @@ function novDlgCancel() {
 // Keyboard ESC closes dialog
 document.addEventListener('keydown', e => {
   if(e.key === 'Escape' && document.getElementById('nov-dialog-overlay')) novDlgCancel();
+  // Arrow key desktop page switching (only when no input focused and no window open)
+  if((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && !e.target.closest('input,textarea,[contenteditable]')) {
+    const anyWindow = Object.values(windows).some(w => w);
+    if(!anyWindow && document.getElementById('desktop')?.classList.contains('visible')) {
+      e.preventDefault();
+      desktopGoPage(currentPage + (e.key === 'ArrowRight' ? 1 : -1));
+    }
+  }
 });
 
 // ── Dialog helpers for inline-onclick calls ──────────
@@ -1385,6 +1508,10 @@ let ccWifi = true;
 let ccBluetooth = false;
 let ccDnd = false;
 let ccAirplane = false;
+let ccFlashlight = false;
+let ccFocus = false;
+let ccNightShift = false;
+let ccHotspot = false;
 
 // Init Battery API
 if(navigator.getBattery) {
@@ -1453,39 +1580,65 @@ function renderCC() {
     <div class="cc-section">
       <div class="cc-label">Verbindungen</div>
       <div class="cc-tiles">
-        <div class="cc-tile ${ccWifi?'on':''}" onclick="ccToggle('wifi',this)">
+        <div class="cc-tile ${ccWifi?'on':''}" onclick="event.stopPropagation();ccToggle('wifi',this)">
           <div class="cc-tile-icon">📶</div>
           <div class="cc-tile-name">WLAN</div>
           <div class="cc-tile-sub">${ccWifi?'NovNet-5G':'Aus'}</div>
         </div>
-        <div class="cc-tile ${ccBluetooth?'on':''}" onclick="ccToggle('bt',this)">
+        <div class="cc-tile ${ccBluetooth?'on':''}" onclick="event.stopPropagation();ccToggle('bt',this)">
           <div class="cc-tile-icon">🦷</div>
           <div class="cc-tile-name">Bluetooth</div>
           <div class="cc-tile-sub">${ccBluetooth?'An':'Aus'}</div>
         </div>
-        <div class="cc-tile ${ccAirplane?'on':''}" onclick="ccToggle('airplane',this)">
+        <div class="cc-tile ${ccAirplane?'on':''}" onclick="event.stopPropagation();ccToggle('airplane',this)">
           <div class="cc-tile-icon">✈️</div>
           <div class="cc-tile-name">Flugmodus</div>
           <div class="cc-tile-sub">${ccAirplane?'Aktiv':'Inaktiv'}</div>
         </div>
-        <div class="cc-tile ${ccDnd?'on':''}" onclick="ccToggle('dnd',this)">
+        <div class="cc-tile ${ccHotspot?'on':''}" onclick="event.stopPropagation();ccToggle('hotspot',this)">
+          <div class="cc-tile-icon">📡</div>
+          <div class="cc-tile-name">Hotspot</div>
+          <div class="cc-tile-sub">${ccHotspot?'Aktiv':'Aus'}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cc-section">
+      <div class="cc-label">Werkzeuge</div>
+      <div class="cc-tiles">
+        <div class="cc-tile ${ccDnd?'on':''}" onclick="event.stopPropagation();ccToggle('dnd',this)">
           <div class="cc-tile-icon">${ccDnd?'🔕':'🔔'}</div>
           <div class="cc-tile-name">Nicht stören</div>
           <div class="cc-tile-sub">${ccDnd?'An':'Aus'}</div>
+        </div>
+        <div class="cc-tile ${ccFocus?'on':''}" onclick="event.stopPropagation();ccToggle('focus',this)">
+          <div class="cc-tile-icon">🎯</div>
+          <div class="cc-tile-name">Fokus</div>
+          <div class="cc-tile-sub">${ccFocus?'Aktiv':'Aus'}</div>
+        </div>
+        <div class="cc-tile ${ccNightShift?'on':''}" onclick="event.stopPropagation();ccToggle('night',this)">
+          <div class="cc-tile-icon">🌙</div>
+          <div class="cc-tile-name">Nacht-Shift</div>
+          <div class="cc-tile-sub">${ccNightShift?'An':'Aus'}</div>
+        </div>
+        <div class="cc-tile ${ccFlashlight?'on':''}" onclick="event.stopPropagation();ccToggle('flash',this)">
+          <div class="cc-tile-icon">${ccFlashlight?'🔦':'🔦'}</div>
+          <div class="cc-tile-name">Taschenlampe</div>
+          <div class="cc-tile-sub">${ccFlashlight?'An':'Aus'}</div>
         </div>
       </div>
     </div>
 
     <div class="cc-section">
       <div class="cc-label">Steuerung</div>
-      <div class="cc-slider-row">
+      <div class="cc-slider-row" onclick="event.stopPropagation()">
         <div class="cc-slider-icon">🔆</div>
         <input type="range" class="cc-slider" min="10" max="100" value="${ccBrightness}"
           oninput="ccBrightness=+this.value;document.getElementById('desktop').style.filter='brightness('+((ccBrightness/100)*0.4+0.6).toFixed(2)+')'">
         <div style="font-size:10px;color:var(--text2);width:28px;text-align:right">${ccBrightness}%</div>
       </div>
-      <div class="cc-slider-row">
-        <div class="cc-slider-icon" onclick="ccMuteToggle()" style="cursor:pointer">${ccVolume===0?'🔇':ccVolume<50?'🔉':'🔊'}</div>
+      <div class="cc-slider-row" onclick="event.stopPropagation()">
+        <div class="cc-slider-icon" onclick="event.stopPropagation();ccMuteToggle()" style="cursor:pointer">${ccVolume===0?'🔇':ccVolume<50?'🔉':'🔊'}</div>
         <input type="range" class="cc-slider" min="0" max="100" value="${ccVolume}"
           oninput="ccVolume=+this.value;setSetting('volume',ccVolume);this.previousElementSibling.textContent=ccVolume===0?'🔇':ccVolume<50?'🔉':'🔊';this.nextElementSibling.textContent=ccVolume+'%'">
         <div style="font-size:10px;color:var(--text2);width:28px;text-align:right">${ccVolume}%</div>
@@ -1513,8 +1666,9 @@ function renderCC() {
     </div>
 
     <div style="display:flex;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">
-      <button onclick="openApp('settings');toggleCC()" style="flex:1;padding:8px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;color:var(--text2);font-family:inherit;font-size:11px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">⚙️ Einstellungen</button>
-      <button onclick="novDlgLogout()" style="flex:1;padding:8px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;color:var(--text2);font-family:inherit;font-size:11px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.borderColor='var(--accent2)'" onmouseout="this.style.borderColor='var(--border)'">🔒 Sperren</button>
+      <button onclick="event.stopPropagation();openApp('settings');toggleCC()" style="flex:1;padding:8px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;color:var(--text2);font-family:inherit;font-size:11px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">⚙️ Einstellungen</button>
+      <button onclick="event.stopPropagation();novDlgLogout()" style="flex:1;padding:8px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;color:var(--text2);font-family:inherit;font-size:11px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.borderColor='var(--accent2)'" onmouseout="this.style.borderColor='var(--border)'">🔒 Sperren</button>
+      <button onclick="event.stopPropagation();novDlgShutdown()" style="flex:1;padding:8px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;color:var(--text2);font-family:inherit;font-size:11px;cursor:pointer;transition:all 0.15s" onmouseover="this.style.borderColor='#ff4a6a'" onmouseout="this.style.borderColor='var(--border)'">⏻ System</button>
     </div>`;
 }
 
@@ -1523,12 +1677,16 @@ function ccToggle(key, el) {
   if(key==='bt')       { ccBluetooth=!ccBluetooth; setSetting('bluetooth',ccBluetooth); }
   if(key==='airplane') { ccAirplane=!ccAirplane; if(ccAirplane){ccWifi=false;ccBluetooth=false;} }
   if(key==='dnd')      { ccDnd=!ccDnd; setSetting('doNotDisturb',ccDnd); }
+  if(key==='hotspot')  { ccHotspot=!ccHotspot; if(ccHotspot) showNotif('Hotspot','NovOS Hotspot aktiv 📡','#6affca'); }
+  if(key==='focus')    { ccFocus=!ccFocus; if(ccFocus) showNotif('Fokus','Fokus-Modus aktiv 🎯','var(--accent)'); }
+  if(key==='night')    {
+    ccNightShift=!ccNightShift;
+    document.getElementById('desktop').style.filter = ccNightShift
+      ? (ccBrightness < 100 ? `brightness(${(ccBrightness/100*0.4+0.6).toFixed(2)}) sepia(0.35) saturate(0.85)` : 'sepia(0.35) saturate(0.85)')
+      : (ccBrightness < 100 ? `brightness(${(ccBrightness/100*0.4+0.6).toFixed(2)})` : '');
+  }
+  if(key==='flash')    { ccFlashlight=!ccFlashlight; if(ccFlashlight) showNotif('Taschenlampe','Taschenlampe an 🔦','#ffca6a'); }
   renderCC();
-  // Close after a short delay so the toggle animation is visible
-  setTimeout(() => {
-    const cc = document.getElementById('control-center');
-    if(cc) { ccOpen = false; cc.style.display = 'none'; }
-  }, 350);
 }
 
 function ccMuteToggle() {
@@ -1576,6 +1734,7 @@ const DEFAULT_SETTINGS = {
   wallpaperIdx: 0,
   darkMode: false,
   userName: 'Nova User',
+  loginPassword: '',
   uiScale: '13px',
   animations: true,
   transparency: true,
@@ -1674,6 +1833,18 @@ loadNovSettings();
 // LOGIN
 // ══════════════════════════════════════
 function doLogin() {
+  const pw = NovSettings.loginPassword;
+  if (pw) {
+    const inp = document.getElementById('login-pass-inp');
+    if (!inp) return;
+    if (inp.value !== pw) {
+      document.getElementById('login-err').textContent = 'Falsches Passwort';
+      inp.style.borderColor = '#ff4a6a';
+      setTimeout(() => { inp.style.borderColor = 'rgba(255,255,255,0.15)'; }, 800);
+      inp.select();
+      return;
+    }
+  }
   const ls = document.getElementById('login-screen');
   const desktop = document.getElementById('desktop');
   ls.classList.add('out');
@@ -1682,21 +1853,230 @@ function doLogin() {
     desktop.classList.add('visible');
     desktopInit();
     startScreenTimeTicker();
-    setTimeout(() => showNotif('NovOS 3.1', 'Willkommen, Nova User! 👋'), 400);
+    setTimeout(() => showNotif('NovOS 3.1', 'Willkommen, ' + (NovSettings.userName||'Nova User') + '! 👋'), 400);
     setTimeout(() => showNotif('NovUpdate', '3 Updates verfügbar', '#6affca'), 2000);
   }, 600);
 }
+
+function loginScreenInit() {
+  const pw = NovSettings.loginPassword;
+  const wrap = document.getElementById('login-pass-wrap');
+  const nameEl = document.getElementById('login-name-el');
+  if (nameEl) nameEl.textContent = NovSettings.userName || 'Nova User';
+  if (wrap) {
+    wrap.style.display = pw ? 'flex' : 'none';
+    const inp = document.getElementById('login-pass-inp');
+    if (inp) { inp.value = ''; }
+    document.getElementById('login-err').textContent = '';
+  }
+}
+
+function setLoginPassword() {
+  showPasswordDialog('Neues Passwort setzen', '', (pw) => {
+    NovSettings.loginPassword = pw;
+    saveNovSettings();
+    loadSettings('security');
+    showNotif('Sicherheit', 'Passwort gesetzt 🔒', 'var(--accent)');
+  });
+}
+function changeLoginPassword() {
+  showPasswordDialog('Neues Passwort eingeben', '', (pw) => {
+    NovSettings.loginPassword = pw;
+    saveNovSettings();
+    loadSettings('security');
+    showNotif('Sicherheit', 'Passwort geändert 🔑', 'var(--accent)');
+  });
+}
+function removeLoginPassword() {
+  NovSettings.loginPassword = '';
+  saveNovSettings();
+  loadSettings('security');
+  showNotif('Sicherheit', 'Passwort entfernt', '#ffca6a');
+}
+
+function showPasswordDialog(title, current, callback) {
+  const ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(12px);z-index:99990;display:flex;align-items:center;justify-content:center';
+  ov.innerHTML = `
+    <div style="background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:28px 32px;min-width:280px;text-align:center">
+      <div style="font-size:28px;margin-bottom:10px">🔑</div>
+      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:20px">${title}</div>
+      <input id="pwdlg-inp" type="password" placeholder="Passwort eingeben…"
+        style="width:100%;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-family:inherit;font-size:13px;outline:none;box-sizing:border-box;margin-bottom:8px"
+        onkeydown="if(event.key==='Enter')document.getElementById('pwdlg-ok').click()">
+      <input id="pwdlg-inp2" type="password" placeholder="Passwort wiederholen…"
+        style="width:100%;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-family:inherit;font-size:13px;outline:none;box-sizing:border-box;margin-bottom:6px"
+        onkeydown="if(event.key==='Enter')document.getElementById('pwdlg-ok').click()">
+      <div id="pwdlg-err" style="font-size:11px;color:#ff6a8a;min-height:16px;margin-bottom:12px"></div>
+      <div style="display:flex;gap:8px">
+        <button onclick="this.closest('[data-pwdlg]').remove()" style="flex:1;padding:9px;border-radius:10px;border:1px solid var(--border);background:var(--panel2);color:var(--text2);font-family:inherit;font-size:12px;cursor:pointer">Abbrechen</button>
+        <button id="pwdlg-ok" style="flex:1;padding:9px;border-radius:10px;border:1px solid rgba(124,106,255,0.4);background:rgba(124,106,255,0.2);color:var(--text);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer"
+          onclick="(()=>{const a=document.getElementById('pwdlg-inp').value,b=document.getElementById('pwdlg-inp2').value;if(!a){document.getElementById('pwdlg-err').textContent='Bitte Passwort eingeben';return;}if(a!==b){document.getElementById('pwdlg-err').textContent='Passwörter stimmen nicht überein';return;}this.closest('[data-pwdlg]').remove();window._pwCallback(a);})()">Speichern</button>
+      </div>
+    </div>`;
+  ov.setAttribute('data-pwdlg', '1');
+  window._pwCallback = callback;
+  document.body.appendChild(ov);
+  setTimeout(() => document.getElementById('pwdlg-inp')?.focus(), 50);
+}
+
 function doLogout() {
   const ls = document.getElementById('login-screen');
   const desktop = document.getElementById('desktop');
   [...Object.keys(windows)].forEach(id => closeWindow(id));
-  musicPlaying=false; clearInterval(musicInterval);
+  musicPlaying = false; clearInterval(musicInterval);
   clearInterval(sysmonInterval);
-  browserHistory=['nov://start']; browserPos=0;
-  calcVal='0'; calcExpr=''; calcNewNum=true;
+  browserHistory = ['nov://start']; browserPos = 0;
+  calcVal = '0'; calcExpr = ''; calcNewNum = true;
   desktop.classList.remove('visible');
   ls.style.display = 'flex';
   ls.classList.remove('out');
+  loginScreenInit();
+}
+
+function doShutdown() {
+  toggleCC();
+  const bs = document.getElementById('boot-screen');
+  const msgs = ['Anwendungen werden beendet…','Dienste werden gestoppt…','Speicher wird bereinigt…','Auf Wiedersehen 👋'];
+  bs.style.opacity = '0';
+  bs.style.display = 'flex';
+  document.getElementById('boot-msg').textContent = msgs[0];
+  document.getElementById('boot-title')?.textContent && (document.querySelector('.boot-title').textContent = 'NovOS wird heruntergefahren');
+  document.querySelector('.boot-sub').textContent = 'Bitte warten…';
+  document.querySelector('.boot-logo').textContent = '🌑';
+  requestAnimationFrame(() => { bs.style.transition = 'opacity 0.4s'; bs.style.opacity = '1'; });
+  let i = 0;
+  const iv = setInterval(() => {
+    i++;
+    if (i < msgs.length) { document.getElementById('boot-msg').textContent = msgs[i]; }
+    else {
+      clearInterval(iv);
+      document.querySelector('.boot-spinner').style.display = 'none';
+      document.getElementById('boot-msg').textContent = 'System heruntergefahren.';
+      // After 1.5s show a black "off" screen
+      setTimeout(() => {
+        bs.style.background = '#000';
+        bs.innerHTML = '<div style="color:rgba(255,255,255,0.08);font-size:12px;margin-top:40vh">NovOS ist ausgeschaltet. Seite neu laden zum Starten.</div>';
+      }, 1500);
+    }
+  }, 900);
+}
+
+async function novDlgShutdown() {
+  const choice = await novDialogChoice({
+    icon:'⏻', title:'NovOS',
+    msg:'Was möchtest du tun?',
+    buttons:[
+      {label:'🔄 Neustart', value:'restart'},
+      {label:'⏻ Ausschalten', value:'shutdown', danger:true},
+      {label:'Abbrechen', value:'cancel'}
+    ]
+  });
+  if (choice === 'restart') doRestart();
+  else if (choice === 'shutdown') doShutdown();
+}
+
+function doRestart() {
+  // Close CC if open
+  if (ccOpen) { ccOpen = false; const cc = document.getElementById('control-center'); if(cc) cc.style.display='none'; }
+  const bs = document.getElementById('boot-screen');
+  const ls = document.getElementById('login-screen');
+  const desktop = document.getElementById('desktop');
+
+  // Step 1: shut down desktop immediately (silent logout)
+  [...Object.keys(windows)].forEach(id => closeWindow(id));
+  musicPlaying = false; clearInterval(musicInterval);
+  clearInterval(sysmonInterval);
+  desktop.classList.remove('visible');
+  ls.style.display = 'none';
+
+  // Step 2: shutdown sequence
+  const shutdownMsgs = ['Neustart wird vorbereitet…','Anwendungen werden beendet…','System fährt herunter…'];
+  bs.style.opacity = '0';
+  bs.style.display = 'flex';
+  bs.style.transition = '';
+  bs.style.background = '#07060f';
+  document.querySelector('.boot-title').textContent = 'NovOS';
+  document.querySelector('.boot-sub').textContent = 'Neustart…';
+  document.querySelector('.boot-logo').textContent = '🌀';
+  document.querySelector('.boot-spinner').style.display = '';
+  document.getElementById('boot-msg').textContent = shutdownMsgs[0];
+  requestAnimationFrame(() => { bs.style.transition = 'opacity 0.4s'; bs.style.opacity = '1'; });
+
+  let i = 0;
+  const iv1 = setInterval(() => {
+    i++;
+    if (i < shutdownMsgs.length) {
+      document.getElementById('boot-msg').textContent = shutdownMsgs[i];
+    } else {
+      clearInterval(iv1);
+      // Step 3: fade to BLACK
+      bs.style.transition = 'opacity 0.6s, background 0.6s';
+      bs.style.background = '#000';
+      bs.style.opacity = '0';
+      setTimeout(() => {
+        // Step 4: hold black for 600ms, then boot
+        bs.innerHTML = '';
+        bs.style.background = '#000';
+        bs.style.opacity = '1';
+        bs.style.transition = '';
+        setTimeout(() => {
+          // Step 5: rebuild boot screen content and boot
+          bs.innerHTML = `
+            <div class="boot-logo">🌀</div>
+            <div class="boot-title">NovOS</div>
+            <div class="boot-sub">Version 3.1</div>
+            <div class="boot-spinner"></div>
+            <div class="boot-msg" id="boot-msg">Starte NovOS…</div>`;
+          bs.style.background = '#07060f';
+          bs.style.transition = 'opacity 0.5s';
+          bs.style.opacity = '0';
+          requestAnimationFrame(() => { bs.style.opacity = '1'; });
+          const bootMsgs = ['Kernel wird geladen…','Dienste starten…','Desktop wird vorbereitet…','Bereit!'];
+          let j = 0;
+          document.getElementById('boot-msg').textContent = bootMsgs[0];
+          const iv2 = setInterval(() => {
+            j++;
+            if (j < bootMsgs.length) {
+              document.getElementById('boot-msg').textContent = bootMsgs[j];
+            } else {
+              clearInterval(iv2);
+              bs.style.transition = 'opacity 0.5s';
+              bs.style.opacity = '0';
+              setTimeout(() => {
+                bs.style.display = 'none';
+                bs.style.opacity = '';
+                bs.style.transition = '';
+                ls.style.display = 'flex';
+                ls.classList.remove('out');
+                loginScreenInit();
+              }, 500);
+            }
+          }, 650);
+        }, 600);
+      }, 600);
+    }
+  }, 750);
+}
+
+// Generic choice dialog (multiple buttons)
+function novDialogChoice({icon='', title='', msg='', buttons=[]}) {
+  return new Promise(resolve => {
+    const ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(12px);z-index:99990;display:flex;align-items:center;justify-content:center';
+    ov.innerHTML = `
+      <div style="background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:28px 32px;text-align:center;min-width:260px;max-width:320px">
+        <div style="font-size:36px;margin-bottom:10px">${icon}</div>
+        <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px">${title}</div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:22px">${msg}</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          ${buttons.map(b=>`<button onclick="this.closest('[data-dlgchoice]').dispatchEvent(new CustomEvent('choose',{detail:'${b.value}'}))" style="padding:10px;border-radius:10px;border:1px solid var(--border);background:${b.danger?'rgba(255,74,106,0.12)':'var(--panel2)'};color:${b.danger?'#ff4a6a':'var(--text)'};font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s">${b.label}</button>`).join('')}
+        </div>
+      </div>`;
+    ov.setAttribute('data-dlgchoice','1');
+    ov.addEventListener('choose', e => { ov.remove(); resolve(e.detail); });
+    document.body.appendChild(ov);
+  });
 }
 
 // ══════════════════════════════════════
@@ -1792,7 +2172,7 @@ function openApp(app) {
       <div class="win-btns">
         <button class="win-btn btn-close" onclick="closeWindow('${app}')"></button>
         <button class="win-btn btn-min"   onclick="minimizeWindow('${app}')"></button>
-        <button class="win-btn btn-max"   onclick="maximizeWindow('${app}')"></button>
+        <button class="win-btn btn-max"   onclick="maximizeWindow('${app}')" oncontextmenu="openSplitMenu(event,'${app}')"></button>
       </div>
       <div class="win-title">${def.icon} ${def.title}</div>
     </div>
@@ -1871,6 +2251,47 @@ function maximizeWindow(id) {
     w.el.style.height=`calc(100vh - ${getComputedStyle(document.documentElement).getPropertyValue('--taskbar-h')})`;
     w.maximized=true;
   }
+}
+
+let _splitApp = null;
+function openSplitMenu(e, appId) {
+  e.preventDefault(); e.stopPropagation();
+  _splitApp = appId;
+  const m = document.getElementById('split-menu');
+  m.classList.add('open');
+  const vw = window.innerWidth, vh = window.innerHeight;
+  let x = e.clientX, y = e.clientY;
+  m.style.left = Math.min(x, vw - 180) + 'px';
+  m.style.top  = Math.min(y, vh - 300) + 'px';
+  setTimeout(() => document.addEventListener('click', closeSplitMenu, {once:true}), 0);
+}
+function closeSplitMenu() {
+  document.getElementById('split-menu')?.classList.remove('open');
+}
+function splitWindow(id, pos) {
+  closeSplitMenu();
+  const w = windows[id]; if(!w) return;
+  const tbH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--taskbar-h')) || 48;
+  const vw = window.innerWidth, vh = window.innerHeight - tbH;
+  w.maximized = false;
+  const slots = {
+    left:   {l:0,        t:0,       w:vw/2,  h:vh},
+    right:  {l:vw/2,     t:0,       w:vw/2,  h:vh},
+    top:    {l:0,        t:0,       w:vw,    h:vh/2},
+    bottom: {l:0,        t:vh/2,    w:vw,    h:vh/2},
+    tl:     {l:0,        t:0,       w:vw/2,  h:vh/2},
+    tr:     {l:vw/2,     t:0,       w:vw/2,  h:vh/2},
+    bl:     {l:0,        t:vh/2,    w:vw/2,  h:vh/2},
+    br:     {l:vw/2,     t:vh/2,    w:vw/2,  h:vh/2},
+  };
+  const s = slots[pos]; if(!s) return;
+  w.el.style.transition = 'left 0.25s,top 0.25s,width 0.25s,height 0.25s';
+  w.el.style.left   = s.l + 'px';
+  w.el.style.top    = s.t + 'px';
+  w.el.style.width  = s.w + 'px';
+  w.el.style.height = s.h + 'px';
+  setTimeout(() => { w.el.style.transition = ''; }, 300);
+  focusWindow(id);
 }
 function focusWindow(id) {
   document.querySelectorAll('.window').forEach(w=>w.classList.remove('focused'));
@@ -5767,6 +6188,19 @@ const worldClocks = [
   { city:'Sydney',    tz:'Australia/Sydney',    flag:'🇦🇺' },
 ];
 
+function buildScreenTime() {
+  return `<div id="st-root" style="height:100%;overflow-y:auto;padding:16px;box-sizing:border-box">
+    <div style="color:var(--text2);font-size:12px;text-align:center;padding:20px">Wird geladen…</div>
+  </div>`;
+}
+
+function initScreenTime() {
+  const root = document.getElementById('st-root');
+  if (!root) return;
+  stLoad();
+  stRefreshUI();
+}
+
 function buildClock() {
   return `
     <div class="clock-shell">
@@ -6302,11 +6736,19 @@ const settingsBuilders = {
       <div class="setting-label">Benutzername<small>Wird auf dem Login-Bildschirm angezeigt</small></div>
       <div style="display:flex;gap:6px">
         <input id="username-inp" class="sm-search" style="width:120px;margin:0;padding:4px 8px" value="${NovSettings.userName}">
-        <button class="setting-btn" onclick="setSetting('userName',document.getElementById('username-inp').value);showNotif('Einstellungen','Name gespeichert ✓','#6affca')">✓</button>
+        <button class="setting-btn" onclick="setSetting('userName',document.getElementById('username-inp').value);document.getElementById('login-name-el')&&(document.getElementById('login-name-el').textContent=NovSettings.userName);showNotif('Einstellungen','Name gespeichert ✓','#6affca')">✓</button>
       </div>
     </div>
-    <div class="setting-row"><div class="setting-label">Bildschirmsperre</div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
-    <div class="setting-row"><div class="setting-label">Zwei-Faktor-Auth</div><div class="toggle" onclick="this.classList.toggle('on')"></div></div>
+    <div class="setting-row">
+      <div class="setting-label">Anmeldepasswort<small>${NovSettings.loginPassword ? 'Passwort gesetzt ●●●●' : 'Kein Passwort – freier Zugang'}</small></div>
+      <div style="display:flex;gap:6px">
+        ${NovSettings.loginPassword
+          ? `<button class="setting-btn danger" onclick="changeLoginPassword()">🔑 Ändern</button>
+             <button class="setting-btn danger" onclick="removeLoginPassword()">✕ Entfernen</button>`
+          : `<button class="setting-btn" onclick="setLoginPassword()">🔑 Passwort setzen</button>`}
+      </div>
+    </div>
+    <div class="setting-row"><div class="setting-label">Bildschirmsperre nach Inaktivität</div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
     <div class="setting-row"><div class="setting-label">Firewall</div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
     <div class="setting-row"><div class="setting-label">Virenscanner</div>
       <button class="setting-btn" onclick="this.textContent='Scannt…';setTimeout(()=>{this.textContent='Jetzt scannen';showNotif('Sicherheit','Scan abgeschlossen – Keine Bedrohungen ✓','#6affca')},1800)">Jetzt scannen</button>
@@ -7129,6 +7571,10 @@ function desktopUpdateDots() {
     d.onclick   = () => desktopGoPage(i);
     el.appendChild(d);
   }
+  const lBtn = document.getElementById('page-nav-left');
+  const rBtn = document.getElementById('page-nav-right');
+  if (lBtn) lBtn.classList.toggle('hidden', currentPage === 0);
+  if (rBtn) rBtn.classList.toggle('hidden', currentPage === TOTAL_PAGES - 1);
 }
 
 function desktopGetIconPage(id) {
@@ -7422,6 +7868,7 @@ function desktopRender() {
 
   desktopUpdateDots();
   desktopGoPage(currentPage, false);
+  if (typeof stRestoreBadges === 'function') setTimeout(stRestoreBadges, 60);
 }
 
 // ── Touch / mobile mode ───────────────────
@@ -7475,291 +7922,310 @@ function desktopInit() {
 let stData = null; // loaded on init
 
 function stLoad() {
+  if (stData) return; // already in memory — never overwrite with stale localStorage
   try { stData = JSON.parse(localStorage.getItem('novos_screentime') || 'null'); } catch(e) {}
   if (!stData) stData = {
-    pin: null,           // null = not set
+    pin: null,
     enabled: true,
-    limits: {},          // appId → minutes (0 = unlimited)
-    usage: {},           // appId → seconds today
-    dayKey: stTodayKey(),
-    locks: {},           // appId → true if locked
+    limits:  {},      // appId → minutes (0 = unlimited)
+    totalLimit: 0,    // minutes, 0 = no total limit
+    usage:   {},      // appId → seconds today
+    resetHour: 6,     // reset at 6:00
+    lastResetKey: stResetKey(),
+    locks:   {},
   };
-  // Reset usage if new day
-  const today = stTodayKey();
-  if (stData.dayKey !== today) {
-    stData.usage  = {};
-    stData.locks  = {};
-    stData.dayKey = today;
-    stSave();
-  }
+  stCheckReset();
 }
 
 function stSave() {
   try { localStorage.setItem('novos_screentime', JSON.stringify(stData)); } catch(e) {}
 }
 
-function stTodayKey() {
-  const d = new Date();
+// Key = "YYYY-MM-DD-HH≥6" so that before 6 = yesterday's key
+function stResetKey() {
+  const now = new Date();
+  const h   = now.getHours();
+  const rh  = (stData && stData.resetHour != null) ? stData.resetHour : 6;
+  // If before resetHour → belongs to previous day's session
+  const d   = new Date(now);
+  if (h < rh) d.setDate(d.getDate() - 1);
   return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
 }
 
-// Called every second by the global ticker
+function stCheckReset() {
+  const key = stResetKey();
+  if (stData.lastResetKey !== key) {
+    stData.usage         = {};
+    stData.locks         = {};
+    stData.lastResetKey  = key;
+    stSave();
+    // Remove all lock badges
+    document.querySelectorAll('.st-lock-badge').forEach(b => b.remove());
+    showNotif('Screen Time', 'Nutzung zurückgesetzt (6:00 Uhr)', 'var(--accent)');
+  }
+}
+
+// Called every second
 function stTick() {
   if (!stData || !stData.enabled) return;
+  stCheckReset();
+
   const open = Object.keys(windows);
+  let anyChange = false;
+
   for (const app of open) {
     if (app === 'screentime') continue;
     stData.usage[app] = (stData.usage[app] || 0) + 1;
-    const limit = stData.limits[app];
-    if (limit && limit > 0) {
-      const used = stData.usage[app];
-      if (used >= limit * 60 && !stData.locks[app]) {
-        stData.locks[app] = true;
-        stSave();
-        stLockApp(app);
+    anyChange = true;
+
+    // Per-app limit
+    const lim = stData.limits[app];
+    if (lim && lim > 0 && stData.usage[app] >= lim * 60 && !stData.locks[app]) {
+      stData.locks[app] = true;
+      stSave();
+      stLockApp(app);
+      continue;
+    }
+  }
+
+  // Total limit check
+  const totalLim = stData.totalLimit;
+  if (totalLim && totalLim > 0) {
+    const totalUsed = Object.values(stData.usage).reduce((a,b)=>a+b,0);
+    if (totalUsed >= totalLim * 60) {
+      // Lock all unlocked open apps
+      for (const app of open) {
+        if (app === 'screentime') continue;
+        if (!stData.locks[app]) {
+          stData.locks[app] = true;
+          stLockApp(app);
+        }
       }
     }
   }
-  // Refresh UI if open
-  if (windows['screentime']) stRefreshUI();
+
+  if (anyChange) stSave();
+
+  // Live-update only the dynamic parts — no full re-render
+  stUpdateLiveUI();
 }
-
-function stLockApp(appId) {
-  const def = appDefs[appId];
-  const name = def ? def.title : appId;
-  // Minimize the window
-  if (windows[appId]) minimizeWindow(appId);
-  // Show lock overlay
-  stShowLockOverlay(appId, name);
-}
-
-function stShowLockOverlay(appId, name) {
-  document.getElementById('st-lock-overlay')?.remove();
-  const ov = document.createElement('div');
-  ov.id = 'st-lock-overlay';
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(10,5,20,0.92);backdrop-filter:blur(20px);z-index:99999;display:flex;align-items:center;justify-content:center';
-  ov.innerHTML = `
-    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(180,80,255,0.25);border-radius:24px;padding:40px 48px;text-align:center;max-width:340px;width:90%">
-      <div style="font-size:52px;margin-bottom:16px">🔒</div>
-      <div style="font-size:20px;font-weight:800;color:#e0d0ff;margin-bottom:8px">${name} gesperrt</div>
-      <div style="font-size:12px;color:rgba(255,255,255,0.45);margin-bottom:28px">Tageslimit erreicht. PIN zum Entsperren eingeben.</div>
-      <div style="display:flex;gap:10px;justify-content:center;margin-bottom:20px" id="st-pin-dots">
-        ${[0,1,2,3].map(i=>`<div id="st-pd-${i}" style="width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,0.15);border:2px solid rgba(180,80,255,0.4);transition:all 0.15s"></div>`).join('')}
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:220px;margin:0 auto">
-        ${[1,2,3,4,5,6,7,8,9,'','0','⌫'].map(k => k==='' ? '<div></div>' :
-          `<button onclick="stPinKey('${k}')" style="padding:14px;border-radius:12px;border:1px solid rgba(180,80,255,0.2);background:rgba(255,255,255,0.05);color:#e0d0ff;font-size:18px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.1s" onmouseover="this.style.background='rgba(180,80,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">${k}</button>`
-        ).join('')}
-      </div>
-      <div id="st-pin-err" style="margin-top:14px;font-size:11px;color:#ff6a8a;min-height:16px"></div>
-      <button onclick="stLockClose()" style="margin-top:16px;padding:8px 20px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:rgba(255,255,255,0.3);font-size:11px;cursor:pointer;font-family:inherit">Abbrechen</button>
-    </div>`;
-  ov.dataset.appId = appId;
-  document.body.appendChild(ov);
-  stPinBuf = '';
-}
-
-let stPinBuf = '';
-function stPinKey(k) {
-  if (k === '⌫') { stPinBuf = stPinBuf.slice(0,-1); }
-  else if (stPinBuf.length < 4) { stPinBuf += k; }
-  // Update dots
-  for (let i = 0; i < 4; i++) {
-    const dot = document.getElementById('st-pd-' + i);
-    if (dot) {
-      dot.style.background = i < stPinBuf.length ? '#b450ff' : 'rgba(255,255,255,0.15)';
-      dot.style.borderColor = i < stPinBuf.length ? '#b450ff' : 'rgba(180,80,255,0.4)';
-    }
-  }
-  if (stPinBuf.length === 4) {
-    setTimeout(() => {
-      const ov = document.getElementById('st-lock-overlay');
-      const appId = ov?.dataset.appId;
-      if (stData.pin === null || stPinBuf === stData.pin) {
-        // Correct — unlock
-        if (appId) {
-          stData.locks[appId] = false;
-          // Reset usage so they get a grace period
-          stData.usage[appId] = 0;
-          stSave();
-        }
-        ov?.remove();
-        stPinBuf = '';
-        if (appId && appDefs[appId]) openApp(appId);
-      } else {
-        const err = document.getElementById('st-pin-err');
-        if (err) err.textContent = 'Falscher PIN — erneut versuchen';
-        stPinBuf = '';
-        for (let i = 0; i < 4; i++) {
-          const dot = document.getElementById('st-pd-' + i);
-          if (dot) { dot.style.background = '#ff4a6a'; }
-        }
-        setTimeout(() => {
-          for (let i = 0; i < 4; i++) {
-            const dot = document.getElementById('st-pd-' + i);
-            if (dot) { dot.style.background = 'rgba(255,255,255,0.15)'; dot.style.borderColor = 'rgba(180,80,255,0.4)'; }
-          }
-        }, 600);
-      }
-    }, 80);
-  }
-}
-
-function stLockClose() {
-  document.getElementById('st-lock-overlay')?.remove();
-  stPinBuf = '';
-}
-
-// openApp lock check is injected directly into openApp above
-
-// ── Screen Time UI ────────────────────────────────────
-function buildScreenTime() {
-  return `<div id="st-root" style="height:100%;display:flex;flex-direction:column;background:var(--panel);overflow:hidden"></div>`;
-}
-
-function initScreenTime() {
-  stLoad();
-  stRefreshUI();
-}
-
-const ST_ALL_APPS = [
-  {id:'browser',  name:'Browser',       ico:'🌐'},
-  {id:'files',    name:'Dateien',        ico:'📂'},
-  {id:'terminal', name:'Terminal',       ico:'💻'},
-  {id:'editor',   name:'Editor',         ico:'📝'},
-  {id:'music',    name:'Musik',          ico:'🎵'},
-  {id:'calc',     name:'Rechner',        ico:'🧮'},
-  {id:'gallery',  name:'Galerie',        ico:'🖼️'},
-  {id:'weather',  name:'Wetter',         ico:'🌤️'},
-  {id:'sysmon',   name:'Monitor',        ico:'📊'},
-  {id:'pdf',      name:'NovPDF',         ico:'📋'},
-  {id:'clock',    name:'Uhr',            ico:'🕐'},
-  {id:'klassenblatt', name:'Klassenblatt', ico:'📝'},
-  {id:'slideforge',   name:'SlideForge',   ico:'🎞️'},
-  {id:'kwiz',         name:'KWIZ!',         ico:'❓'},
-  {id:'novsnake',     name:'NovSnake',      ico:'🐍'},
-  {id:'novmemo',      name:'Memo',          ico:'🃏'},
-];
 
 function stFmtTime(secs) {
-  if (!secs) return '0 Min';
+  if (!secs) return '0s';
   const h = Math.floor(secs/3600), m = Math.floor((secs%3600)/60), s = secs%60;
   if (h > 0) return `${h}h ${m}m`;
   if (m > 0) return `${m}m ${s}s`;
   return `${s}s`;
 }
 
+// ── Live update without re-render ────────────────────────────────────────────
+function stUpdateLiveUI() {
+  if (!windows['screentime']) return;
+  const root = document.getElementById('st-root');
+  if (!root) return;
+
+  // Update total used
+  const totalUsed = Object.values(stData.usage||{}).reduce((a,b)=>a+b,0);
+  const subEl = document.getElementById('st-total-used');
+  if (subEl) subEl.textContent = `Heutige Nutzung · ${stFmtTime(totalUsed)} gesamt`;
+
+  // Update total limit bar
+  const tl = stData.totalLimit || 0;
+  const tlBar  = document.getElementById('st-total-bar');
+  const tlPct  = document.getElementById('st-total-pct');
+  if (tlBar && tl) {
+    const pct = Math.min(100, totalUsed / (tl*60) * 100);
+    tlBar.style.width = pct + '%';
+    tlBar.style.background = pct > 90 ? '#ff4a6a' : pct > 70 ? '#ffca6a' : 'var(--accent)';
+    if (tlPct) tlPct.textContent = `${stFmtTime(totalUsed)} / ${tl}m`;
+  }
+
+  // Update per-app rows
+  ST_ALL_APPS.forEach(a => {
+    const used   = stData.usage[a.id] || 0;
+    const lim    = stData.limits[a.id] || 0;
+    const pct    = lim ? Math.min(100, used/(lim*60)*100) : 0;
+    const col    = pct > 90 ? '#ff4a6a' : pct > 70 ? '#ffca6a' : 'var(--accent2)';
+    const locked = stData.locks[a.id];
+
+    const timeEl = document.getElementById(`st-time-${a.id}`);
+    const barEl  = document.getElementById(`st-bar-${a.id}`);
+    const rowEl  = document.getElementById(`st-row-${a.id}`);
+    const lockEl = document.getElementById(`st-lock-${a.id}`);
+
+    if (timeEl) { timeEl.textContent = `${stFmtTime(used)}${lim ? ' / '+lim+'m' : ''}`; timeEl.style.color = col; }
+    if (barEl)  { barEl.style.width = pct + '%'; barEl.style.background = col; }
+    if (rowEl)  { rowEl.style.borderColor = locked ? 'rgba(255,80,80,0.35)' : 'var(--border)'; }
+    if (lockEl) { lockEl.style.display = locked ? 'inline' : 'none'; }
+  });
+
+  // Summary cards
+  const summaryEl = document.getElementById('st-summary');
+  if (summaryEl) {
+    const active = ST_ALL_APPS.filter(a => (stData.usage[a.id]||0)>0).slice(0,6);
+    summaryEl.innerHTML = active.length
+      ? active.map(a => {
+          const used = stData.usage[a.id]||0;
+          const lim  = stData.limits[a.id]||0;
+          const pct  = lim ? Math.min(100,used/(lim*60)*100) : 0;
+          const col  = pct>90?'#ff4a6a':pct>70?'#ffca6a':'var(--accent)';
+          return `<div style="flex-shrink:0;background:rgba(255,255,255,0.05);border-radius:10px;padding:8px 10px;min-width:72px;text-align:center">
+            <div style="font-size:18px">${a.ico}</div>
+            <div style="font-size:9px;color:var(--text2);margin:2px 0">${a.name}</div>
+            <div style="font-size:11px;font-weight:700;color:${col}">${stFmtTime(used)}</div>
+            ${lim?`<div style="height:2px;background:rgba(255,255,255,0.08);border-radius:1px;margin-top:4px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${col};transition:width 1s;border-radius:1px"></div></div>`:''}
+          </div>`;
+        }).join('')
+      : '<div style="color:var(--text2);font-size:11px;padding:8px">Noch keine Nutzung heute</div>';
+  }
+}
+
+// ── Full render (called once on open, and after settings changes) ─────────────
 function stRefreshUI() {
   const root = document.getElementById('st-root');
   if (!root) return;
   if (!stData) stLoad();
 
-  const totalUsed = Object.values(stData.usage||{}).reduce((a,b)=>a+b,0);
-  const enabled   = stData.enabled;
-  const hasPin    = !!stData.pin;
+  const totalUsed  = Object.values(stData.usage||{}).reduce((a,b)=>a+b,0);
+  const enabled    = stData.enabled;
+  const hasPin     = !!stData.pin;
+  const tl         = stData.totalLimit || 0;
+  const tlPct      = tl ? Math.min(100, totalUsed/(tl*60)*100) : 0;
+  const tlCol      = tlPct>90?'#ff4a6a':tlPct>70?'#ffca6a':'var(--accent)';
 
+  // Build HTML as a string — set once, then stUpdateLiveUI keeps it fresh
   root.innerHTML = `
     <!-- Header -->
-    <div style="padding:16px 20px 12px;background:var(--panel2);border-bottom:1px solid var(--border);flex-shrink:0">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
-        <span style="font-size:22px">⏰</span>
-        <div>
-          <div style="font-size:15px;font-weight:800;color:var(--text)">Screen Time</div>
-          <div style="font-size:10px;color:var(--text2)">Heutige Nutzung · ${stFmtTime(totalUsed)} gesamt</div>
+    <div style="padding:14px 18px 10px;background:var(--panel2);border-bottom:1px solid var(--border);flex-shrink:0">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <span style="font-size:20px">⏰</span>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:800;color:var(--text)">Screen Time</div>
+          <div id="st-total-used" style="font-size:10px;color:var(--text2)">Heutige Nutzung · ${stFmtTime(totalUsed)} gesamt</div>
         </div>
-        <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+        <div style="display:flex;align-items:center;gap:6px">
           <span style="font-size:11px;color:var(--text2)">Aktiv</span>
-          <div onclick="stToggleEnabled()" style="width:36px;height:20px;border-radius:10px;background:${enabled?'var(--accent)':'rgba(255,255,255,0.15)'};cursor:pointer;position:relative;transition:background 0.2s">
-            <div style="width:16px;height:16px;border-radius:8px;background:white;position:absolute;top:2px;transition:left 0.2s;left:${enabled?'18px':'2px'}"></div>
+          <div onclick="stToggleEnabled()" style="width:34px;height:19px;border-radius:10px;background:${enabled?'var(--accent)':'rgba(255,255,255,0.15)'};cursor:pointer;position:relative;transition:background 0.2s">
+            <div style="width:15px;height:15px;border-radius:8px;background:white;position:absolute;top:2px;left:${enabled?'17px':'2px'};transition:left 0.2s"></div>
           </div>
         </div>
       </div>
 
-      <!-- Daily summary bar -->
-      <div style="display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px">
-        ${ST_ALL_APPS.filter(a => (stData.usage[a.id]||0)>0).slice(0,6).map(a => {
-          const used = stData.usage[a.id]||0;
-          const lim  = stData.limits[a.id]||0;
-          const pct  = lim ? Math.min(100, used/(lim*60)*100) : 0;
-          const col  = pct > 90 ? '#ff4a6a' : pct > 70 ? '#ffca6a' : 'var(--accent)';
+      <!-- Total limit bar (shown only if tl > 0) -->
+      ${tl ? `<div style="margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:3px">
+          <span style="color:var(--text2)">Gesamtlimit</span>
+          <span id="st-total-pct" style="color:${tlCol};font-weight:700">${stFmtTime(totalUsed)} / ${tl}m</span>
+        </div>
+        <div style="height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden">
+          <div id="st-total-bar" style="height:100%;width:${tlPct}%;background:${tlCol};border-radius:2px;transition:width 1s"></div>
+        </div>
+      </div>` : '<div id="st-total-bar" style="display:none"></div><div id="st-total-pct" style="display:none"></div>'}
+
+      <!-- Summary cards -->
+      <div id="st-summary" style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px">
+        ${ST_ALL_APPS.filter(a=>(stData.usage[a.id]||0)>0).slice(0,6).map(a=>{
+          const used=stData.usage[a.id]||0,lim=stData.limits[a.id]||0;
+          const pct=lim?Math.min(100,used/(lim*60)*100):0;
+          const col=pct>90?'#ff4a6a':pct>70?'#ffca6a':'var(--accent)';
           return `<div style="flex-shrink:0;background:rgba(255,255,255,0.05);border-radius:10px;padding:8px 10px;min-width:72px;text-align:center">
             <div style="font-size:18px">${a.ico}</div>
             <div style="font-size:9px;color:var(--text2);margin:2px 0">${a.name}</div>
             <div style="font-size:11px;font-weight:700;color:${col}">${stFmtTime(used)}</div>
-            ${lim ? `<div style="height:2px;background:rgba(255,255,255,0.08);border-radius:1px;margin-top:4px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${col};border-radius:1px"></div></div>` : ''}
+            ${lim?`<div style="height:2px;background:rgba(255,255,255,0.08);border-radius:1px;margin-top:4px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${col};border-radius:1px"></div></div>`:''}
           </div>`;
         }).join('') || '<div style="color:var(--text2);font-size:11px;padding:8px">Noch keine Nutzung heute</div>'}
       </div>
     </div>
 
-    <!-- PIN section -->
-    <div style="padding:12px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0">
-      <div style="flex:1">
-        <div style="font-size:12px;font-weight:700;color:var(--text)">PIN-Schutz</div>
-        <div style="font-size:10px;color:var(--text2)">${hasPin ? 'PIN gesetzt — schützt Limits und Entsperren' : 'Kein PIN — jeder kann Limits ändern'}</div>
+    <!-- Settings strip (PIN + total limit) -->
+    <div style="padding:10px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;flex-wrap:wrap;row-gap:8px">
+      <!-- PIN -->
+      <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:180px">
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--text)">PIN-Schutz</div>
+          <div style="font-size:9px;color:var(--text2)">${hasPin?'Gesetzt':'Nicht gesetzt'}</div>
+        </div>
+        ${hasPin
+          ? `<button onclick="stChangePinFlow()" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--panel2);color:var(--text2);font-size:10px;cursor:pointer;font-family:inherit">Ändern</button>
+             <button onclick="stRemovePin()" style="padding:4px 10px;border-radius:6px;border:1px solid rgba(255,80,80,0.3);background:transparent;color:#ff6a8a;font-size:10px;cursor:pointer;font-family:inherit">Entfernen</button>`
+          : `<button onclick="stSetPinFlow()" style="padding:4px 12px;border-radius:6px;border:none;background:var(--accent);color:white;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit">PIN setzen</button>`
+        }
       </div>
-      ${hasPin
-        ? `<button onclick="stChangePinFlow()" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:var(--panel2);color:var(--text2);font-size:11px;cursor:pointer;font-family:inherit">Ändern</button>
-           <button onclick="stRemovePin()" style="padding:6px 12px;border-radius:8px;border:1px solid rgba(255,80,80,0.3);background:transparent;color:#ff6a8a;font-size:11px;cursor:pointer;font-family:inherit">Entfernen</button>`
-        : `<button onclick="stSetPinFlow()" style="padding:6px 14px;border-radius:8px;border:none;background:var(--accent);color:white;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">PIN setzen</button>`
-      }
+      <!-- Total limit -->
+      <div style="display:flex;align-items:center;gap:8px">
+        <div style="font-size:11px;font-weight:700;color:var(--text)">Gesamtlimit</div>
+        <select onchange="stSetTotalLimit(+this.value)" style="background:var(--panel);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:4px 6px;font-size:11px;font-family:inherit;cursor:pointer">
+          <option value="0" ${!tl?'selected':''}>Kein Limit</option>
+          ${[30,60,90,120,180,240,300].map(m=>`<option value="${m}" ${tl===m?'selected':''}>${m>=60?m/60+'h'+(m%60?' '+m%60+'m':''):m+' Min'}</option>`).join('')}
+        </select>
+      </div>
     </div>
 
-    <!-- App limits -->
-    <div style="flex:1;overflow-y:auto;padding:12px 20px 20px">
-      <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">App-Limits</div>
-      <div style="display:flex;flex-direction:column;gap:6px">
+    <!-- App list — static structure, values updated by stUpdateLiveUI -->
+    <div style="flex:1;overflow-y:auto;padding:10px 16px 18px">
+      <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">App-Limits</div>
+      <div style="display:flex;flex-direction:column;gap:5px">
         ${ST_ALL_APPS.map(a => {
-          const used  = stData.usage[a.id] || 0;
-          const lim   = stData.limits[a.id] || 0;
-          const pct   = lim ? Math.min(100, used/(lim*60)*100) : 0;
-          const col   = pct > 90 ? '#ff4a6a' : pct > 70 ? '#ffca6a' : 'var(--accent2)';
+          const used   = stData.usage[a.id] || 0;
+          const lim    = stData.limits[a.id] || 0;
+          const pct    = lim ? Math.min(100, used/(lim*60)*100) : 0;
+          const col    = pct>90?'#ff4a6a':pct>70?'#ffca6a':'var(--accent2)';
           const locked = stData.locks[a.id];
-          return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--panel2);border:1px solid ${locked?'rgba(255,80,80,0.3)':'var(--border)'};border-radius:10px">
-            <div style="font-size:20px;width:28px;text-align:center">${a.ico}</div>
+          return `<div id="st-row-${a.id}" style="display:flex;align-items:center;gap:8px;padding:9px 11px;background:var(--panel2);border:1px solid ${locked?'rgba(255,80,80,0.35)':'var(--border)'};border-radius:10px">
+            <div style="font-size:19px;width:26px;text-align:center">${a.ico}</div>
             <div style="flex:1;min-width:0">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:${lim?'4px':'0'}">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:${lim?'3px':'0'}">
                 <span style="font-size:12px;font-weight:600;color:var(--text)">${a.name}</span>
-                <span style="font-size:10px;color:${col};font-weight:700">${stFmtTime(used)}${lim?' / '+lim+'m':''}</span>
+                <span id="st-time-${a.id}" style="font-size:10px;color:${col};font-weight:700">${stFmtTime(used)}${lim?' / '+lim+'m':''}</span>
               </div>
-              ${lim ? `<div style="height:3px;background:rgba(255,255,255,0.07);border-radius:2px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${col};border-radius:2px;transition:width 0.5s"></div></div>` : ''}
+              <div style="height:3px;background:rgba(255,255,255,0.07);border-radius:2px;overflow:hidden;display:${lim?'block':'none'}">
+                <div id="st-bar-${a.id}" style="height:100%;width:${pct}%;background:${col};border-radius:2px;transition:width 1s"></div>
+              </div>
             </div>
-            ${locked ? '<span style="font-size:14px" title="Gesperrt">🔒</span>' : ''}
-            <select onchange="stSetLimit('${a.id}',+this.value)" style="background:var(--panel);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:4px 6px;font-size:11px;font-family:inherit;cursor:pointer">
+            <span id="st-lock-${a.id}" style="font-size:13px;display:${locked?'inline':'none'}">🔒</span>
+            <select onchange="stSetLimit('${a.id}',+this.value)" style="background:var(--panel);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:3px 5px;font-size:10px;font-family:inherit;cursor:pointer">
               <option value="0" ${!lim?'selected':''}>Kein Limit</option>
               ${[5,10,15,20,30,45,60,90,120].map(m=>`<option value="${m}" ${lim===m?'selected':''}>${m} Min</option>`).join('')}
             </select>
           </div>`;
         }).join('')}
       </div>
-      <div style="margin-top:14px;display:flex;gap:8px;justify-content:flex-end">
-        <button onclick="stResetUsage()" style="padding:7px 14px;border-radius:8px;border:1px solid var(--border);background:var(--panel2);color:var(--text2);font-size:11px;cursor:pointer;font-family:inherit">Nutzung zurücksetzen</button>
-        <button onclick="stUnlockAll()" style="padding:7px 14px;border-radius:8px;border:1px solid rgba(106,255,202,0.3);background:transparent;color:var(--accent2);font-size:11px;cursor:pointer;font-family:inherit">Alle entsperren</button>
+      <div style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end">
+        <button onclick="stResetUsage()" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:var(--panel2);color:var(--text2);font-size:10px;cursor:pointer;font-family:inherit">Nutzung zurücksetzen</button>
+        <button onclick="stUnlockAll()" style="padding:6px 12px;border-radius:8px;border:1px solid rgba(106,255,202,0.3);background:transparent;color:var(--accent2);font-size:10px;cursor:pointer;font-family:inherit">Alle entsperren</button>
       </div>
     </div>`;
 }
 
 function stToggleEnabled() {
-  stLoad();
   stData.enabled = !stData.enabled;
   stSave();
   stRefreshUI();
 }
 
 function stSetLimit(appId, minutes) {
-  stLoad();
   stData.limits[appId] = minutes;
-  // If lowering limit below current usage, lock immediately
+  const barWrap = document.getElementById('st-bar-' + appId)?.parentElement;
+  if (barWrap) barWrap.style.display = minutes ? 'block' : 'none';
   if (minutes > 0 && (stData.usage[appId]||0) >= minutes*60) {
     stData.locks[appId] = true;
+    stUpdateIconBadge(appId, true);
   }
   stSave();
-  stRefreshUI();
+  stUpdateLiveUI();
   showNotif('Screen Time', `${appId}: ${minutes ? minutes+'m Limit' : 'Kein Limit'}`, 'var(--accent)');
 }
 
+function stSetTotalLimit(minutes) {
+  stData.totalLimit = minutes;
+  stSave();
+  stRefreshUI(); // needs full re-render to show/hide total bar
+  showNotif('Screen Time', `Gesamtlimit: ${minutes ? minutes+'m' : 'Kein Limit'}`, 'var(--accent)');
+}
+
 function stResetUsage() {
-  stLoad();
+  Object.keys(stData.locks||{}).forEach(id => stUpdateIconBadge(id, false));
   stData.usage = {};
   stData.locks = {};
   stSave();
@@ -7768,7 +8234,6 @@ function stResetUsage() {
 }
 
 function stUnlockAll() {
-  stLoad();
   stData.locks = {};
   stData.usage = {};
   stSave();
@@ -7854,6 +8319,32 @@ function startScreenTimeTicker() {
   stLoad();
   setInterval(stTick, 1000);
 }
+
+// ── Initial boot sequence ────────────────
+(function initBoot() {
+  const bs = document.getElementById('boot-screen');
+  const ls = document.getElementById('login-screen');
+  if (!bs || !ls) return;
+  ls.style.display = 'none';
+  const msgs = ['Kernel wird geladen…','Dienste starten…','Hardware wird initialisiert…','Desktop wird vorbereitet…','Bereit!'];
+  let i = 0;
+  document.getElementById('boot-msg').textContent = msgs[0];
+  const iv = setInterval(() => {
+    i++;
+    if (i < msgs.length) {
+      document.getElementById('boot-msg').textContent = msgs[i];
+    } else {
+      clearInterval(iv);
+      bs.classList.add('fade-out');
+      setTimeout(() => {
+        bs.style.display = 'none';
+        bs.classList.remove('fade-out');
+        ls.style.display = 'flex';
+        loginScreenInit();
+      }, 500);
+    }
+  }, 600);
+})();
 </script>
 </body>
 </html>
