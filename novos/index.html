@@ -22,6 +22,11 @@
   * { margin:0; padding:0; box-sizing:border-box; user-select:none; }
   input, textarea, select { user-select:text; }
   iframe { user-select:auto; pointer-events:auto; }
+  @keyframes ifl-bar {
+    0%   { transform: translateX(-100%); }
+    50%  { transform: translateX(60%); }
+    100% { transform: translateX(250%); }
+  }
   body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); width:100vw; height:100vh; overflow:hidden; font-size:13px; }
 
   /* ══════════════════ LOGIN SCREEN ══════════════════ */
@@ -102,33 +107,61 @@
       radial-gradient(1px 1px at 10% 50%,rgba(255,255,255,0.4) 0%,transparent 100%);
   }
 
-  /* Desktop icon grid — responsive, respects taskbar */
+  /* ── Multi-page desktop ── */
+  #desktop-pages {
+    position:absolute; inset:0;
+    display:flex; overflow:hidden; pointer-events:none;
+  }
+  #desktop-pages.sliding { transition:transform 0.35s cubic-bezier(0.4,0,0.2,1); }
+  .desktop-page {
+    min-width:100%; width:100%; height:100%;
+    flex-shrink:0; position:relative; pointer-events:all;
+  }
+  #page-dots {
+    position:absolute;
+    bottom:calc(var(--taskbar-h) + 10px);
+    left:50%; transform:translateX(-50%);
+    display:flex; gap:7px; z-index:50; pointer-events:all;
+  }
+  .page-dot {
+    width:7px; height:7px; border-radius:50%;
+    background:rgba(255,255,255,0.25); cursor:pointer;
+    transition:all 0.2s; border:1.5px solid rgba(255,255,255,0.15);
+  }
+  .page-dot.active { background:rgba(124,106,255,0.9); border-color:rgba(124,106,255,0.6); width:18px; border-radius:4px; }
+
+  /* ── Touch / Mobile Mode ── */
+  body.touch-mode .desk-icon { width:88px; height:96px; padding:10px 4px 8px; }
+  body.touch-mode .desk-icon .ico { width:54px; height:54px; font-size:28px; border-radius:14px; }
+  body.touch-mode .desk-icon span { font-size:12px; }
+  body.touch-mode #taskbar { height:60px; }
+  body.touch-mode #start-btn { font-size:22px; width:44px; height:44px; }
+
+  /* Desktop icon grid — icons are freely positionable */
   .icon-grid {
     position:absolute;
-    top:12px;
-    left:12px;
-    bottom:calc(var(--taskbar-h) + 12px); /* never overlap taskbar */
-    right:12px;
-    display:grid;
-    /* columns fill left-to-right, each 80px wide */
-    grid-template-columns:repeat(auto-fill,80px);
-    grid-template-rows:repeat(auto-fill,88px);
-    grid-auto-flow:column;  /* fill column by column, top to bottom */
-    align-content:start;
-    justify-content:start;
-    gap:4px;
-    overflow:hidden; /* no scrollbar — grid itself defines capacity */
-    pointer-events:none; /* let clicks fall through to desktop */
+    inset:0;
+    pointer-events:none;
+    z-index:1;
   }
   .desk-icon {
+    position:absolute;
     display:flex; flex-direction:column; align-items:center;
     gap:5px; width:80px; height:88px; cursor:pointer; padding:8px 4px 6px;
-    border-radius:12px; transition:background 0.15s;
-    pointer-events:all; /* re-enable on icons */
+    border-radius:12px; transition:background 0.12s, box-shadow 0.12s;
+    pointer-events:all;
     user-select:none;
+    touch-action:none;
   }
   .desk-icon:hover  { background:rgba(124,106,255,0.18); }
-  .desk-icon:active { background:rgba(124,106,255,0.30); transform:scale(0.95); }
+  .desk-icon.icon-dragging {
+    background:rgba(124,106,255,0.28);
+    box-shadow:0 8px 24px rgba(0,0,0,0.5);
+    transform:scale(1.08);
+    z-index:999;
+    transition:box-shadow 0.12s, transform 0.12s;
+  }
+  .desk-icon.icon-selected { background:rgba(124,106,255,0.22); outline:1.5px solid rgba(124,106,255,0.5); }
   .desk-icon .ico {
     width:48px; height:48px; border-radius:12px;
     display:flex; align-items:center; justify-content:center; font-size:24px;
@@ -136,10 +169,44 @@
   }
   .desk-icon span {
     font-size:11px; color:var(--text); text-align:center;
-    text-shadow:0 1px 3px rgba(0,0,0,0.6);
+    text-shadow:0 1px 3px rgba(0,0,0,0.8);
     line-height:1.2; max-width:72px;
     overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
   }
+
+  /* Desktop widgets */
+  .desk-widget {
+    position:absolute;
+    background:rgba(18,15,35,0.72);
+    backdrop-filter:blur(16px);
+    -webkit-backdrop-filter:blur(16px);
+    border:1px solid rgba(124,106,255,0.22);
+    border-radius:16px;
+    color:var(--text);
+    pointer-events:all;
+    user-select:none;
+    touch-action:none;
+    cursor:grab;
+    box-shadow:0 4px 24px rgba(0,0,0,0.4);
+    transition:box-shadow 0.15s, border-color 0.15s;
+    z-index:2;
+  }
+  .desk-widget:hover { border-color:rgba(124,106,255,0.4); }
+  .desk-widget.widget-dragging {
+    cursor:grabbing;
+    box-shadow:0 12px 40px rgba(0,0,0,0.6);
+    z-index:998;
+  }
+  .desk-widget .widget-close {
+    position:absolute; top:8px; right:8px;
+    width:16px; height:16px; border-radius:50%;
+    background:rgba(255,100,100,0.3);
+    border:none; cursor:pointer; font-size:9px; color:rgba(255,255,255,0.6);
+    display:flex; align-items:center; justify-content:center;
+    opacity:0; transition:opacity 0.15s;
+  }
+  .desk-widget:hover .widget-close { opacity:1; }
+  .desk-widget .widget-close:hover { background:rgba(255,80,80,0.7); color:white; }
 
   /* ══════════════════ TASKBAR ══════════════════ */
   #taskbar {
@@ -529,6 +596,7 @@
   /* Content */
   .browser-content { flex:1; overflow-y:auto; min-height:0; }
   .browser-page { max-width:680px; margin:0 auto; padding:28px 24px; }
+  #browser-novpage > .browser-page { overflow-y:auto; height:100%; box-sizing:border-box; }
   .browser-page h1 { font-size:22px; font-weight:800; color:var(--accent); margin-bottom:8px; }
   .browser-page h2 { font-size:15px; font-weight:700; color:var(--text); margin:18px 0 8px; }
   .browser-page p { color:var(--text2); line-height:1.7; margin-bottom:10px; font-size:13px; }
@@ -1071,56 +1139,20 @@
 <!-- ══ DESKTOP ══ -->
 <div id="desktop">
 
-  <div class="icon-grid">
-    <div class="desk-icon" ondblclick="openApp('files')">
-      <div class="ico" style="background:linear-gradient(135deg,#1e3a5f,#0d2040)">📂</div>
-      <span>Dateien</span>
+  <!-- Multi-page desktop -->
+  <div id="desktop-pages">
+    <div class="desktop-page" id="dpage-0" data-page="0">
+      <div class="icon-grid" id="icon-grid-0"></div>
     </div>
-    <div class="desk-icon" ondblclick="openApp('browser')">
-      <div class="ico" style="background:linear-gradient(135deg,#1a2040,#0d0f2a)">🌐</div>
-      <span>Browser</span>
+    <div class="desktop-page" id="dpage-1" data-page="1">
+      <div class="icon-grid" id="icon-grid-1"></div>
     </div>
-    <div class="desk-icon" ondblclick="openApp('terminal')">
-      <div class="ico" style="background:linear-gradient(135deg,#0f1f0f,#0a150a)">💻</div>
-      <span>Terminal</span>
-    </div>
-    <div class="desk-icon" ondblclick="openApp('music')">
-      <div class="ico" style="background:linear-gradient(135deg,#3a1040,#1a0520)">🎵</div>
-      <span>Musik</span>
-    </div>
-    <div class="desk-icon" ondblclick="openApp('calc')">
-      <div class="ico" style="background:linear-gradient(135deg,#1a3a20,#0a1f10)">🧮</div>
-      <span>Rechner</span>
-    </div>
-    <div class="desk-icon" ondblclick="openApp('editor')">
-      <div class="ico" style="background:linear-gradient(135deg,#3a2a10,#1f1508)">📝</div>
-      <span>Editor</span>
-    </div>
-    <div class="desk-icon" ondblclick="openApp('gallery')">
-      <div class="ico" style="background:linear-gradient(135deg,#2a1a3a,#150a20)">🖼️</div>
-      <span>Galerie</span>
-    </div>
-    <div class="desk-icon" ondblclick="openApp('weather')">
-      <div class="ico" style="background:linear-gradient(135deg,#0d2a3a,#061520)">🌤️</div>
-      <span>Wetter</span>
-    </div>
-    <div class="desk-icon" ondblclick="openApp('sysmon')">
-      <div class="ico" style="background:linear-gradient(135deg,#2a1a10,#150d08)">📊</div>
-      <span>Monitor</span>
-    </div>
-    <div class="desk-icon" ondblclick="openApp('settings')">
-      <div class="ico" style="background:linear-gradient(135deg,#222,#111)">⚙️</div>
-      <span>Einstellungen</span>
-    </div>
-    <div class="desk-icon" ondblclick="openApp('pdf')">
-      <div class="ico" style="background:linear-gradient(135deg,#3a0a0a,#1f0505)">📋</div>
-      <span>NovPDF</span>
-    </div>
-    <div class="desk-icon" ondblclick="openApp('clock')">
-      <div class="ico" style="background:linear-gradient(135deg,#0a1a3a,#050d1f)">🕐</div>
-      <span>Uhr</span>
+    <div class="desktop-page" id="dpage-2" data-page="2">
+      <div class="icon-grid" id="icon-grid-2"></div>
     </div>
   </div>
+  <!-- Page indicator dots -->
+  <div id="page-dots"></div>
 
   <!-- Notifications -->
   <div id="notif-area"></div>
@@ -1129,6 +1161,12 @@
   <div id="ctx-menu">
     <div class="ctx-item" onclick="cycleWallpaper();closeCtxMenu()">🖼️ Hintergrund ändern</div>
     <div class="ctx-item" onclick="openApp('files');closeCtxMenu()">📂 Neues Datei-Fenster</div>
+    <div class="ctx-item" onclick="desktopAddWidget('clock');closeCtxMenu()">🕐 Widget: Uhr</div>
+    <div class="ctx-item" onclick="desktopAddWidget('weather');closeCtxMenu()">🌤️ Widget: Wetter</div>
+    <div class="ctx-item" onclick="desktopAddWidget('sysinfo');closeCtxMenu()">📊 Widget: System</div>
+    <div class="ctx-item" onclick="desktopAddWidget('quicklaunch');closeCtxMenu()">⚡ Widget: Schnellstart</div>
+    <div class="ctx-sep"></div>
+    <div class="ctx-item" onclick="desktopResetLayout();closeCtxMenu()">↺ Layout zurücksetzen</div>
     <div class="ctx-sep"></div>
     <div class="ctx-item" onclick="showNotif('Desktop','Anzeige aktualisiert ✓');closeCtxMenu()">🔄 Aktualisieren</div>
     <div class="ctx-item" onclick="openApp('settings');closeCtxMenu()">⚙️ Einstellungen</div>
@@ -1169,12 +1207,12 @@
     <div id="taskbar-apps"></div>
     <div id="tb-right">
       <div id="tb-icons">
-        <span class="tb-icon" id="tb-wifi"   title="WLAN"      onclick="toggleCC()">📶</span>
-        <span class="tb-icon" id="tb-vol"    title="Lautstärke" onclick="toggleCC()">🔊</span>
-        <span class="tb-icon" id="tb-battery" title="Akku"     onclick="toggleCC()">🔋</span>
-        <span class="tb-icon" id="tb-bat-pct" style="font-size:10px;font-weight:600;color:var(--text2);cursor:pointer" onclick="toggleCC()"></span>
+        <span class="tb-icon" id="tb-wifi"   title="WLAN"      onclick="toggleCC(event)">📶</span>
+        <span class="tb-icon" id="tb-vol"    title="Lautstärke" onclick="toggleCC(event)">🔊</span>
+        <span class="tb-icon" id="tb-battery" title="Akku"     onclick="toggleCC(event)">🔋</span>
+        <span class="tb-icon" id="tb-bat-pct" style="font-size:10px;font-weight:600;color:var(--text2);cursor:pointer" onclick="toggleCC(event)"></span>
       </div>
-      <div style="text-align:right;cursor:pointer" onclick="toggleCC()" title="Kontrollzentrum">
+      <div style="text-align:right;cursor:pointer" onclick="toggleCC(event)" title="Kontrollzentrum">
         <div id="clock" style="pointer-events:none"></div>
         <div id="date-display" style="pointer-events:none"></div>
       </div>
@@ -1182,7 +1220,7 @@
   </div>
 
   <!-- CONTROL CENTER -->
-  <div id="control-center" style="
+  <div id="control-center" onclick="event.stopPropagation()" style="
     position:absolute;bottom:calc(var(--taskbar-h) + 8px);right:12px;
     width:320px;background:rgba(14,14,24,0.97);backdrop-filter:blur(24px);
     border:1px solid var(--border);border-radius:16px;
@@ -1218,21 +1256,7 @@ function updateClock() {
 setInterval(updateClock, 1000);
 updateClock();
 
-// ── Desktop icon grid: recalc row count on resize ──
-function updateIconGrid() {
-  const grid = document.querySelector('.icon-grid');
-  if(!grid) return;
-  // grid height is set by CSS (bottom: taskbar + 12px), so just
-  // let CSS handle it — but we update --taskbar-h if needed
-  const tbH = parseInt(getComputedStyle(document.documentElement)
-    .getPropertyValue('--taskbar-h')) || 48;
-  const avail = window.innerHeight - tbH - 24; // top 12 + bottom 12
-  const rowH = 92; // 88px icon + 4px gap
-  const rows = Math.max(1, Math.floor(avail / rowH));
-  grid.style.gridTemplateRows = 'repeat(' + rows + ', 88px)';
-}
-window.addEventListener('resize', updateIconGrid);
-// Will be called once desktop becomes visible (after login)
+// Desktop layout managed by desktopInit()
 
 // ══════════════════════════════════════
 // DIALOG SYSTEM (replaces prompt/confirm/alert)
@@ -1385,12 +1409,12 @@ function updateBatteryIcon() {
   if(ccOpen) renderCC();
 }
 
-function toggleCC() {
+function toggleCC(e) {
+  if(e) e.stopPropagation();
   const cc = document.getElementById('control-center');
   if(!cc) return;
   ccOpen = !ccOpen;
   if(ccOpen) {
-    // Close start menu if open
     document.getElementById('start-menu')?.classList.remove('open');
     renderCC();
     cc.style.display = 'block';
@@ -1656,7 +1680,8 @@ function doLogin() {
   setTimeout(() => {
     ls.style.display = 'none';
     desktop.classList.add('visible');
-    updateIconGrid();
+    desktopInit();
+    startScreenTimeTicker();
     setTimeout(() => showNotif('NovOS 3.1', 'Willkommen, Nova User! 👋'), 400);
     setTimeout(() => showNotif('NovUpdate', '3 Updates verfügbar', '#6affca'), 2000);
   }, 600);
@@ -1744,10 +1769,17 @@ const appDefs = {
   sysmon:   { title:'Systemmonitor',icon:'📊',w:500, h:440 },
   settings: { title:'Einstellungen',icon:'⚙️',w:560, h:440 },
   pdf:      { title:'NovPDF',      icon:'📋', w:680, h:520 },
-  clock:    { title:'NovUhr',      icon:'🕐', w:480, h:500 },
+  clock:      { title:'NovUhr',       icon:'🕐', w:480, h:500 },
+  screentime: { title:'Screen Time',  icon:'⏰', w:540, h:520 },
 };
 
 function openApp(app) {
+  // Screen Time lock check
+  if (typeof stData !== 'undefined' && stData && stData.enabled && stData.locks && stData.locks[app]) {
+    const def = appDefs[app];
+    stShowLockOverlay(app, def ? def.title : app);
+    return;
+  }
   if(windows[app]) { focusWindow(app); return; }
   const def = appDefs[app];
   if(!def) return;
@@ -1779,7 +1811,8 @@ function openApp(app) {
   if(app==='editor')   setTimeout(()=>initEditor(),10);
   if(app==='settings') setTimeout(()=>initSettingsSidebar(),10);
   if(app==='pdf')      setTimeout(()=>initPDF(),10);
-  if(app==='clock')    setTimeout(()=>initClock(),10);
+  if(app==='clock')      setTimeout(()=>initClock(),10);
+  if(app==='screentime') setTimeout(()=>initScreenTime(),10);
   if(app==='novpiano')   setTimeout(()=>pianoInit(),50);
   if(app==='novsnake')   setTimeout(()=>snakeStart(),50);
   if(app==='novmemo')    setTimeout(()=>memoInit(),50);
@@ -1807,6 +1840,7 @@ function buildAppBody(id) {
     case 'settings': return buildSettings();
     case 'pdf':      return buildPDF();
     case 'clock':    return buildClock();
+    case 'screentime': return buildScreenTime();
     default: return '<div style="padding:20px;color:var(--text2)">Laden...</div>';
   }
 }
@@ -2366,15 +2400,14 @@ const VFS_DEFAULT = {
     {ico:'📂',n:'Bilder',type:'dir',key:'pics'},
     {ico:'📂',n:'Downloads',type:'dir',key:'dl'},
     {ico:'📂',n:'Videos',type:'dir',key:'vids'},
+    {ico:'📂',n:'Webseiten',type:'dir',key:'web'},
     {ico:'📝',n:'README.txt',type:'txt'},
-    {ico:'⚙️',n:'config.json',type:'file'},
+    {ico:'⚙️',n:'config.json',type:'txt'},
   ],
   docs: [
     {ico:'📝',n:'Notizen.txt',type:'txt'},
     {ico:'📝',n:'Ideen.txt',type:'txt'},
     {ico:'📝',n:'Tagebuch.txt',type:'txt'},
-    {ico:'📄',n:'Brief.docx',type:'file'},
-    {ico:'📊',n:'Statistik.xlsx',type:'file'},
     {ico:'📋',n:'Bericht.pdf',type:'pdf'},
   ],
   pics: [
@@ -2394,12 +2427,132 @@ const VFS_DEFAULT = {
     {ico:'🎬',n:'Aufnahme.mkv',type:'file'},
     {ico:'🎥',n:'Tutorial.webm',type:'file'},
   ],
+  web: [
+    {ico:'🌐',n:'index.html',type:'txt'},
+    {ico:'🌐',n:'about.html',type:'txt'},
+    {ico:'💻',n:'style.css',type:'txt'},
+  ],
 };
 const VFS_CONTENTS_DEFAULT = {
-  'home/README.txt': '# NovOS 3.1\n\nWillkommen in deinem Heimordner!\nDu kannst hier Dateien erstellen,\nbearbeiten und speichern.\n\n- Doppelklick öffnet .txt Dateien\n- Rechtsklick für mehr Optionen\n\nViel Spaß! ✦',
-  'docs/Notizen.txt': 'Meine Notizen\n=============\n\n- NovOS ausprobieren ✓\n- Texteditor testen ✓\n- Neue Datei erstellen\n- Cloud-Sync einrichten\n',
+  'home/README.txt': '# NovOS 3.1\n\nWillkommen in deinem Heimordner!\n\n📂 Dokumente  – Texte und Notizen\n📂 Bilder      – Fotos und Grafiken\n📂 Downloads   – Heruntergeladenes\n📂 Webseiten   – HTML-Dateien\n\nTipp: Doppelklick auf .html öffnet die Datei\nim NovBrowser! ✦',
+  'home/config.json': '{\n  "theme": "dark",\n  "language": "de",\n  "version": "3.1",\n  "user": "NovUser",\n  "startPage": "nov://start"\n}',
+  'docs/Notizen.txt': 'Meine Notizen\n=============\n\n- NovOS ausprobieren ✓\n- HTML-Dateien im Browser öffnen ✓\n- Neue Datei erstellen\n- Cloud-Sync einrichten\n',
   'docs/Ideen.txt': 'Projektideen\n============\n\n1. KI-Integration in NovEdit\n2. Dark Mode Varianten\n3. Cloud-Speicher erweitern\n4. Plugin-System entwickeln\n5. Mobile Version planen\n',
   'docs/Tagebuch.txt': new Date().toLocaleDateString('de-DE') + '\n\nHeute habe ich NovOS 3.1 ausprobiert.\nDer neue Texteditor gefällt mir sehr!\nBesonders das virtuelle Dateisystem\nist eine tolle Neuerung.\n',
+  'web/index.html': `<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meine Webseite</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #0d0d1a 0%, #1a0d2e 100%);
+      color: #e0e0f0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .card {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(124,106,255,0.3);
+      border-radius: 20px;
+      padding: 40px 48px;
+      text-align: center;
+      max-width: 480px;
+    }
+    .logo { font-size: 56px; margin-bottom: 16px; }
+    h1 { font-size: 28px; font-weight: 800; color: #c4b5fd; margin-bottom: 8px; }
+    p  { font-size: 14px; color: #9090b0; line-height: 1.8; margin-bottom: 24px; }
+    .btn {
+      display: inline-block;
+      padding: 10px 28px;
+      background: linear-gradient(135deg, #7c6aff, #6affca);
+      border-radius: 24px;
+      color: white;
+      font-weight: 700;
+      text-decoration: none;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .tags { display: flex; gap: 8px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
+    .tag { padding: 4px 12px; border-radius: 20px; background: rgba(124,106,255,0.15); font-size: 11px; color: #a090d0; border: 1px solid rgba(124,106,255,0.2); }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">✦</div>
+    <h1>Willkommen auf meiner Seite</h1>
+    <p>Diese HTML-Datei liegt im NovOS Dateisystem<br>und wird direkt im NovBrowser gerendert.</p>
+    <a class="btn" href="about.html">Über mich →</a>
+    <div class="tags">
+      <span class="tag">HTML</span>
+      <span class="tag">CSS</span>
+      <span class="tag">NovOS</span>
+    </div>
+  </div>
+</body>
+</html>`,
+  'web/about.html': `<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Über mich</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; background: #0a0a14; color: #d0d0e8; padding: 40px; max-width: 600px; margin: 0 auto; }
+    h1 { color: #a78bfa; margin-bottom: 16px; }
+    h2 { color: #6affca; margin: 24px 0 8px; font-size: 15px; text-transform: uppercase; letter-spacing: 1px; }
+    p  { color: #9090b0; line-height: 1.8; font-size: 14px; }
+    .skill { display: inline-block; padding: 4px 12px; margin: 3px; background: rgba(106,255,202,0.1); border: 1px solid rgba(106,255,202,0.2); border-radius: 20px; font-size: 12px; color: #6affca; }
+    a { color: #7c6aff; }
+  </style>
+</head>
+<body>
+  <h1>👤 Über mich</h1>
+  <p>Hallo! Ich bin ein NovOS-Benutzer und baue gerne eigene Webseiten<br>direkt im Browser-Dateisystem.</p>
+  <h2>Skills</h2>
+  <div>
+    <span class="skill">HTML</span>
+    <span class="skill">CSS</span>
+    <span class="skill">JavaScript</span>
+    <span class="skill">NovOS</span>
+  </div>
+  <h2>Kontakt</h2>
+  <p>📧 <a href="nov://mail">NovMail öffnen</a></p>
+  <p><a href="index.html">← Zurück zur Startseite</a></p>
+</body>
+</html>`,
+  'web/style.css': `/* NovOS Webseiten-Stylesheet */
+:root {
+  --accent:  #7c6aff;
+  --accent2: #6affca;
+  --bg:      #0d0d1a;
+  --text:    #e0e0f0;
+  --text2:   #9090b0;
+}
+
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+h1 { color: var(--accent); }
+h2 { color: var(--accent2); }
+a  { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+`,
 };
 
 function vfsLoad() {
@@ -2487,6 +2640,7 @@ const fmDirMeta = {
   pics: { label:'Bilder',    icon:'🖼️', parent:'home' },
   dl:   { label:'Downloads', icon:'⬇️', parent:'home' },
   vids: { label:'Videos',    icon:'🎬', parent:'home' },
+  web:  { label:'Webseiten', icon:'🌐', parent:'home' },
 };
 
 function fmGetMeta(key) {
@@ -2595,26 +2749,42 @@ function fmSelect(el) {
 
 function fmOpen(name, type) {
   if(type === 'dir') {
-    // Find the key for this dir entry
     const entry = (vfs[fmCurrentDir]||[]).find(f => f.n===name && f.type==='dir');
     const key = (entry && entry.key) ? entry.key : null;
-    // Register in fmDirMeta if not known
-    if(key && !fmDirMeta[key]) {
-      fmDirMeta[key] = { label:name, icon:'📂', parent:fmCurrentDir };
-    }
+    if(key && !fmDirMeta[key]) fmDirMeta[key] = { label:name, icon:'📂', parent:fmCurrentDir };
     if(key && vfs[key]) { fmNavTo(key); return; }
     showNotif('Dateien', '"' + name + '" kann nicht geöffnet werden', '#ff6a8a');
     return;
   }
-  if(type === 'txt') { fmOpenTxt(fmCurrentDir, name); return; }
-  if(type === 'pdf') { pdfOpenFromVFS(fmCurrentDir, name); return; }
-  if(/\.(png|jpg|jpeg|gif|svg|webp)$/i.test(name)) {
-    showNotif('Galerie', '"' + name + '" – Bild öffnet sich in NovGalerie (bald)', '#ffca6a'); return;
+  const nl = name.toLowerCase();
+  // HTML/HTM → NovBrowser mit srcdoc
+  if(/\.html?$/.test(nl)) {
+    const content = vfsContents[fmCurrentDir + '/' + name] || '<p>Leere Datei</p>';
+    openApp('browser');
+    setTimeout(() => browserGoVFS(fmCurrentDir + '/' + name, content), 200);
+    return;
   }
-  if(/\.(mp3|wav|ogg|flac|aac)$/i.test(name)) {
-    openApp('music'); showNotif('NovMusic', '"' + name + '" – Wiedergabe aus VFS bald verfügbar', '#6affca'); return;
+  // Text / Code / Config → Editor
+  if(/\.(txt|md|log|readme|json|xml|yaml|yml|toml|ini|cfg|conf|js|ts|jsx|tsx|css|vue|py|rb|php|java|c|cpp|h|cs|go|rs|sh|bash|bat|csv|svg|ps1)$/i.test(nl) || type==='txt') {
+    fmOpenTxt(fmCurrentDir, name); return;
   }
-  showNotif('Dateien', '"' + name + '" – Kein Viewer für diesen Dateityp', '#ffca6a');
+  // PDF
+  if(/\.pdf$/i.test(nl) || type==='pdf') { pdfOpenFromVFS(fmCurrentDir, name); return; }
+  // Images
+  if(/\.(png|jpg|jpeg|gif|svg|webp|ico)$/i.test(nl)) {
+    const content = vfsContents[fmCurrentDir + '/' + name];
+    if(content && content.startsWith('data:')) {
+      openApp('gallery');
+      setTimeout(() => galleryPreviewDataUrl(content, name), 250);
+    } else showNotif('Galerie', '"' + name + '" – keine Vorschaudaten', '#ffca6a');
+    return;
+  }
+  // Audio
+  if(/\.(mp3|wav|ogg|flac|aac|m4a)$/i.test(nl)) {
+    openApp('music'); showNotif('NovMusic', '"' + name + '" geladen', '#6affca'); return;
+  }
+  // Fallback: try editor anyway
+  fmOpenTxt(fmCurrentDir, name);
 }
 
 function fmOpenTxt(dirKey, name) {
@@ -2922,7 +3092,7 @@ function buildBrowser() {
       <div class="br-bookmarks-bar" id="br-bm-bar"></div>
       <div id="browser-main" style="flex:1;overflow:hidden;display:flex;flex-direction:column;min-height:0;position:relative;">
         <div id="browser-loading-bar" style="position:absolute;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%;transition:width 0.4s ease;z-index:10;pointer-events:none;border-radius:0 2px 2px 0;"></div>
-        <div id="browser-novpage" style="flex:1;overflow-y:auto;min-height:0;display:none;"></div>
+        <div id="browser-novpage" style="flex:1;overflow:hidden;min-height:0;display:none;"></div>
         <div id="browser-start" class="br-start" style="display:none;"></div>
         <div id="browser-iframe-wrap" style="flex:1;min-height:0;position:relative;display:none;">
           <iframe id="browser-iframe"
@@ -3036,6 +3206,13 @@ function browserCloseTab(e, id) {
 function browserGo(raw) {
   let url = (raw||'').trim();
   if(!url) return;
+  // nov://vfs/... → load from VFS
+  if(url.startsWith('nov://vfs/')) {
+    const vfsPath = decodeURIComponent(url.slice('nov://vfs'.length));
+    const content = vfsContents[vfsPath];
+    if(content !== undefined) { browserGoVFS(vfsPath, content); return; }
+    showNotif('Browser', 'VFS-Datei nicht gefunden: ' + vfsPath, '#ff6a8a'); return;
+  }
   // nov:// internal
   if(url.startsWith('nov://')) { /* keep */ }
   // has :// - check for search engines to intercept
@@ -3071,6 +3248,56 @@ function browserGo(raw) {
   browserNavigateTo(url, true);
   browserSaveState();
 }
+
+// Open a VFS HTML file in the browser via srcdoc
+function browserGoVFS(vfsPath, htmlContent) {
+  // Register as a tab
+  const tab = browserGetActiveTab();
+  const fakeUrl = 'nov://vfs' + (vfsPath.startsWith('/') ? vfsPath : '/' + vfsPath);
+  if(tab) {
+    tab.history = tab.history.slice(0, tab.histPos+1);
+    tab.history.push(fakeUrl);
+    tab.histPos = tab.history.length - 1;
+    tab.url = fakeUrl;
+    // Extract filename for title
+    const fname = fakeUrl.split('/').pop().split('%')[0];
+    tab.title = fname; tab.favicon = '🌐';
+  }
+
+  // Update address bar
+  const urlInp = document.getElementById('browser-url');
+  if(urlInp) urlInp.value = fakeUrl;
+
+  // Show iframe, hide novpage
+  const iframeWrap = document.getElementById('browser-iframe-wrap');
+  const iframe     = document.getElementById('browser-iframe');
+  const novpage    = document.getElementById('browser-novpage');
+  const startPage  = document.getElementById('browser-start');
+  const errPage    = document.getElementById('browser-error-page');
+  if(novpage)   novpage.style.display   = 'none';
+  if(startPage) startPage.style.display = 'none';
+  if(errPage)   errPage.style.display   = 'none';
+  if(!iframeWrap || !iframe) return;
+  iframeWrap.style.display = 'flex';
+  iframeWrap.style.flexDirection = 'column';
+
+  // Set security icon
+  const sec = document.getElementById('br-security-icon');
+  if(sec) { sec.textContent = '📄'; sec.style.color = 'var(--accent)'; }
+
+  // Status
+  const status    = document.getElementById('br-status-text');
+  const statusDot = document.getElementById('br-status-dot');
+  if(status)    status.textContent = 'VFS-Datei geöffnet';
+  if(statusDot) statusDot.style.background = '#2ecc71';
+
+  // Use srcdoc to render the HTML file
+  iframe.removeAttribute('src');
+  iframe.srcdoc = htmlContent;
+
+  browserRebuildTabs();
+  browserSaveState();
+}
 function browserNavigateTo(url, pushState) {
   // Update address bar
   const urlInp = document.getElementById('browser-url');
@@ -3095,7 +3322,7 @@ function browserNavigateTo(url, pushState) {
   const errPage   = document.getElementById('browser-error-page');
   if(!novpage) return;
 
-  const isInternal = url.startsWith('nov://') || !url.includes('://');
+  const isInternal = url.startsWith('nov://') && !url.startsWith('nov://vfs') || !url.includes('://');
   browserRebuildTabs();
 
   if(isInternal) {
@@ -3110,7 +3337,8 @@ function browserNavigateTo(url, pushState) {
       if(startPage) { startPage.style.display = 'flex'; browserRenderStart(startPage); }
     } else {
       if(startPage) startPage.style.display = 'none';
-      novpage.style.display = 'block';
+      novpage.style.display = 'flex';
+      novpage.style.flexDirection = 'column';
       novpage.innerHTML = browserPage(url);
     }
     browserSetTabMeta(url);
@@ -4063,6 +4291,7 @@ function buildEditor() {
       <button class="editor-btn" onclick="editorOpenFromPC()" title="Datei öffnen">📂 Öffnen</button>
       <button class="editor-btn" onclick="editorSave()" title="Speichern (Strg+S)" id="editor-save-btn">💾 Speichern</button>
       <button class="editor-btn" onclick="editorSaveAs()" title="Speichern unter">💾 Als...</button>
+      <button class="editor-btn" id="ed-preview-btn" onclick="editorPreviewHTML()" title="HTML im Browser vorschauen" style="display:none">🌐 Vorschau</button>
       <div class="editor-sep"></div>
       <button class="editor-btn" onclick="editorUndo()" title="Rückgängig">↩</button>
       <button class="editor-btn" onclick="editorRedo()" title="Wiederholen">↪</button>
@@ -4157,12 +4386,12 @@ function renderTabs() {
 }
 
 function editorSwitchTab(id) {
-  // save current content to current tab
   const cur = editorTabs.find(t=>t.id===editorActiveTab);
   if(cur) { cur.content = document.getElementById('editor-area')?.value||''; }
   editorActiveTab = id;
   renderTabs();
   loadActiveTab();
+  setTimeout(editorUpdatePreviewBtn, 50);
 }
 
 async function editorCloseTab(e, id) {
@@ -4226,15 +4455,14 @@ function editorOpenFromPC() {
 
 // Open file from VFS (called by file manager)
 function editorOpenFile(name, content, vfsPath) {
-  // Check if already open
   const existing = editorTabs.find(t=>t.vfsPath===vfsPath);
-  if(existing) { editorSwitchTab(existing.id); openApp('editor'); return; }
+  if(existing) { editorSwitchTab(existing.id); openApp('editor'); editorUpdatePreviewBtn(); return; }
   openApp('editor');
-  // save current before switching
   const cur = editorTabs.find(t=>t.id===editorActiveTab);
   if(cur) cur.content = document.getElementById('editor-area')?.value||'';
   editorNewTab(name, content, vfsPath);
   showNotif('NovEdit', name+' geöffnet 📝');
+  setTimeout(editorUpdatePreviewBtn, 100);
 }
 
 function editorSave() {
@@ -6157,7 +6385,15 @@ const settingsBuilders = {
     <div class="setting-row"><div class="setting-label">Gerätename</div><span style="font-size:12px;color:var(--text2)">nova-machine</span></div>
     <div class="setting-row"><div class="setting-label">Prozessor</div><span style="font-size:12px;color:var(--text2)">nova-core i9 (16 Kerne)</span></div>
     <div class="setting-row"><div class="setting-label">Arbeitsspeicher</div><span style="font-size:12px;color:var(--text2)">16 GB DDR5</span></div>
-    <div class="setting-row"><div class="setting-label">localStorage-Einstellungen</div><span style="font-size:11px;color:var(--accent3)">✓ Aktiv – Einstellungen bleiben beim Neuladen erhalten</span></div>
+    <div class="setting-row">
+          <div class="setting-label">Touch-Modus</div>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" id="touch-mode-toggle" onchange="setTouchMode(this.checked)"
+              style="accent-color:var(--accent);width:14px;height:14px">
+            <span style="font-size:11px;color:var(--text2)">Optimiert für Touchscreen / Handy</span>
+          </label>
+        </div>
+        <div class="setting-row"><div class="setting-label">localStorage-Einstellungen</div><span style="font-size:11px;color:var(--accent3)">✓ Aktiv – Einstellungen bleiben beim Neuladen erhalten</span></div>
     <div class="setting-row"><div class="setting-label">Updates</div>
       <button class="setting-btn" onclick="this.textContent='Prüfe…';setTimeout(()=>{this.textContent='🔄 Prüfen';showNotif('NovUpdate','Alle Updates installiert ✓','#6affca')},1200)">🔄 Prüfen</button>
     </div>
@@ -6271,6 +6507,63 @@ const STORE_APP_DEFS = {
       +'<div style="font-size:10px;color:var(--text2);text-align:center">Generiert via QR-API &nbsp;&#183;&nbsp; Bild anklicken zum Herunterladen</div>'
     +'</div>'
   },
+  klassenblatt:{ title:'Klassenblatt', icon:'📝', w:980, h:680,
+    body:()=>'<div style="height:100%;display:flex;flex-direction:column;background:#0a0a14">'
+      +'<div style="position:relative;flex:1;display:flex;flex-direction:column">'
+        +'<div id="ifl-klassenblatt" style="position:absolute;inset:0;background:#0a0a14;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:2">'
+          +'<div style="font-size:48px">📝</div>'
+          +'<div style="font-size:15px;font-weight:800;color:rgba(255,255,255,0.85)">Klassenblatt</div>'
+          +'<div style="font-size:11px;color:rgba(255,255,255,0.4)">Textverarbeitung wird geladen…</div>'
+          +'<div style="width:160px;height:3px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden">'
+            +'<div style="height:100%;width:40%;background:linear-gradient(90deg,#4a9eff,#6affca);border-radius:2px;animation:ifl-bar 1.2s ease-in-out infinite"></div>'
+          +'</div>'
+        +'</div>'
+        +'<iframe src="https://klassenblatt-editor.vercel.app/app" '
+          +'style="flex:1;border:none;width:100%;height:100%;opacity:0;transition:opacity 0.5s" '
+          +'onload="this.style.opacity=1;document.getElementById(\'ifl-klassenblatt\').style.display=\'none\'" '
+          +'allow="clipboard-read; clipboard-write; fullscreen" allowfullscreen></iframe>'
+      +'</div>'
+    +'</div>'
+  },
+
+  slideforge:{ title:'SlideForge', icon:'🎞️', w:1020, h:680,
+    body:()=>'<div style="height:100%;display:flex;flex-direction:column;background:#0a0a14">'
+      +'<div style="position:relative;flex:1;display:flex;flex-direction:column">'
+        +'<div id="ifl-slideforge" style="position:absolute;inset:0;background:#0a0a14;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:2">'
+          +'<div style="font-size:48px">🎞️</div>'
+          +'<div style="font-size:15px;font-weight:800;color:rgba(255,255,255,0.85)">SlideForge</div>'
+          +'<div style="font-size:11px;color:rgba(255,255,255,0.4)">Präsentationsprogramm wird geladen…</div>'
+          +'<div style="width:160px;height:3px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden">'
+            +'<div style="height:100%;width:40%;background:linear-gradient(90deg,#ff7c4a,#ffcc44);border-radius:2px;animation:ifl-bar 1.2s ease-in-out infinite"></div>'
+          +'</div>'
+        +'</div>'
+        +'<iframe src="https://slideforgeofficial-aeropus.vercel.app" '
+          +'style="flex:1;border:none;width:100%;height:100%;opacity:0;transition:opacity 0.5s" '
+          +'onload="this.style.opacity=1;document.getElementById(\'ifl-slideforge\').style.display=\'none\'" '
+          +'allow="clipboard-read; clipboard-write; fullscreen" allowfullscreen></iframe>'
+      +'</div>'
+    +'</div>'
+  },
+
+  kwiz:{ title:'KWIZ!', icon:'❓', w:740, h:600,
+    body:()=>'<div style="height:100%;display:flex;flex-direction:column;background:#0a0a14">'
+      +'<div style="position:relative;flex:1;display:flex;flex-direction:column">'
+        +'<div id="ifl-kwiz" style="position:absolute;inset:0;background:#0a0a14;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:2">'
+          +'<div style="font-size:48px">❓</div>'
+          +'<div style="font-size:15px;font-weight:800;color:rgba(255,255,255,0.85)">KWIZ!</div>'
+          +'<div style="font-size:11px;color:rgba(255,255,255,0.4)">Quiz-App wird geladen…</div>'
+          +'<div style="width:160px;height:3px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden">'
+            +'<div style="height:100%;width:40%;background:linear-gradient(90deg,#ffcc00,#ff8c00);border-radius:2px;animation:ifl-bar 1.2s ease-in-out infinite"></div>'
+          +'</div>'
+        +'</div>'
+        +'<iframe src="https://kwiz-app-five.vercel.app" '
+          +'style="flex:1;border:none;width:100%;height:100%;opacity:0;transition:opacity 0.5s" '
+          +'onload="this.style.opacity=1;document.getElementById(\'ifl-kwiz\').style.display=\'none\'" '
+          +'allowfullscreen></iframe>'
+      +'</div>'
+    +'</div>'
+  },
+
   novmarkdown: { title:'MarkdownViewer', icon:'📄', w:580, h:460,
     body:()=>'<div style="display:flex;height:100%;background:var(--panel)">'
       +'<div style="flex:1;display:flex;flex-direction:column;border-right:1px solid var(--border)">'
@@ -6297,6 +6590,9 @@ function renderNovStore() {
     {id:'novpiano',    icon:'🎹', name:'NovPiano',        cat:'Kreativität',   desc:'Virtuelles Piano, Maus + Tastatur', col:'#3a8fff'},
     {id:'novqr',       icon:'📱', name:'QR-Generator',   cat:'Werkzeuge',     desc:'QR-Codes aus Text und URLs',        col:'#e74c3c'},
     {id:'novmarkdown', icon:'📄', name:'MarkdownViewer', cat:'Werkzeuge',     desc:'Markdown live rendern',             col:'#a78bfa'},
+    {id:'klassenblatt',icon:'📝', name:'Klassenblatt',  cat:'Produktivität', desc:'Professioneller Online-Texteditor',  col:'#4a9eff'},
+    {id:'slideforge',  icon:'🎞️', name:'SlideForge',    cat:'Produktivität', desc:'Präsentationen schnell erstellen',   col:'#ff7c4a'},
+    {id:'kwiz',        icon:'❓', name:'KWIZ!',          cat:'Spiele',        desc:'Wissensquiz mit vielen Kategorien',  col:'#ffcc00'},
   ];
 
   const el = document.createElement('div');
@@ -6328,7 +6624,7 @@ function renderNovStore() {
     const btn = document.createElement('button');
     btn.id = 'storecat-' + c;
     btn.textContent = c;
-    btn.onclick = () => storeSetCat(c);
+    btn.setAttribute('onclick', `storeSetCat('${c}')`);
     btn.style.cssText = 'padding:5px 14px;border-radius:20px 20px 0 0;border:none;cursor:pointer;font-size:11px;font-weight:600;font-family:inherit;white-space:nowrap;transition:all 0.1s;background:transparent;color:var(--text2)';
     if(i===0) { btn.style.background='var(--panel)'; btn.style.color='var(--accent)'; btn.style.borderBottom='2px solid var(--accent)'; }
     catBar.appendChild(btn);
@@ -6358,8 +6654,8 @@ function renderNovStore() {
     card.className = 'store-card';
     card.dataset.cat = app.cat;
     card.style.cssText = 'display:flex;align-items:center;gap:14px;padding:12px 14px;background:var(--panel2);border:1px solid var(--border);border-radius:12px;transition:border-color 0.15s;cursor:default';
-    card.onmouseover = () => card.style.borderColor = 'var(--accent)';
-    card.onmouseout  = () => card.style.borderColor = 'var(--border)';
+    card.setAttribute('onmouseover', "this.style.borderColor='var(--accent)'");
+    card.setAttribute('onmouseout',  "this.style.borderColor='var(--border)'");
 
     const ico = document.createElement('div');
     ico.style.cssText = `width:50px;height:50px;border-radius:13px;background:${app.col}22;border:1.5px solid ${app.col}55;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0`;
@@ -6376,7 +6672,7 @@ function renderNovStore() {
     btn.id = 'storebtn-' + app.id;
     btn.style.cssText = `flex-shrink:0;min-width:90px;padding:7px 12px;border-radius:8px;border:none;cursor:pointer;font-size:11px;font-weight:700;font-family:inherit;transition:all 0.15s;${isInst ? 'background:var(--panel);color:var(--text2);border:1px solid var(--border)' : `background:${app.col};color:white`}`;
     btn.innerHTML = isInst ? '✓ Öffnen' : 'Installieren';
-    btn.onclick = () => storeInstall(app.id, app.icon, app.name, app.cat, app.col);
+    btn.setAttribute('onclick', `storeInstall('${app.id}','${app.icon.replace(/'/g,"\\'")}','${app.name}','${app.cat}','${app.col}')`);
 
     card.appendChild(ico);
     card.appendChild(info);
@@ -6405,6 +6701,7 @@ function storeInstall(id, ico, name, cat, col) {
     localStorage.setItem('novos_store_installed', JSON.stringify(installed));
     storeAddDesktopIcon(id, ico, name);
     storeAddStartMenu(id, ico, name);
+    if(typeof desktopRender === 'function') desktopRender();
     showNotif('NovStore', name + ' installiert ✓', col||'#6affca');
     const btn = document.getElementById('storebtn-'+id);
     if(btn) { btn.innerHTML='&#10003; &Ouml;ffnen'; btn.style.background='var(--panel)'; btn.style.color='var(--text2)'; btn.style.border='1px solid var(--border)'; }
@@ -6417,14 +6714,8 @@ function storeInstall(id, ico, name, cat, col) {
 }
 
 function storeAddDesktopIcon(id, ico, name) {
-  const desk = document.getElementById('desktop');
-  if(!desk) return; if(desk.querySelector('[data-store-app="'+id+'"]')) return;
-  const d = document.createElement('div');
-  d.className='desk-icon';
-  d.dataset.storeApp = id;
-  d.setAttribute('ondblclick',"openApp('"+id+"')");
-  d.innerHTML='<div class="desk-icon-img" style="font-size:28px">'+ico+'</div><div class="desk-icon-label">'+name+'</div>';
-  desk.appendChild(d);
+  // desktopRender() handles store app icons via STORE_APP_DEFS + localStorage
+  // No extra render needed — called from storeInstall which calls desktopRender after
 }
 
 function storeAddStartMenu(id, ico, name) {
@@ -6438,12 +6729,12 @@ function storeAddStartMenu(id, ico, name) {
 }
 
 function storeRestoreInstalled() {
+  // Only restores appDefs + start menu — desktopRender() handles icons
   const installed = JSON.parse(localStorage.getItem('novos_store_installed')||'[]');
   for(const id of installed) {
     const def = STORE_APP_DEFS[id];
     if(!def) continue;
     if(!appDefs[id]) appDefs[id] = { title:def.title, icon:def.icon, w:def.w, h:def.h };
-    storeAddDesktopIcon(id, def.icon, def.title);
     storeAddStartMenu(id, def.icon, def.title);
   }
 }
@@ -6694,8 +6985,875 @@ function paintClear(){if(!paintCtx)return;const cv=document.getElementById('pain
 function paintSave(){const cv=document.getElementById('paint-canvas');if(!cv)return;const a=document.createElement('a');a.download='novpaint.png';a.href=cv.toDataURL();a.click();}
 
 // Restore on page load
-document.addEventListener('DOMContentLoaded', storeRestoreInstalled);
-setTimeout(storeRestoreInstalled, 300);
+// storeRestoreInstalled is called from desktopInit after login
+
+function editorPreviewHTML() {
+  const content = document.getElementById('editor-area')?.value || '';
+  const fname   = document.getElementById('ed-filename')?.textContent || 'preview.html';
+  openApp('browser');
+  setTimeout(() => browserGoVFS('preview/' + fname, content), 200);
+}
+
+// Show/hide preview button based on file type
+function editorUpdatePreviewBtn() {
+  const fname = document.getElementById('ed-filename')?.textContent || '';
+  const btn   = document.getElementById('ed-preview-btn');
+  if(btn) btn.style.display = /\.html?$/i.test(fname) ? 'inline-block' : 'none';
+}
+
+function galleryPreviewDataUrl(dataUrl, name) {
+  // Add image to gallery if not present, then open lightbox
+  const existing = galleryItems ? galleryItems.findIndex(i=>i.name===name) : -1;
+  if(existing < 0 && window.galleryItems) {
+    galleryItems.push({ name, src: dataUrl, type:'img' });
+  }
+  // Show in a simple overlay in gallery
+  const body = document.getElementById('body-gallery');
+  if(body) {
+    const ov = document.createElement('div');
+    ov.style.cssText='position:absolute;inset:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:10;flex-direction:column;gap:10px;cursor:pointer';
+    ov.onclick = () => ov.remove();
+    ov.innerHTML='<img src="'+dataUrl+'" style="max-width:90%;max-height:80%;border-radius:8px;box-shadow:0 8px 40px rgba(0,0,0,0.8)">'
+      +'<div style="color:white;font-size:12px;opacity:0.7">'+name+' — Klicken zum Schließen</div>';
+    body.style.position='relative';
+    body.appendChild(ov);
+  }
+}
+
+
+// ══════════════════════════════════════════
+// FREE DESKTOP — draggable icons & widgets
+// ══════════════════════════════════════════
+
+const DESKTOP_ICONS = [
+  { id:'files',    ico:'📂', label:'Dateien',       bg:'linear-gradient(135deg,#1e3a5f,#0d2040)' },
+  { id:'browser',  ico:'🌐', label:'Browser',       bg:'linear-gradient(135deg,#1a2040,#0d0f2a)' },
+  { id:'terminal', ico:'💻', label:'Terminal',      bg:'linear-gradient(135deg,#0f1f0f,#0a150a)' },
+  { id:'music',    ico:'🎵', label:'Musik',         bg:'linear-gradient(135deg,#3a1040,#1a0520)' },
+  { id:'calc',     ico:'🧮', label:'Rechner',       bg:'linear-gradient(135deg,#1a3a20,#0a1f10)' },
+  { id:'editor',   ico:'📝', label:'Editor',        bg:'linear-gradient(135deg,#3a2a10,#1f1508)' },
+  { id:'gallery',  ico:'🖼️', label:'Galerie',       bg:'linear-gradient(135deg,#2a1a3a,#150a20)' },
+  { id:'weather',  ico:'🌤️', label:'Wetter',        bg:'linear-gradient(135deg,#0d2a3a,#061520)' },
+  { id:'sysmon',   ico:'📊', label:'Monitor',       bg:'linear-gradient(135deg,#2a1a10,#150d08)' },
+  { id:'settings', ico:'⚙️', label:'Einstellungen', bg:'linear-gradient(135deg,#222,#111)'        },
+  { id:'pdf',      ico:'📋', label:'NovPDF',        bg:'linear-gradient(135deg,#3a0a0a,#1f0505)' },
+  { id:'clock',      ico:'🕐', label:'Uhr',          bg:'linear-gradient(135deg,#0a1a3a,#050d1f)' },
+  { id:'screentime', ico:'⏰', label:'Screen Time',  bg:'linear-gradient(135deg,#1a002a,#0d0015)' },
+  { id:'wordpro',  ico:'📃', label:'NovWriter',     bg:'linear-gradient(135deg,#002040,#001020)' },
+];
+
+const STORE_COLORS = {
+  novnotes:    'linear-gradient(135deg,#3a2e00,#1f1800)',
+  novpomodoro: 'linear-gradient(135deg,#3a1a00,#1f0e00)',
+  novsnake:    'linear-gradient(135deg,#0a2a10,#051508)',
+  novmemo:     'linear-gradient(135deg,#2a1e00,#150f00)',
+  novpaint:    'linear-gradient(135deg,#003a2a,#001f15)',
+  novpiano:    'linear-gradient(135deg,#001a3a,#000d1f)',
+  novqr:       'linear-gradient(135deg,#2a0808,#150404)',
+  novmarkdown: 'linear-gradient(135deg,#1e0a3a,#0f051f)',
+  klassenblatt:'linear-gradient(135deg,#002a4a,#001525)',
+  slideforge:  'linear-gradient(135deg,#3a1500,#1f0a00)',
+  kwiz:        'linear-gradient(135deg,#2a2200,#151100)',
+};
+
+// ── State ────────────────────────────────
+const TOTAL_PAGES = 3;
+const SNAP_COL = 84, SNAP_ROW = 92, SNAP_MAR = 12;
+let currentPage         = 0;
+let desktopPagePositions = {};   // { pageNum: { appId: {x,y} } }
+let desktopWidgets       = [];   // [{ wid, type, x, y }]
+let desktopWidgetCounter = 0;
+
+// ── Snap helper ──────────────────────────
+function snapIcon(x, y) {
+  const tbH    = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--taskbar-h')) || 48;
+  const maxCol = Math.floor((window.innerWidth  - SNAP_MAR * 2) / SNAP_COL) - 1;
+  const maxRow = Math.floor((window.innerHeight - tbH - SNAP_MAR * 2) / SNAP_ROW) - 1;
+  return {
+    x: SNAP_MAR + Math.max(0, Math.min(maxCol, Math.round((x - SNAP_MAR) / SNAP_COL))) * SNAP_COL,
+    y: SNAP_MAR + Math.max(0, Math.min(maxRow, Math.round((y - SNAP_MAR) / SNAP_ROW))) * SNAP_ROW,
+  };
+}
+
+// ── Default positions ────────────────────
+function desktopDefaultPagePositions() {
+  const pos  = { 0:{}, 1:{}, 2:{} };
+  const tbH  = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--taskbar-h')) || 48;
+  const rows = Math.max(3, Math.floor((window.innerHeight - tbH - SNAP_MAR * 2) / SNAP_ROW));
+  const cols = Math.max(3, Math.floor((window.innerWidth  - SNAP_MAR * 2) / SNAP_COL));
+  const per  = rows * cols;
+  const storeInstalled = JSON.parse(localStorage.getItem('novos_store_installed') || '[]');
+  const all  = [...DESKTOP_ICONS.map(ic => ic.id), ...storeInstalled];
+  all.forEach((id, i) => {
+    const page = Math.min(TOTAL_PAGES - 1, Math.floor(i / per));
+    const idx  = i % per;
+    pos[page][id] = { x: SNAP_MAR + Math.floor(idx / rows) * SNAP_COL, y: SNAP_MAR + (idx % rows) * SNAP_ROW };
+  });
+  return pos;
+}
+
+// ── Persistence ──────────────────────────
+function desktopSave() {
+  localStorage.setItem('novos_desktop', JSON.stringify({ pages: desktopPagePositions, widgets: desktopWidgets, page: currentPage }));
+}
+function desktopLoad() {
+  try {
+    const d = JSON.parse(localStorage.getItem('novos_desktop') || 'null');
+    if (d) {
+      if (d.pages)           desktopPagePositions = d.pages;
+      if (d.widgets)         desktopWidgets       = d.widgets;
+      if (d.page != null)    currentPage          = d.page;
+    }
+  } catch(e) {}
+}
+
+// ── Page navigation ───────────────────────
+function desktopGoPage(n, animate=true) {
+  n = Math.max(0, Math.min(TOTAL_PAGES - 1, n));
+  currentPage = n;
+  const el = document.getElementById('desktop-pages');
+  if (!el) return;
+  if (animate) { el.classList.add('sliding'); setTimeout(() => el.classList.remove('sliding'), 380); }
+  el.style.transform = `translateX(${-n * 100}%)`;
+  desktopUpdateDots();
+  localStorage.setItem('novos_current_page', n);
+}
+
+function desktopUpdateDots() {
+  const el = document.getElementById('page-dots');
+  if (!el) return;
+  el.innerHTML = '';
+  for (let i = 0; i < TOTAL_PAGES; i++) {
+    const d = document.createElement('div');
+    d.className = 'page-dot' + (i === currentPage ? ' active' : '');
+    d.onclick   = () => desktopGoPage(i);
+    el.appendChild(d);
+  }
+}
+
+function desktopGetIconPage(id) {
+  for (let p = 0; p < TOTAL_PAGES; p++) {
+    if (desktopPagePositions[p]?.[id]) return p;
+  }
+  return null;
+}
+
+// ── Icon factory ──────────────────────────
+function desktopMakeIcon(appId, ico, label, bg, x, y) {
+  const el = document.createElement('div');
+  el.className     = 'desk-icon';
+  el.dataset.appid = appId;
+  el.style.left    = x + 'px';
+  el.style.top     = y + 'px';
+  el.innerHTML     = `<div class="ico" style="background:${bg}">${ico}</div><span>${label}</span>`;
+
+  let clickCount = 0, clickTimer = null;
+
+  el.addEventListener('pointerdown', e => {
+    if(e.button !== 0) return;
+    clickCount++;
+    if(clickCount === 2) {
+      // Double-click → open app
+      clickCount = 0;
+      clearTimeout(clickTimer);
+      e.stopPropagation();
+      openApp(appId);
+      return;
+    }
+    // Start drag only after a short delay — cancel if second click arrives
+    clickTimer = setTimeout(() => {
+      clickCount = 0;
+      desktopStartIconDrag(e, el, appId);
+    }, 220);
+  });
+
+  return el;
+}
+
+// ── Icon drag ─────────────────────────────
+function desktopStartIconDrag(eDown, el, appId) {
+  // Called after 220ms delay — so we listen for the NEXT pointermove/pointerup on the element
+  const origGrid = el.parentElement;
+  const desk = document.getElementById('desktop');
+  let moved = false, lifted = false;
+  let offX = 0, offY = 0;
+
+  function liftIcon(ev) {
+    if(lifted) return;
+    lifted = true;
+    const rect = el.getBoundingClientRect();
+    offX = ev.clientX - rect.left;
+    offY = ev.clientY - rect.top;
+    el.style.position  = 'fixed';
+    el.style.zIndex    = '9999';
+    el.style.left      = rect.left + 'px';
+    el.style.top       = rect.top  + 'px';
+    el.style.transition = 'none';
+    desk.appendChild(el);
+    el.setPointerCapture(ev.pointerId);
+  }
+
+  function onMove(ev) {
+    if(!lifted) { liftIcon(ev); return; }
+    moved = true;
+    el.classList.add('icon-dragging');
+    const tbH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--taskbar-h')) || 48;
+    el.style.left = Math.max(0, Math.min(window.innerWidth  - 80,       ev.clientX - offX)) + 'px';
+    el.style.top  = Math.max(0, Math.min(window.innerHeight - tbH - 88, ev.clientY - offY)) + 'px';
+  }
+
+  function onUp(ev) {
+    el.removeEventListener('pointermove', onMove);
+    el.removeEventListener('pointerup',   onUp);
+    el.classList.remove('icon-dragging');
+    el.style.transition = '';
+
+    if(moved) {
+      const snapped = snapIcon(parseFloat(el.style.left), parseFloat(el.style.top));
+      const oldPage = desktopGetIconPage(appId);
+      if(oldPage !== null) delete desktopPagePositions[oldPage][appId];
+      if(!desktopPagePositions[currentPage]) desktopPagePositions[currentPage] = {};
+      desktopPagePositions[currentPage][appId] = snapped;
+      desktopSave();
+
+      const targetGrid = document.getElementById('icon-grid-' + currentPage);
+      if(targetGrid) {
+        el.style.position  = 'absolute';
+        el.style.zIndex    = '';
+        el.style.left      = snapped.x + 'px';
+        el.style.top       = snapped.y + 'px';
+        targetGrid.appendChild(el);
+      } else {
+        desktopRender();
+      }
+    } else {
+      // No drag — restore
+      el.style.position  = 'absolute';
+      el.style.zIndex    = '';
+      const page = desktopGetIconPage(appId) ?? currentPage;
+      const pos  = desktopPagePositions[page]?.[appId];
+      if(pos) { el.style.left = pos.x + 'px'; el.style.top = pos.y + 'px'; }
+      if(origGrid) origGrid.appendChild(el);
+    }
+  }
+
+  el.addEventListener('pointermove', onMove);
+  el.addEventListener('pointerup',   onUp);
+}
+
+// ── Widget factory ────────────────────────
+function desktopMakeWidget(type, wid, x, y) {
+  const el = document.createElement('div');
+  el.className = 'desk-widget';
+  el.id        = 'widget-' + wid;
+  el.style.left = x + 'px';
+  el.style.top  = y + 'px';
+  const closeBtn = `<button class="widget-close" onclick="desktopRemoveWidget('${wid}')">✕</button>`;
+
+  switch (type) {
+    case 'clock':
+      el.style.cssText += ';width:160px;padding:18px 20px 14px;text-align:center';
+      el.innerHTML = closeBtn
+        + `<div style="font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px" id="wclk-date-${wid}"></div>`
+        + `<div style="font-size:38px;font-weight:200;letter-spacing:2px;color:var(--text)" id="wclk-time-${wid}"></div>`;
+      { let ci; const tc = () => {
+          if (!document.getElementById('widget-'+wid)) { clearInterval(ci); return; }
+          const n = new Date();
+          const t = document.getElementById('wclk-time-'+wid);
+          const d = document.getElementById('wclk-date-'+wid);
+          if (t) t.textContent = n.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+          if (d) d.textContent = n.toLocaleDateString('de-DE',{weekday:'short',day:'2-digit',month:'short'});
+        }; tc(); ci = setInterval(tc, 1000); }
+      break;
+
+    case 'weather':
+      el.style.cssText += ';width:200px;padding:16px 18px';
+      el.innerHTML = closeBtn + `
+        <div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Wetter · Nova City</div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="font-size:40px">🌤️</div>
+          <div><div style="font-size:28px;font-weight:200;color:var(--text)">18°C</div><div style="font-size:11px;color:var(--text2)">Leicht bewölkt</div></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.07)">
+          ${['Mo','Di','Mi','Do','Fr'].map((d,i)=>`<div style="text-align:center"><div style="font-size:9px;color:var(--text2)">${d}</div><div style="font-size:14px">${['☀️','🌤️','🌥️','🌦️','☀️'][i]}</div><div style="font-size:10px;color:var(--text2)">${[22,18,15,17,24][i]}°</div></div>`).join('')}
+        </div>`;
+      break;
+
+    case 'sysinfo':
+      el.style.cssText += ';width:180px;padding:14px 16px';
+      el.innerHTML = closeBtn + `
+        <div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">System</div>
+        <div style="display:flex;flex-direction:column;gap:7px">
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:3px"><span style="color:var(--text2)">CPU</span><span id="wcpu-${wid}" style="color:var(--accent)">—</span></div>
+            <div style="background:rgba(255,255,255,0.08);height:3px;border-radius:2px"><div id="wcpu-bar-${wid}" style="background:var(--accent);height:3px;border-radius:2px;width:0%;transition:width 0.5s"></div></div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:3px"><span style="color:var(--text2)">RAM</span><span id="wram-${wid}" style="color:var(--accent2)">—</span></div>
+            <div style="background:rgba(255,255,255,0.08);height:3px;border-radius:2px"><div id="wram-bar-${wid}" style="background:var(--accent2);height:3px;border-radius:2px;width:0%;transition:width 0.5s"></div></div>
+          </div>
+          <div style="font-size:10px;color:var(--text2);margin-top:2px">NovOS 3.1 · <span id="wstor-${wid}">—</span></div>
+        </div>`;
+      { let si;
+        const ts = () => {
+          if (!document.getElementById('widget-'+wid)) { clearInterval(si); return; }
+          const cpu = Math.floor(Math.random()*40+10), ram = Math.floor(Math.random()*30+40);
+          const g = id => document.getElementById(id);
+          if(g('wcpu-'+wid))     g('wcpu-'+wid).textContent  = cpu+'%';
+          if(g('wram-'+wid))     g('wram-'+wid).textContent  = ram+'%';
+          if(g('wcpu-bar-'+wid)) g('wcpu-bar-'+wid).style.width = cpu+'%';
+          if(g('wram-bar-'+wid)) g('wram-bar-'+wid).style.width = ram+'%';
+          const ls = JSON.stringify(localStorage).length;
+          if(g('wstor-'+wid))    g('wstor-'+wid).textContent = ls>1024?(ls/1024).toFixed(1)+'KB':ls+'B';
+        }; ts(); si = setInterval(ts, 2000); }
+      break;
+
+    case 'quicklaunch':
+      el.style.cssText += ';padding:12px 14px';
+      el.innerHTML = closeBtn + `
+        <div style="font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Schnellstart</div>
+        <div style="display:flex;gap:10px">
+          ${[{id:'browser',ico:'🌐',l:'Browser'},{id:'files',ico:'📂',l:'Dateien'},{id:'editor',ico:'📝',l:'Editor'},{id:'terminal',ico:'💻',l:'Terminal'}].map(a=>`
+            <div onclick="openApp('${a.id}')" style="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:6px;border-radius:10px;transition:background 0.1s"
+              onmouseover="this.style.background='rgba(124,106,255,0.15)'" onmouseout="this.style.background='none'">
+              <div style="font-size:22px">${a.ico}</div>
+              <div style="font-size:9px;color:var(--text2)">${a.l}</div>
+            </div>`).join('')}
+        </div>`;
+      break;
+  }
+  el.addEventListener('pointerdown', e => desktopStartWidgetDrag(e, el, wid));
+  return el;
+}
+
+// ── Widget drag ───────────────────────────
+function desktopStartWidgetDrag(e, el, wid) {
+  if (e.target.classList.contains('widget-close')) return;
+  e.preventDefault();
+  const rect = el.getBoundingClientRect();
+  const offX = e.clientX - rect.left, offY = e.clientY - rect.top;
+  el.setPointerCapture(e.pointerId);
+  el.classList.add('widget-dragging');
+  function onMove(ev) {
+    const tbH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--taskbar-h')) || 48;
+    el.style.left = Math.max(0, Math.min(window.innerWidth-el.offsetWidth,  ev.clientX-offX)) + 'px';
+    el.style.top  = Math.max(0, Math.min(window.innerHeight-tbH-el.offsetHeight, ev.clientY-offY)) + 'px';
+  }
+  function onUp() {
+    el.removeEventListener('pointermove', onMove);
+    el.removeEventListener('pointerup',   onUp);
+    el.classList.remove('widget-dragging');
+    const w = desktopWidgets.find(w => w.wid === wid);
+    if (w) { w.x = parseFloat(el.style.left); w.y = parseFloat(el.style.top); }
+    desktopSave();
+  }
+  el.addEventListener('pointermove', onMove);
+  el.addEventListener('pointerup',   onUp);
+}
+
+// ── Add / remove / reset ──────────────────
+function desktopAddWidget(type) {
+  const wid = 'w' + (++desktopWidgetCounter);
+  const x = Math.round(window.innerWidth/2  - 100 + Math.random()*60-30);
+  const y = Math.round(window.innerHeight/2 -  80 + Math.random()*40-20);
+  desktopWidgets.push({ wid, type, x, y });
+  document.getElementById('desktop').appendChild(desktopMakeWidget(type, wid, x, y));
+  desktopSave();
+  showNotif('Desktop', 'Widget hinzugefügt', 'var(--accent)');
+}
+function desktopRemoveWidget(wid) {
+  document.getElementById('widget-'+wid)?.remove();
+  desktopWidgets = desktopWidgets.filter(w => w.wid !== wid);
+  desktopSave();
+}
+function desktopResetLayout() {
+  desktopPagePositions = {};
+  desktopWidgets = [];
+  desktopSave();
+  desktopRender();
+  showNotif('Desktop', 'Layout zurückgesetzt', 'var(--accent)');
+}
+
+// ── Render ────────────────────────────────
+function desktopRender() {
+  // Clear grids
+  for (let p = 0; p < TOTAL_PAGES; p++) {
+    const g = document.getElementById('icon-grid-' + p);
+    if (g) g.innerHTML = '';
+  }
+  // Remove old widgets
+  document.querySelectorAll('.desk-widget').forEach(w => w.remove());
+
+  const defaults = desktopDefaultPagePositions();
+  for (let p = 0; p < TOTAL_PAGES; p++) {
+    if (!desktopPagePositions[p]) desktopPagePositions[p] = {};
+  }
+
+  // Build icon list: built-ins + installed store apps
+  const storeInstalled = JSON.parse(localStorage.getItem('novos_store_installed') || '[]');
+  const allIcons = [
+    ...DESKTOP_ICONS,
+    ...storeInstalled.map(id => {
+      const def = typeof STORE_APP_DEFS !== 'undefined' ? STORE_APP_DEFS[id] : null;
+      return def ? { id, ico:def.icon, label:def.title, bg: STORE_COLORS[id] || 'linear-gradient(135deg,#1a1a2e,#0d0d1a)' } : null;
+    }).filter(Boolean),
+  ];
+
+  // Render each icon on its page
+  allIcons.forEach(ic => {
+    let page = desktopGetIconPage(ic.id);
+    if (page === null) {
+      for (let p = 0; p < TOTAL_PAGES; p++) {
+        if (defaults[p]?.[ic.id]) { page = p; desktopPagePositions[p][ic.id] = defaults[p][ic.id]; break; }
+      }
+      if (page === null) { page = 0; desktopPagePositions[0][ic.id] = defaults[0][ic.id] || {x:SNAP_MAR, y:SNAP_MAR}; }
+    }
+    const grid = document.getElementById('icon-grid-' + page);
+    if (!grid) return;
+    grid.appendChild(desktopMakeIcon(ic.id, ic.ico, ic.label, ic.bg, desktopPagePositions[page][ic.id].x, desktopPagePositions[page][ic.id].y));
+  });
+
+  // Render widgets
+  const desk = document.getElementById('desktop');
+  desktopWidgets.forEach(w => {
+    desktopWidgetCounter = Math.max(desktopWidgetCounter, parseInt(w.wid.slice(1)) || 0);
+    desk.appendChild(desktopMakeWidget(w.type, w.wid, w.x, w.y));
+  });
+
+  desktopUpdateDots();
+  desktopGoPage(currentPage, false);
+}
+
+// ── Touch / mobile mode ───────────────────
+function detectAndApplyTouchMode() {
+  const mobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+    || (navigator.maxTouchPoints > 1 && window.innerWidth < 900);
+  const saved = localStorage.getItem('novos_touch_mode');
+  setTouchMode(saved !== null ? saved === '1' : mobile, false);
+}
+function setTouchMode(enable, save=true) {
+  document.body.classList.toggle('touch-mode', enable);
+  if (save) localStorage.setItem('novos_touch_mode', enable ? '1' : '0');
+  const tgl = document.getElementById('touch-mode-toggle');
+  if (tgl) tgl.checked = enable;
+}
+
+// ── Swipe between pages ───────────────────
+function desktopInitSwipe() {
+  const el = document.getElementById('desktop');
+  if (!el) return;
+  let tx0 = 0, ty0 = 0, active = false;
+  el.addEventListener('touchstart', e => {
+    if (e.touches.length !== 1) return;
+    if (e.target.closest('.window,.desk-widget,#taskbar,#ctx-menu')) return;
+    tx0 = e.touches[0].clientX; ty0 = e.touches[0].clientY; active = true;
+  }, { passive:true });
+  el.addEventListener('touchend', e => {
+    if (!active) return; active = false;
+    const dx = e.changedTouches[0].clientX - tx0, dy = e.changedTouches[0].clientY - ty0;
+    if (Math.abs(dx) > Math.abs(dy)*1.5 && Math.abs(dx) > 50) desktopGoPage(currentPage + (dx < 0 ? 1 : -1));
+  }, { passive:true });
+}
+
+// ── Main init (called after login) ───────
+function desktopInit() {
+  desktopLoad();
+  storeRestoreInstalled();   // registers appDefs + start menu entries (no render)
+  detectAndApplyTouchMode();
+  desktopInitSwipe();
+  desktopRender();           // single render
+  const sp = parseInt(localStorage.getItem('novos_current_page') || '0');
+  setTimeout(() => desktopGoPage(sp, false), 50);
+}
+
+
+
+// ══════════════════════════════════════════════════════
+// SCREEN TIME — per-app usage limits with PIN lock
+// ══════════════════════════════════════════════════════
+
+let stData = null; // loaded on init
+
+function stLoad() {
+  try { stData = JSON.parse(localStorage.getItem('novos_screentime') || 'null'); } catch(e) {}
+  if (!stData) stData = {
+    pin: null,           // null = not set
+    enabled: true,
+    limits: {},          // appId → minutes (0 = unlimited)
+    usage: {},           // appId → seconds today
+    dayKey: stTodayKey(),
+    locks: {},           // appId → true if locked
+  };
+  // Reset usage if new day
+  const today = stTodayKey();
+  if (stData.dayKey !== today) {
+    stData.usage  = {};
+    stData.locks  = {};
+    stData.dayKey = today;
+    stSave();
+  }
+}
+
+function stSave() {
+  try { localStorage.setItem('novos_screentime', JSON.stringify(stData)); } catch(e) {}
+}
+
+function stTodayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+}
+
+// Called every second by the global ticker
+function stTick() {
+  if (!stData || !stData.enabled) return;
+  const open = Object.keys(windows);
+  for (const app of open) {
+    if (app === 'screentime') continue;
+    stData.usage[app] = (stData.usage[app] || 0) + 1;
+    const limit = stData.limits[app];
+    if (limit && limit > 0) {
+      const used = stData.usage[app];
+      if (used >= limit * 60 && !stData.locks[app]) {
+        stData.locks[app] = true;
+        stSave();
+        stLockApp(app);
+      }
+    }
+  }
+  // Refresh UI if open
+  if (windows['screentime']) stRefreshUI();
+}
+
+function stLockApp(appId) {
+  const def = appDefs[appId];
+  const name = def ? def.title : appId;
+  // Minimize the window
+  if (windows[appId]) minimizeWindow(appId);
+  // Show lock overlay
+  stShowLockOverlay(appId, name);
+}
+
+function stShowLockOverlay(appId, name) {
+  document.getElementById('st-lock-overlay')?.remove();
+  const ov = document.createElement('div');
+  ov.id = 'st-lock-overlay';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(10,5,20,0.92);backdrop-filter:blur(20px);z-index:99999;display:flex;align-items:center;justify-content:center';
+  ov.innerHTML = `
+    <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(180,80,255,0.25);border-radius:24px;padding:40px 48px;text-align:center;max-width:340px;width:90%">
+      <div style="font-size:52px;margin-bottom:16px">🔒</div>
+      <div style="font-size:20px;font-weight:800;color:#e0d0ff;margin-bottom:8px">${name} gesperrt</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.45);margin-bottom:28px">Tageslimit erreicht. PIN zum Entsperren eingeben.</div>
+      <div style="display:flex;gap:10px;justify-content:center;margin-bottom:20px" id="st-pin-dots">
+        ${[0,1,2,3].map(i=>`<div id="st-pd-${i}" style="width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,0.15);border:2px solid rgba(180,80,255,0.4);transition:all 0.15s"></div>`).join('')}
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:220px;margin:0 auto">
+        ${[1,2,3,4,5,6,7,8,9,'','0','⌫'].map(k => k==='' ? '<div></div>' :
+          `<button onclick="stPinKey('${k}')" style="padding:14px;border-radius:12px;border:1px solid rgba(180,80,255,0.2);background:rgba(255,255,255,0.05);color:#e0d0ff;font-size:18px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.1s" onmouseover="this.style.background='rgba(180,80,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">${k}</button>`
+        ).join('')}
+      </div>
+      <div id="st-pin-err" style="margin-top:14px;font-size:11px;color:#ff6a8a;min-height:16px"></div>
+      <button onclick="stLockClose()" style="margin-top:16px;padding:8px 20px;border-radius:20px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:rgba(255,255,255,0.3);font-size:11px;cursor:pointer;font-family:inherit">Abbrechen</button>
+    </div>`;
+  ov.dataset.appId = appId;
+  document.body.appendChild(ov);
+  stPinBuf = '';
+}
+
+let stPinBuf = '';
+function stPinKey(k) {
+  if (k === '⌫') { stPinBuf = stPinBuf.slice(0,-1); }
+  else if (stPinBuf.length < 4) { stPinBuf += k; }
+  // Update dots
+  for (let i = 0; i < 4; i++) {
+    const dot = document.getElementById('st-pd-' + i);
+    if (dot) {
+      dot.style.background = i < stPinBuf.length ? '#b450ff' : 'rgba(255,255,255,0.15)';
+      dot.style.borderColor = i < stPinBuf.length ? '#b450ff' : 'rgba(180,80,255,0.4)';
+    }
+  }
+  if (stPinBuf.length === 4) {
+    setTimeout(() => {
+      const ov = document.getElementById('st-lock-overlay');
+      const appId = ov?.dataset.appId;
+      if (stData.pin === null || stPinBuf === stData.pin) {
+        // Correct — unlock
+        if (appId) {
+          stData.locks[appId] = false;
+          // Reset usage so they get a grace period
+          stData.usage[appId] = 0;
+          stSave();
+        }
+        ov?.remove();
+        stPinBuf = '';
+        if (appId && appDefs[appId]) openApp(appId);
+      } else {
+        const err = document.getElementById('st-pin-err');
+        if (err) err.textContent = 'Falscher PIN — erneut versuchen';
+        stPinBuf = '';
+        for (let i = 0; i < 4; i++) {
+          const dot = document.getElementById('st-pd-' + i);
+          if (dot) { dot.style.background = '#ff4a6a'; }
+        }
+        setTimeout(() => {
+          for (let i = 0; i < 4; i++) {
+            const dot = document.getElementById('st-pd-' + i);
+            if (dot) { dot.style.background = 'rgba(255,255,255,0.15)'; dot.style.borderColor = 'rgba(180,80,255,0.4)'; }
+          }
+        }, 600);
+      }
+    }, 80);
+  }
+}
+
+function stLockClose() {
+  document.getElementById('st-lock-overlay')?.remove();
+  stPinBuf = '';
+}
+
+// openApp lock check is injected directly into openApp above
+
+// ── Screen Time UI ────────────────────────────────────
+function buildScreenTime() {
+  return `<div id="st-root" style="height:100%;display:flex;flex-direction:column;background:var(--panel);overflow:hidden"></div>`;
+}
+
+function initScreenTime() {
+  stLoad();
+  stRefreshUI();
+}
+
+const ST_ALL_APPS = [
+  {id:'browser',  name:'Browser',       ico:'🌐'},
+  {id:'files',    name:'Dateien',        ico:'📂'},
+  {id:'terminal', name:'Terminal',       ico:'💻'},
+  {id:'editor',   name:'Editor',         ico:'📝'},
+  {id:'music',    name:'Musik',          ico:'🎵'},
+  {id:'calc',     name:'Rechner',        ico:'🧮'},
+  {id:'gallery',  name:'Galerie',        ico:'🖼️'},
+  {id:'weather',  name:'Wetter',         ico:'🌤️'},
+  {id:'sysmon',   name:'Monitor',        ico:'📊'},
+  {id:'pdf',      name:'NovPDF',         ico:'📋'},
+  {id:'clock',    name:'Uhr',            ico:'🕐'},
+  {id:'klassenblatt', name:'Klassenblatt', ico:'📝'},
+  {id:'slideforge',   name:'SlideForge',   ico:'🎞️'},
+  {id:'kwiz',         name:'KWIZ!',         ico:'❓'},
+  {id:'novsnake',     name:'NovSnake',      ico:'🐍'},
+  {id:'novmemo',      name:'Memo',          ico:'🃏'},
+];
+
+function stFmtTime(secs) {
+  if (!secs) return '0 Min';
+  const h = Math.floor(secs/3600), m = Math.floor((secs%3600)/60), s = secs%60;
+  if (h > 0) return `${h}h ${m}m`;
+  if (m > 0) return `${m}m ${s}s`;
+  return `${s}s`;
+}
+
+function stRefreshUI() {
+  const root = document.getElementById('st-root');
+  if (!root) return;
+  if (!stData) stLoad();
+
+  const totalUsed = Object.values(stData.usage||{}).reduce((a,b)=>a+b,0);
+  const enabled   = stData.enabled;
+  const hasPin    = !!stData.pin;
+
+  root.innerHTML = `
+    <!-- Header -->
+    <div style="padding:16px 20px 12px;background:var(--panel2);border-bottom:1px solid var(--border);flex-shrink:0">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+        <span style="font-size:22px">⏰</span>
+        <div>
+          <div style="font-size:15px;font-weight:800;color:var(--text)">Screen Time</div>
+          <div style="font-size:10px;color:var(--text2)">Heutige Nutzung · ${stFmtTime(totalUsed)} gesamt</div>
+        </div>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:var(--text2)">Aktiv</span>
+          <div onclick="stToggleEnabled()" style="width:36px;height:20px;border-radius:10px;background:${enabled?'var(--accent)':'rgba(255,255,255,0.15)'};cursor:pointer;position:relative;transition:background 0.2s">
+            <div style="width:16px;height:16px;border-radius:8px;background:white;position:absolute;top:2px;transition:left 0.2s;left:${enabled?'18px':'2px'}"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Daily summary bar -->
+      <div style="display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px">
+        ${ST_ALL_APPS.filter(a => (stData.usage[a.id]||0)>0).slice(0,6).map(a => {
+          const used = stData.usage[a.id]||0;
+          const lim  = stData.limits[a.id]||0;
+          const pct  = lim ? Math.min(100, used/(lim*60)*100) : 0;
+          const col  = pct > 90 ? '#ff4a6a' : pct > 70 ? '#ffca6a' : 'var(--accent)';
+          return `<div style="flex-shrink:0;background:rgba(255,255,255,0.05);border-radius:10px;padding:8px 10px;min-width:72px;text-align:center">
+            <div style="font-size:18px">${a.ico}</div>
+            <div style="font-size:9px;color:var(--text2);margin:2px 0">${a.name}</div>
+            <div style="font-size:11px;font-weight:700;color:${col}">${stFmtTime(used)}</div>
+            ${lim ? `<div style="height:2px;background:rgba(255,255,255,0.08);border-radius:1px;margin-top:4px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${col};border-radius:1px"></div></div>` : ''}
+          </div>`;
+        }).join('') || '<div style="color:var(--text2);font-size:11px;padding:8px">Noch keine Nutzung heute</div>'}
+      </div>
+    </div>
+
+    <!-- PIN section -->
+    <div style="padding:12px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0">
+      <div style="flex:1">
+        <div style="font-size:12px;font-weight:700;color:var(--text)">PIN-Schutz</div>
+        <div style="font-size:10px;color:var(--text2)">${hasPin ? 'PIN gesetzt — schützt Limits und Entsperren' : 'Kein PIN — jeder kann Limits ändern'}</div>
+      </div>
+      ${hasPin
+        ? `<button onclick="stChangePinFlow()" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:var(--panel2);color:var(--text2);font-size:11px;cursor:pointer;font-family:inherit">Ändern</button>
+           <button onclick="stRemovePin()" style="padding:6px 12px;border-radius:8px;border:1px solid rgba(255,80,80,0.3);background:transparent;color:#ff6a8a;font-size:11px;cursor:pointer;font-family:inherit">Entfernen</button>`
+        : `<button onclick="stSetPinFlow()" style="padding:6px 14px;border-radius:8px;border:none;background:var(--accent);color:white;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">PIN setzen</button>`
+      }
+    </div>
+
+    <!-- App limits -->
+    <div style="flex:1;overflow-y:auto;padding:12px 20px 20px">
+      <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">App-Limits</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        ${ST_ALL_APPS.map(a => {
+          const used  = stData.usage[a.id] || 0;
+          const lim   = stData.limits[a.id] || 0;
+          const pct   = lim ? Math.min(100, used/(lim*60)*100) : 0;
+          const col   = pct > 90 ? '#ff4a6a' : pct > 70 ? '#ffca6a' : 'var(--accent2)';
+          const locked = stData.locks[a.id];
+          return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--panel2);border:1px solid ${locked?'rgba(255,80,80,0.3)':'var(--border)'};border-radius:10px">
+            <div style="font-size:20px;width:28px;text-align:center">${a.ico}</div>
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:${lim?'4px':'0'}">
+                <span style="font-size:12px;font-weight:600;color:var(--text)">${a.name}</span>
+                <span style="font-size:10px;color:${col};font-weight:700">${stFmtTime(used)}${lim?' / '+lim+'m':''}</span>
+              </div>
+              ${lim ? `<div style="height:3px;background:rgba(255,255,255,0.07);border-radius:2px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${col};border-radius:2px;transition:width 0.5s"></div></div>` : ''}
+            </div>
+            ${locked ? '<span style="font-size:14px" title="Gesperrt">🔒</span>' : ''}
+            <select onchange="stSetLimit('${a.id}',+this.value)" style="background:var(--panel);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:4px 6px;font-size:11px;font-family:inherit;cursor:pointer">
+              <option value="0" ${!lim?'selected':''}>Kein Limit</option>
+              ${[5,10,15,20,30,45,60,90,120].map(m=>`<option value="${m}" ${lim===m?'selected':''}>${m} Min</option>`).join('')}
+            </select>
+          </div>`;
+        }).join('')}
+      </div>
+      <div style="margin-top:14px;display:flex;gap:8px;justify-content:flex-end">
+        <button onclick="stResetUsage()" style="padding:7px 14px;border-radius:8px;border:1px solid var(--border);background:var(--panel2);color:var(--text2);font-size:11px;cursor:pointer;font-family:inherit">Nutzung zurücksetzen</button>
+        <button onclick="stUnlockAll()" style="padding:7px 14px;border-radius:8px;border:1px solid rgba(106,255,202,0.3);background:transparent;color:var(--accent2);font-size:11px;cursor:pointer;font-family:inherit">Alle entsperren</button>
+      </div>
+    </div>`;
+}
+
+function stToggleEnabled() {
+  stLoad();
+  stData.enabled = !stData.enabled;
+  stSave();
+  stRefreshUI();
+}
+
+function stSetLimit(appId, minutes) {
+  stLoad();
+  stData.limits[appId] = minutes;
+  // If lowering limit below current usage, lock immediately
+  if (minutes > 0 && (stData.usage[appId]||0) >= minutes*60) {
+    stData.locks[appId] = true;
+  }
+  stSave();
+  stRefreshUI();
+  showNotif('Screen Time', `${appId}: ${minutes ? minutes+'m Limit' : 'Kein Limit'}`, 'var(--accent)');
+}
+
+function stResetUsage() {
+  stLoad();
+  stData.usage = {};
+  stData.locks = {};
+  stSave();
+  stRefreshUI();
+  showNotif('Screen Time', 'Nutzungsdaten zurückgesetzt', 'var(--accent2)');
+}
+
+function stUnlockAll() {
+  stLoad();
+  stData.locks = {};
+  stData.usage = {};
+  stSave();
+  stRefreshUI();
+  document.getElementById('st-lock-overlay')?.remove();
+  showNotif('Screen Time', 'Alle Apps entsperrt', 'var(--accent2)');
+}
+
+// ── PIN flow ──────────────────────────────
+function stSetPinFlow() {
+  stShowPinDialog('Neuen PIN setzen (4 Ziffern)', pin => {
+    stData.pin = pin;
+    stSave();
+    stRefreshUI();
+    showNotif('Screen Time', 'PIN gesetzt 🔒', 'var(--accent)');
+  });
+}
+
+function stChangePinFlow() {
+  stShowPinDialog('Neuen PIN eingeben', pin => {
+    stData.pin = pin;
+    stSave();
+    stRefreshUI();
+    showNotif('Screen Time', 'PIN geändert', 'var(--accent)');
+  });
+}
+
+function stRemovePin() {
+  stData.pin = null;
+  stSave();
+  stRefreshUI();
+  showNotif('Screen Time', 'PIN entfernt', '#ffca6a');
+}
+
+function stShowPinDialog(title, callback) {
+  document.getElementById('st-pin-setup-ov')?.remove();
+  let buf = '';
+  const ov = document.createElement('div');
+  ov.id = 'st-pin-setup-ov';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(10px);z-index:99998;display:flex;align-items:center;justify-content:center';
+  ov.innerHTML = `
+    <div style="background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:32px 40px;text-align:center;min-width:260px">
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:20px">${title}</div>
+      <div style="display:flex;gap:10px;justify-content:center;margin-bottom:20px" id="st-sp-dots">
+        ${[0,1,2,3].map(i=>`<div id="st-sp-${i}" style="width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,0.12);border:2px solid rgba(124,106,255,0.4);transition:all 0.15s"></div>`).join('')}
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:200px;margin:0 auto 16px">
+        ${[1,2,3,4,5,6,7,8,9,'','0','⌫'].map(k => k==='' ? '<div></div>' :
+          `<button onclick="stSpKey('${k}')" style="padding:12px;border-radius:10px;border:1px solid rgba(124,106,255,0.2);background:rgba(255,255,255,0.04);color:var(--text);font-size:17px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.1s" onmouseover="this.style.background='rgba(124,106,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.04)'">${k}</button>`
+        ).join('')}
+      </div>
+      <button onclick="document.getElementById('st-pin-setup-ov').remove()" style="padding:7px 18px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:11px;cursor:pointer;font-family:inherit">Abbrechen</button>
+    </div>`;
+  document.body.appendChild(ov);
+  window._stSpCallback = callback;
+  window._stSpBuf = '';
+}
+
+function stSpKey(k) {
+  if (k === '⌫') { window._stSpBuf = window._stSpBuf.slice(0,-1); }
+  else if (window._stSpBuf.length < 4) { window._stSpBuf += k; }
+  for (let i = 0; i < 4; i++) {
+    const d = document.getElementById('st-sp-' + i);
+    if(d) {
+      d.style.background = i < window._stSpBuf.length ? 'var(--accent)' : 'rgba(255,255,255,0.12)';
+      d.style.borderColor = i < window._stSpBuf.length ? 'var(--accent)' : 'rgba(124,106,255,0.4)';
+    }
+  }
+  if (window._stSpBuf.length === 4) {
+    const pin = window._stSpBuf;
+    setTimeout(() => {
+      document.getElementById('st-pin-setup-ov')?.remove();
+      window._stSpBuf = '';
+      if (window._stSpCallback) window._stSpCallback(pin);
+    }, 200);
+  }
+}
+
+// ── Global ticker hook ────────────────────
+const _origSetInterval = setInterval;
+// Start the screen-time ticker after login
+function startScreenTimeTicker() {
+  stLoad();
+  setInterval(stTick, 1000);
+}
 </script>
 </body>
 </html>
