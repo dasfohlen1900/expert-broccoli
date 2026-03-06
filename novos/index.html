@@ -83,7 +83,7 @@
 
   /* ══════════════════ DESKTOP ══════════════════ */
   #desktop {
-    width:100%; height:100%; position:relative;
+    width:100%; height:100%; position:relative; overflow:hidden;
     background:
       radial-gradient(ellipse 80% 60% at 20% 80%,#1a0d3a 0%,transparent 60%),
       radial-gradient(ellipse 60% 80% at 80% 20%,#0d1f3a 0%,transparent 60%),
@@ -105,17 +105,19 @@
       radial-gradient(1px 1px at 90% 15%,rgba(255,255,255,0.3) 0%,transparent 100%),
       radial-gradient(1px 1px at 45% 75%,rgba(255,255,255,0.5) 0%,transparent 100%),
       radial-gradient(1px 1px at 10% 50%,rgba(255,255,255,0.4) 0%,transparent 100%);
+    pointer-events:none; z-index:0;
   }
 
   /* ── Multi-page desktop ── */
   #desktop-pages {
-    position:absolute; inset:0;
-    display:flex; overflow:hidden; pointer-events:none;
+    position:absolute; top:0; left:0;
+    width:calc(100% * 3); height:100%;
+    display:flex; pointer-events:none;
   }
   #desktop-pages.sliding { transition:transform 0.35s cubic-bezier(0.4,0,0.2,1); }
   .desktop-page {
-    min-width:100%; width:100%; height:100%;
-    flex-shrink:0; position:relative; pointer-events:all;
+    width:calc(100% / 3); flex-shrink:0; height:100%;
+    position:relative; pointer-events:all;
   }
   #page-dots {
     position:absolute;
@@ -143,6 +145,17 @@
   #page-nav-left  { left:10px; }
   #page-nav-right { right:10px; }
   .page-nav-btn.hidden { opacity:0; pointer-events:none; }
+
+  /* ── Drag-to-edge page zones ── */
+  .drag-edge-zone {
+    position:fixed; top:0; bottom:calc(var(--taskbar-h)); width:48px;
+    z-index:8000; pointer-events:none; opacity:0; transition:opacity 0.15s;
+    display:flex; align-items:center; justify-content:center;
+    font-size:22px;
+  }
+  .drag-edge-zone.left  { left:0;  background:linear-gradient(to right, rgba(124,106,255,0.25), transparent); }
+  .drag-edge-zone.right { right:0; background:linear-gradient(to left,  rgba(124,106,255,0.25), transparent); }
+  .drag-edge-zone.active { opacity:1; }
 
   /* ── Boot / Shutdown screen ── */
   #boot-screen {
@@ -1242,6 +1255,9 @@
   <!-- Page nav arrows -->
   <div id="page-nav-left"  class="page-nav-btn" onclick="desktopGoPage(currentPage-1)">&#8249;</div>
   <div id="page-nav-right" class="page-nav-btn" onclick="desktopGoPage(currentPage+1)">&#8250;</div>
+  <!-- Drag-to-edge page zones -->
+  <div id="drag-edge-left"  class="drag-edge-zone left">&#8249;</div>
+  <div id="drag-edge-right" class="drag-edge-zone right">&#8250;</div>
 
   <!-- Notifications -->
   <div id="notif-area"></div>
@@ -1443,10 +1459,9 @@ function novDlgCancel() {
 // Keyboard ESC closes dialog
 document.addEventListener('keydown', e => {
   if(e.key === 'Escape' && document.getElementById('nov-dialog-overlay')) novDlgCancel();
-  // Arrow key desktop page switching (only when no input focused and no window open)
+  // Arrow key desktop page switching (when no input/textarea focused)
   if((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && !e.target.closest('input,textarea,[contenteditable]')) {
-    const anyWindow = Object.values(windows).some(w => w);
-    if(!anyWindow && document.getElementById('desktop')?.classList.contains('visible')) {
+    if(document.getElementById('desktop')?.classList.contains('visible')) {
       e.preventDefault();
       desktopGoPage(currentPage + (e.key === 'ArrowRight' ? 1 : -1));
     }
@@ -1625,6 +1640,11 @@ function renderCC() {
           <div class="cc-tile-icon">${ccFlashlight?'🔦':'🔦'}</div>
           <div class="cc-tile-name">Taschenlampe</div>
           <div class="cc-tile-sub">${ccFlashlight?'An':'Aus'}</div>
+        </div>
+        <div class="cc-tile ${stData&&stData.enabled?'on':''}" onclick="event.stopPropagation();openApp('screentime');toggleCC()">
+          <div class="cc-tile-icon">⏰</div>
+          <div class="cc-tile-name">Screen Time</div>
+          <div class="cc-tile-sub">${stData&&stData.enabled?(stData.pin?'Aktiv 🔒':'Aktiv'):'Inaktiv'}</div>
         </div>
       </div>
     </div>
@@ -2197,6 +2217,10 @@ function openApp(app) {
   if(app==='novsnake')   setTimeout(()=>snakeStart(),50);
   if(app==='novmemo')    setTimeout(()=>memoInit(),50);
   if(app==='novpaint')   setTimeout(()=>paintInit(),100);
+  if(app==='novtimer')   setTimeout(()=>ntReset(),50);
+  if(app==='novconv')    setTimeout(()=>initConv(),50);
+  if(app==='novworld')   setTimeout(()=>worldInit(),50);
+  if(app==='novhex')     setTimeout(()=>hexUpdate('#7c6aff'),50);
   if(app==='novnotes')   setTimeout(()=>{
     const saved=JSON.parse(localStorage.getItem('novnotes_data')||'{}');
     const t=document.getElementById('novnotes-title'),b=document.getElementById('novnotes-body');
@@ -2329,8 +2353,17 @@ function setupDrag(id) {
 document.addEventListener('mousemove', e => {
   if(isDragging) {
     const w=document.getElementById('win-'+dragData.id); if(!w) return;
-    w.style.left=(e.clientX-dragData.ox)+'px';
-    w.style.top=Math.max(0,e.clientY-dragData.oy)+'px';
+    const x = e.clientX-dragData.ox;
+    const y = Math.max(0, e.clientY-dragData.oy);
+    w.style.left = x+'px';
+    w.style.top  = y+'px';
+
+    // Edge zone detection
+    const edgeW = 60;
+    const atLeft  = e.clientX < edgeW && currentPage > 0;
+    const atRight = e.clientX > window.innerWidth - edgeW && currentPage < TOTAL_PAGES - 1;
+    document.getElementById('drag-edge-left')?.classList.toggle('active', atLeft);
+    document.getElementById('drag-edge-right')?.classList.toggle('active', atRight);
   }
   if(isResizing) {
     const w=document.getElementById('win-'+dragData.id); if(!w) return;
@@ -2340,10 +2373,18 @@ document.addEventListener('mousemove', e => {
   }
 });
 document.addEventListener('mousedown', ()=>{
-  // Disable iframes during any potential drag start so they don't steal events
   if(isDragging||isResizing) document.querySelectorAll('iframe').forEach(f=>f.style.pointerEvents='none');
 });
-document.addEventListener('mouseup',()=>{
+document.addEventListener('mouseup', e => {
+  if(isDragging) {
+    const edgeW = 60;
+    const atLeft  = e.clientX < edgeW && currentPage > 0;
+    const atRight = e.clientX > window.innerWidth - edgeW && currentPage < TOTAL_PAGES - 1;
+    if(atLeft)  { desktopGoPage(currentPage - 1); }
+    if(atRight) { desktopGoPage(currentPage + 1); }
+    document.getElementById('drag-edge-left')?.classList.remove('active');
+    document.getElementById('drag-edge-right')?.classList.remove('active');
+  }
   isDragging=false; isResizing=false;
   document.querySelectorAll('iframe').forEach(f=>f.style.pointerEvents='auto');
 });
@@ -5941,7 +5982,7 @@ function sysmonSwitchTab(tab, el) {
 
 function sysmonRenderTab() {
   const c = document.getElementById('sysmon-content'); if(!c) return;
-  if(sysmonTab === 'overview') sysmonRenderOverview(c);
+  if(sysmonTab === 'overview') { sysmonRenderOverview(c); sysmonRenderOpenApps(); }
   else if(sysmonTab === 'processes') sysmonRenderProcesses(c);
   else if(sysmonTab === 'resources') sysmonRenderResources(c);
   else if(sysmonTab === 'disk') sysmonRenderDisk(c);
@@ -6004,7 +6045,56 @@ function sysmonRenderOverview(c) {
         ${[['OS','NovOS 3.1.0 (nova-6.4.2-lts)'],['Uptime','12 Std. 43 Min.'],['CPU','Nova-Core i9-14900K @ 3.2GHz'],['Kerne','8 Kerne / 16 Threads'],['RAM','16 GB DDR5-4800'],['GPU','NovGPU RTX 5080'],['Hostname','novos-desktop'],['Prozesse',activeProcs+' aktiv / '+smProcs.length+' gesamt']].map(([k,v])=>`
           <div><span style="color:var(--text2)">${k}:</span> <span style="color:var(--text);font-weight:600">${v}</span></div>`).join('')}
       </div>
+    </div>
+    <div class="sysmon-card">
+      <div class="sysmon-card-title">Geöffnete Apps <span style="font-weight:400;color:var(--text2)" id="sm-open-count"></span></div>
+      <div id="sm-open-apps" style="display:flex;flex-direction:column;gap:5px"></div>
     </div>`;
+  sysmonRenderOpenApps();
+}
+
+function sysmonRenderOpenApps() {
+  const smOC = document.getElementById('sm-open-count');
+  const smOA = document.getElementById('sm-open-apps');
+  if (!smOC || !smOA) return;
+  const openApps = Object.entries(windows).filter(([,w]) => w);
+  const active = openApps.filter(([,w]) => !w.minimized).length;
+  const mini   = openApps.filter(([,w]) => w.minimized).length;
+  smOC.textContent = active + ' aktiv · ' + mini + ' minimiert';
+  if (!openApps.length) {
+    smOA.innerHTML = '<div style="font-size:11px;color:var(--text2);padding:4px 0">Keine Apps geöffnet</div>';
+    return;
+  }
+  smOA.innerHTML = openApps.map(([id, w]) => {
+    const def = appDefs[id] || {icon:'📦', title:id};
+    const focused   = w.el && w.el.classList.contains('focused');
+    const minimized = !!w.minimized;
+    const stUsed = stData ? (stData.usage[id] || 0) : 0;
+    const stLim  = stData ? (stData.limits[id] || 0) : 0;
+    const status    = focused ? '▶ Aktiv' : minimized ? '— Minimiert' : '○ Hintergrund';
+    const statusCol = focused ? 'var(--accent)' : minimized ? 'var(--text2)' : '#6affca';
+    const timeStr   = stUsed > 0 ? stFmtTime(stUsed) + (stLim ? ' / ' + stLim + 'm' : '') : '';
+    return [
+      '<div style="display:flex;align-items:center;gap:10px;padding:6px 8px;background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid var(--border)">',
+      '<span style="font-size:16px">' + def.icon + '</span>',
+      '<div style="flex:1;min-width:0">',
+        '<div style="font-size:11px;font-weight:600;color:var(--text)">' + def.title + '</div>',
+        '<div style="font-size:9px;color:' + statusCol + '">' + status + '</div>',
+      '</div>',
+      timeStr ? '<div style="font-size:9px;color:var(--text2)">' + timeStr + '</div>' : '',
+      '<button style="padding:2px 8px;border-radius:5px;border:1px solid var(--border);background:var(--panel2);color:var(--text2);font-size:9px;cursor:pointer;font-family:inherit" data-smfocus="' + id + '">↑</button>',
+      '<button style="padding:2px 8px;border-radius:5px;border:1px solid rgba(255,80,80,0.3);background:transparent;color:#ff6a8a;font-size:9px;cursor:pointer;font-family:inherit" data-smclose="' + id + '">✕</button>',
+      '</div>'
+    ].join('');
+  }).join('');
+
+  // Attach click handlers after innerHTML set
+  smOA.querySelectorAll('[data-smfocus]').forEach(btn => {
+    btn.onclick = () => focusWindow(btn.dataset.smfocus);
+  });
+  smOA.querySelectorAll('[data-smclose]').forEach(btn => {
+    btn.onclick = () => { closeWindow(btn.dataset.smclose); sysmonRenderOpenApps(); };
+  });
 }
 
 function sysmonRenderProcesses(c) {
@@ -6197,8 +6287,13 @@ function buildScreenTime() {
 function initScreenTime() {
   const root = document.getElementById('st-root');
   if (!root) return;
-  stLoad();
-  stRefreshUI();
+  try {
+    stLoad();
+    stRefreshUI();
+  } catch(e) {
+    console.error('ScreenTime init error:', e);
+    root.innerHTML = '<div style="color:var(--text2);font-size:12px;padding:20px;text-align:center">⚠️ Fehler beim Laden</div>';
+  }
 }
 
 function buildClock() {
@@ -6743,15 +6838,18 @@ const settingsBuilders = {
       <div class="setting-label">Anmeldepasswort<small>${NovSettings.loginPassword ? 'Passwort gesetzt ●●●●' : 'Kein Passwort – freier Zugang'}</small></div>
       <div style="display:flex;gap:6px">
         ${NovSettings.loginPassword
-          ? `<button class="setting-btn danger" onclick="changeLoginPassword()">🔑 Ändern</button>
-             <button class="setting-btn danger" onclick="removeLoginPassword()">✕ Entfernen</button>`
-          : `<button class="setting-btn" onclick="setLoginPassword()">🔑 Passwort setzen</button>`}
+          ? '<button class="setting-btn danger" onclick="changeLoginPassword()">🔑 Ändern</button><button class="setting-btn danger" style="margin-left:4px" onclick="removeLoginPassword()">✕ Entfernen</button>'
+          : '<button class="setting-btn" onclick="setLoginPassword()">🔑 Passwort setzen</button>'}
       </div>
     </div>
     <div class="setting-row"><div class="setting-label">Bildschirmsperre nach Inaktivität</div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
     <div class="setting-row"><div class="setting-label">Firewall</div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
     <div class="setting-row"><div class="setting-label">Virenscanner</div>
       <button class="setting-btn" onclick="this.textContent='Scannt…';setTimeout(()=>{this.textContent='Jetzt scannen';showNotif('Sicherheit','Scan abgeschlossen – Keine Bedrohungen ✓','#6affca')},1800)">Jetzt scannen</button>
+    </div>
+    <div class="setting-row">
+      <div class="setting-label">Screen Time<small>${stData&&stData.enabled?'Aktiv'+(stData.pin?' · PIN geschützt 🔒':''):' · Inaktiv'}</small></div>
+      <button class="setting-btn" onclick="openApp('screentime');loadSettings('security')">⏰ Öffnen</button>
     </div>
   </div>`,
 
@@ -7018,23 +7116,103 @@ const STORE_APP_DEFS = {
       +'</div>'
     +'</div>'
   },
+  novtodo: { title:'NovTodo', icon:'\u2705', w:380, h:500,
+    body:()=>'<div style="display:flex;flex-direction:column;height:100%;background:var(--panel)">'
+      +'<div style="padding:10px 14px;background:var(--panel2);border-bottom:1px solid var(--border);display:flex;gap:8px">'
+        +'<input id="todo-inp" placeholder="Neue Aufgabe\u2026" style="flex:1;background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:7px 10px;color:var(--text);font-size:12px;font-family:inherit;outline:none" onkeydown="if(event.key===\'Enter\')todoAdd()">'
+        +'<button class="setting-btn" onclick="todoAdd()" style="font-size:12px;padding:5px 12px">+</button>'
+      +'</div>'
+      +'<div id="todo-list" style="flex:1;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:6px"></div>'
+      +'<div style="padding:8px 14px;border-top:1px solid var(--border);background:var(--panel2);display:flex;justify-content:space-between;align-items:center">'
+        +'<span id="todo-count" style="font-size:10px;color:var(--text2)">0 Aufgaben</span>'
+        +'<button class="setting-btn" onclick="todoClearDone()" style="font-size:10px;padding:3px 8px">\u2713 Erledigt l\xf6schen</button>'
+      +'</div>'
+    +'</div>'
+  },
+  novhex: { title:'ColorPicker', icon:'\U0001f3a8', w:320, h:440,
+    body:()=>'<div style="display:flex;flex-direction:column;height:100%;background:var(--panel);padding:16px;gap:12px;align-items:center">'
+      +'<div style="font-size:13px;font-weight:700;color:var(--text);align-self:flex-start">\U0001f3a8 Color Picker</div>'
+      +'<input type="color" id="hex-pick" value="#7c6aff" oninput="hexUpdate(this.value)" style="width:120px;height:80px;border:none;background:none;cursor:pointer;border-radius:12px">'
+      +'<div id="hex-preview" style="width:180px;height:60px;border-radius:12px;border:1px solid var(--border);background:#7c6aff"></div>'
+      +'<div style="display:flex;flex-direction:column;gap:8px;width:100%">'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--panel2);border-radius:8px;border:1px solid var(--border)">'
+          +'<span style="font-size:11px;color:var(--text2)">HEX</span>'
+          +'<span id="hex-hex" style="font-size:12px;font-weight:700;color:var(--text);font-family:monospace;cursor:pointer" onclick="navigator.clipboard?.writeText(this.textContent);showNotif(\'ColorPicker\',\'Kopiert!\',\'var(--accent)\')">#7C6AFF</span>'
+        +'</div>'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--panel2);border-radius:8px;border:1px solid var(--border)">'
+          +'<span style="font-size:11px;color:var(--text2)">RGB</span>'
+          +'<span id="hex-rgb" style="font-size:12px;font-weight:700;color:var(--text);font-family:monospace;cursor:pointer" onclick="navigator.clipboard?.writeText(this.textContent);showNotif(\'ColorPicker\',\'Kopiert!\',\'var(--accent)\')">124, 106, 255</span>'
+        +'</div>'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--panel2);border-radius:8px;border:1px solid var(--border)">'
+          +'<span style="font-size:11px;color:var(--text2)">HSL</span>'
+          +'<span id="hex-hsl" style="font-size:12px;font-weight:700;color:var(--text);font-family:monospace;cursor:pointer" onclick="navigator.clipboard?.writeText(this.textContent);showNotif(\'ColorPicker\',\'Kopiert!\',\'var(--accent)\')">248\xb0, 100%, 71%</span>'
+        +'</div>'
+      +'</div>'
+    +'</div>'
+  },
+  novtimer: { title:'Stoppuhr', icon:'\u23f1', w:300, h:360,
+    body:()=>'<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;background:var(--panel);gap:14px;padding:20px">'
+      +'<div style="font-size:58px;font-weight:200;color:var(--text);font-variant-numeric:tabular-nums;letter-spacing:-2px" id="sw-display">00:00.0</div>'
+      +'<div style="display:flex;gap:8px">'
+        +'<button class="setting-btn" onclick="ntToggle()" id="sw-btn" style="min-width:90px;font-size:12px">\u25b6 Start</button>'
+        +'<button class="setting-btn" onclick="ntLap()" style="font-size:12px">Runde</button>'
+        +'<button class="setting-btn danger" onclick="ntReset()" style="font-size:12px">\u21ba</button>'
+      +'</div>'
+      +'<div id="sw-laps" style="width:100%;overflow-y:auto;max-height:140px;display:flex;flex-direction:column;gap:4px"></div>'
+    +'</div>'
+  },
+  novconv: { title:'Einheitenrechner', icon:'\U0001f4d0', w:340, h:460,
+    body:()=>'<div style="display:flex;flex-direction:column;height:100%;background:var(--panel);padding:14px;gap:10px">'
+      +'<div style="font-size:13px;font-weight:700;color:var(--text)">\U0001f4d0 Einheitenrechner</div>'
+      +'<select id="conv-cat" onchange="convSetCat(this.value)" style="background:var(--panel2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:7px 10px;font-size:12px;font-family:inherit">'
+        +'<option value="length">L\xe4nge</option><option value="weight">Gewicht</option><option value="temp">Temperatur</option><option value="speed">Geschwindigkeit</option>'
+      +'</select>'
+      +'<div style="display:flex;gap:8px;align-items:flex-end">'
+        +'<div style="flex:1;display:flex;flex-direction:column;gap:4px">'
+          +'<input id="conv-from-val" type="number" value="1" oninput="convCalc()" style="background:var(--panel2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:7px;font-size:14px;font-family:inherit;outline:none;width:100%;box-sizing:border-box">'
+          +'<select id="conv-from" onchange="convCalc()" style="background:var(--panel2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:6px;font-size:11px;font-family:inherit"></select>'
+        +'</div>'
+        +'<div style="font-size:20px;color:var(--text2);padding-bottom:8px">=</div>'
+        +'<div style="flex:1;display:flex;flex-direction:column;gap:4px">'
+          +'<div id="conv-to-val" style="background:var(--panel2);border:1px solid var(--border);border-radius:8px;color:var(--accent);padding:7px;font-size:14px;font-weight:700;min-height:36px;display:flex;align-items:center">\u2013</div>'
+          +'<select id="conv-to" onchange="convCalc()" style="background:var(--panel2);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:6px;font-size:11px;font-family:inherit"></select>'
+        +'</div>'
+      +'</div>'
+      +'<div id="conv-quick" style="display:flex;flex-direction:column;gap:5px;overflow-y:auto;flex:1"></div>'
+    +'</div>'
+  },
+  novworld: { title:'Weltzeituhr', icon:'\U0001f30d', w:380, h:420,
+    body:()=>'<div style="display:flex;flex-direction:column;height:100%;background:var(--panel);padding:14px;gap:10px">'
+      +'<div style="display:flex;align-items:center;gap:8px">'
+        +'<div style="font-size:13px;font-weight:700;color:var(--text);flex:1">\U0001f30d Weltzeituhr</div>'
+        +'<button class="setting-btn" onclick="worldAddCity()" style="font-size:11px;padding:4px 10px">+ Stadt</button>'
+      +'</div>'
+      +'<div id="world-clocks" style="display:flex;flex-direction:column;gap:7px;overflow-y:auto;flex:1"></div>'
+    +'</div>'
+  },
+
 };
 
 
 function renderNovStore() {
   const installed = JSON.parse(localStorage.getItem('novos_store_installed')||'[]');
   const apps = [
-    {id:'novnotes',    icon:'📒', name:'NovNotes',       cat:'Produktivität', desc:'Notizen mit Markdown & Vorschau',   col:'#ffca6a'},
-    {id:'novpomodoro', icon:'⏱️', name:'Pomodoro',        cat:'Produktivität', desc:'25-Min Fokus-Timer Methode',        col:'#ff9f43'},
-    {id:'novsnake',    icon:'🐍', name:'NovSnake',        cat:'Spiele',        desc:'Klassisches Snake mit Highscore',   col:'#2ecc71'},
-    {id:'novmemo',     icon:'🃏', name:'Memo',            cat:'Spiele',        desc:'Memory: 8 Emoji-Paare finden',      col:'#f39c12'},
-    {id:'novpaint',    icon:'🎨', name:'NovPaint',        cat:'Kreativität',   desc:'Zeichenprogramm mit Speichern',     col:'#6affca'},
-    {id:'novpiano',    icon:'🎹', name:'NovPiano',        cat:'Kreativität',   desc:'Virtuelles Piano, Maus + Tastatur', col:'#3a8fff'},
-    {id:'novqr',       icon:'📱', name:'QR-Generator',   cat:'Werkzeuge',     desc:'QR-Codes aus Text und URLs',        col:'#e74c3c'},
-    {id:'novmarkdown', icon:'📄', name:'MarkdownViewer', cat:'Werkzeuge',     desc:'Markdown live rendern',             col:'#a78bfa'},
-    {id:'klassenblatt',icon:'📝', name:'Klassenblatt',  cat:'Produktivität', desc:'Professioneller Online-Texteditor',  col:'#4a9eff'},
-    {id:'slideforge',  icon:'🎞️', name:'SlideForge',    cat:'Produktivität', desc:'Präsentationen schnell erstellen',   col:'#ff7c4a'},
-    {id:'kwiz',        icon:'❓', name:'KWIZ!',          cat:'Spiele',        desc:'Wissensquiz mit vielen Kategorien',  col:'#ffcc00'},
+    {id:'novnotes',    icon:'📒', name:'NovNotes',          cat:'Produktivität', desc:'Notizen mit Markdown & Vorschau',        col:'#ffca6a'},
+    {id:'novtodo',     icon:'✅', name:'NovTodo',            cat:'Produktivität', desc:'Aufgabenliste mit Erledigungs-Check',    col:'#2ecc71'},
+    {id:'novpomodoro', icon:'⏱️', name:'Pomodoro',           cat:'Produktivität', desc:'25-Min Fokus-Timer Methode',             col:'#ff9f43'},
+    {id:'novmarkdown', icon:'📄', name:'MarkdownViewer',     cat:'Produktivität', desc:'Markdown live rendern',                  col:'#a78bfa'},
+    {id:'klassenblatt',icon:'📝', name:'Klassenblatt',       cat:'Produktivität', desc:'Professioneller Online-Texteditor',      col:'#4a9eff'},
+    {id:'slideforge',  icon:'🎞️', name:'SlideForge',         cat:'Produktivität', desc:'Präsentationen schnell erstellen',       col:'#ff7c4a'},
+    {id:'novsnake',    icon:'🐍', name:'NovSnake',           cat:'Spiele',        desc:'Klassisches Snake mit Highscore',        col:'#2ecc71'},
+    {id:'novmemo',     icon:'🃏', name:'Memo',               cat:'Spiele',        desc:'Memory: 8 Emoji-Paare finden',           col:'#f39c12'},
+    {id:'kwiz',        icon:'❓', name:'KWIZ!',              cat:'Spiele',        desc:'Wissensquiz mit vielen Kategorien',      col:'#ffcc00'},
+    {id:'novpaint',    icon:'🎨', name:'NovPaint',           cat:'Kreativität',   desc:'Zeichenprogramm mit Speichern',          col:'#6affca'},
+    {id:'novpiano',    icon:'🎹', name:'NovPiano',           cat:'Kreativität',   desc:'Virtuelles Piano, Maus + Tastatur',      col:'#3a8fff'},
+    {id:'novhex',      icon:'🎨', name:'ColorPicker',        cat:'Kreativität',   desc:'Farben in HEX, RGB, HSL konvertieren',   col:'#e056fd'},
+    {id:'novqr',       icon:'📱', name:'QR-Generator',       cat:'Werkzeuge',     desc:'QR-Codes aus Text und URLs',             col:'#e74c3c'},
+    {id:'novconv',     icon:'📐', name:'Einheitenrechner',   cat:'Werkzeuge',     desc:'Länge, Gewicht, Temp, Geschwindigkeit',  col:'#00b4db'},
+    {id:'novtimer',    icon:'⏱',  name:'Stoppuhr',           cat:'Werkzeuge',     desc:'Stoppuhr mit Rundenzeiten',              col:'#fd9644'},
+    {id:'novworld',    icon:'🌍', name:'Weltzeituhr',         cat:'Werkzeuge',     desc:'Uhrzeiten weltweit auf einen Blick',     col:'#26de81'},
   ];
 
   const el = document.createElement('div');
@@ -7055,12 +7233,13 @@ function renderNovStore() {
           style="flex:1;background:none;border:none;outline:none;color:var(--text);font-size:12px;font-family:Inter,sans-serif">
       </div>
       <div style="font-size:11px;color:var(--text2);margin-left:auto">${installed.length}/${apps.length} installiert</div>
+      <button onclick="novappImport()" style="padding:5px 12px;border-radius:20px;border:1px solid rgba(124,106,255,0.4);background:rgba(124,106,255,0.12);color:var(--accent);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">📦 .novapp</button>
     </div>
     <div style="display:flex;gap:2px;overflow-x:auto;scrollbar-width:none" id="store-cats"></div>`;
   el.appendChild(header);
 
   // Category tabs
-  const cats = ['Alle','Spiele','Produktivität','Kreativität','Werkzeuge'];
+  const cats = ['Alle','Spiele','Produktivität','Kreativität','Werkzeuge','Eigene'];
   const catBar = header.querySelector('#store-cats');
   cats.forEach((c,i) => {
     const btn = document.createElement('button');
@@ -7172,9 +7351,10 @@ function storeAddStartMenu(id, ico, name) {
 
 function storeRestoreInstalled() {
   // Only restores appDefs + start menu — desktopRender() handles icons
+  novappRestoreCustom(); // restore custom .novapp apps first
   const installed = JSON.parse(localStorage.getItem('novos_store_installed')||'[]');
   for(const id of installed) {
-    const def = STORE_APP_DEFS[id];
+    const def = STORE_APP_DEFS[id] || (appDefs[id] ? {title:appDefs[id].title,icon:appDefs[id].icon} : null);
     if(!def) continue;
     if(!appDefs[id]) appDefs[id] = { title:def.title, icon:def.icon, w:def.w, h:def.h };
     storeAddStartMenu(id, def.icon, def.title);
@@ -7199,6 +7379,10 @@ function storeSetCat(cat) {
   });
   const a = document.getElementById('storecat-'+cat);
   if(a){a.style.background='var(--panel)';a.style.color='var(--accent)';a.style.borderBottom='2px solid var(--accent)';}
+  if(cat === 'Eigene') { novappShowOwn(); return; }
+  // Show all store cards again (hide custom-apps pane)
+  document.getElementById('store-custom-pane')?.remove();
+  document.getElementById('store-cards')?.parentElement && (document.getElementById('store-cards').parentElement.style.display='');
   let shown=0;
   document.querySelectorAll('.store-card').forEach(c=>{
     const m = cat==='Alle'||c.dataset.cat===cat;
@@ -7206,6 +7390,166 @@ function storeSetCat(cat) {
   });
   const e=document.getElementById('store-empty');
   if(e) e.style.display=shown===0?'block':'none';
+}
+
+// ── .novapp system ──────────────────────────────────────────────────────────
+// Format: JSON file with .novapp extension
+// { "id":"myapp", "title":"My App", "icon":"🚀", "url":"https://...",
+//   "w":800, "h":600, "color":"#ff0000", "desc":"Description" }
+
+function novappImport() {
+  const input = document.createElement('input');
+  input.type = 'file'; input.accept = '.novapp,.json';
+  input.onchange = e => {
+    const file = e.target.files[0]; if(!file) return;
+    const r = new FileReader();
+    r.onload = ev => {
+      try {
+        const pkg = JSON.parse(ev.target.result);
+        novappInstall(pkg);
+      } catch(err) {
+        showNotif('NovStore', '⚠️ Ungültige .novapp Datei', '#ff4a6a');
+      }
+    };
+    r.readAsText(file);
+  };
+  input.click();
+}
+
+function novappInstall(pkg) {
+  const id = pkg.id || ('custom_' + Date.now());
+  const title = pkg.title || id;
+  const icon  = pkg.icon  || '📦';
+  const url   = pkg.url   || '';
+  const w     = pkg.w     || 900;
+  const h     = pkg.h     || 620;
+  const color = pkg.color || 'var(--accent)';
+  const desc  = pkg.desc  || '';
+
+  if(!url) { showNotif('NovStore','⚠️ Keine URL in .novapp','#ff4a6a'); return; }
+
+  // Register in appDefs as iframe app
+  appDefs[id] = {
+    title, icon, w, h,
+    body: () => `<div style="height:100%;display:flex;flex-direction:column;background:#0a0a14">`
+      + `<div style="position:relative;flex:1;display:flex;flex-direction:column">`
+      + `<div id="ifl-${id}" style="position:absolute;inset:0;background:#0a0a14;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:2">`
+      + `<div style="font-size:48px">${icon}</div>`
+      + `<div style="font-size:15px;font-weight:800;color:rgba(255,255,255,0.85)">${title}</div>`
+      + `<div style="font-size:11px;color:rgba(255,255,255,0.4)">App wird geladen…</div>`
+      + `<div style="width:160px;height:3px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden">`
+      + `<div style="height:100%;width:40%;background:linear-gradient(90deg,${color},#6affca);border-radius:2px;animation:ifl-bar 1.2s ease-in-out infinite"></div>`
+      + `</div></div>`
+      + `<iframe src="${url}" style="flex:1;border:none;width:100%;height:100%;opacity:0;transition:opacity 0.5s" `
+      + `onload="this.style.opacity=1;document.getElementById('ifl-${id}')?.style.setProperty('display','none')" `
+      + `allow="clipboard-read; clipboard-write; fullscreen" allowfullscreen></iframe>`
+      + `</div></div>`
+  };
+
+  // Save to localStorage
+  const customs = JSON.parse(localStorage.getItem('novos_custom_apps')||'[]');
+  const existing = customs.findIndex(a => a.id === id);
+  const entry = {id, title, icon, url, w, h, color, desc};
+  if(existing >= 0) customs[existing] = entry; else customs.push(entry);
+  localStorage.setItem('novos_custom_apps', JSON.stringify(customs));
+
+  // Install in store
+  const installed = JSON.parse(localStorage.getItem('novos_store_installed')||'[]');
+  if(!installed.includes(id)) {
+    installed.push(id);
+    localStorage.setItem('novos_store_installed', JSON.stringify(installed));
+  }
+
+  storeAddDesktopIcon(id, icon, title);
+  storeAddStartMenu(id, icon, title);
+  if(typeof desktopRender === 'function') desktopRender();
+  showNotif('NovStore', `${icon} ${title} installiert ✓`, color);
+  setTimeout(() => openApp(id), 300);
+}
+
+function novappRestoreCustom() {
+  const customs = JSON.parse(localStorage.getItem('novos_custom_apps')||'[]');
+  customs.forEach(pkg => {
+    if(!appDefs[pkg.id]) novappInstallQuiet(pkg);
+  });
+}
+
+function novappInstallQuiet(pkg) {
+  // Like novappInstall but no notification, no open
+  const {id, title, icon, url, w, h, color} = pkg;
+  appDefs[id] = {
+    title, icon, w: w||900, h: h||620,
+    body: () => `<div style="height:100%;display:flex;flex-direction:column;background:#0a0a14">`
+      + `<div style="position:relative;flex:1;display:flex;flex-direction:column">`
+      + `<div id="ifl-${id}" style="position:absolute;inset:0;background:#0a0a14;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:2">`
+      + `<div style="font-size:48px">${icon}</div>`
+      + `<div style="font-size:15px;font-weight:800;color:rgba(255,255,255,0.85)">${title}</div>`
+      + `<div style="width:160px;height:3px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden">`
+      + `<div style="height:100%;width:40%;background:linear-gradient(90deg,${color||'var(--accent)'},#6affca);border-radius:2px;animation:ifl-bar 1.2s ease-in-out infinite"></div>`
+      + `</div></div>`
+      + `<iframe src="${url}" style="flex:1;border:none;width:100%;height:100%;opacity:0;transition:opacity 0.5s" `
+      + `onload="this.style.opacity=1;document.getElementById('ifl-${id}')?.style.setProperty('display','none')" `
+      + `allow="clipboard-read; clipboard-write; fullscreen" allowfullscreen></iframe>`
+      + `</div></div>`
+  };
+}
+
+function novappShowOwn() {
+  const grid = document.getElementById('store-cards')?.parentElement;
+  if(!grid) return;
+  grid.style.display = 'none';
+  let pane = document.getElementById('store-custom-pane');
+  if(!pane) {
+    pane = document.createElement('div');
+    pane.id = 'store-custom-pane';
+    pane.style.cssText = 'flex:1;overflow-y:auto;padding:12px 18px 24px';
+    grid.parentElement.appendChild(pane);
+  }
+  const customs = JSON.parse(localStorage.getItem('novos_custom_apps')||'[]');
+  if(!customs.length) {
+    pane.innerHTML = `<div style="text-align:center;padding:40px;color:var(--text2)">
+      <div style="font-size:32px;margin-bottom:12px">📦</div>
+      <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px">Keine eigenen Apps</div>
+      <div style="font-size:11px;margin-bottom:16px">Installiere eine .novapp Datei um zu beginnen</div>
+      <button onclick="novappImport()" style="padding:8px 18px;border-radius:10px;border:1px solid rgba(124,106,255,0.4);background:rgba(124,106,255,0.12);color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">📦 .novapp importieren</button>
+    </div>`;
+    return;
+  }
+  pane.innerHTML = customs.map(pkg => `
+    <div style="display:flex;align-items:center;gap:14px;padding:12px 14px;background:var(--panel2);border:1px solid var(--border);border-radius:12px;margin-bottom:8px">
+      <div style="width:50px;height:50px;border-radius:13px;background:${pkg.color||'var(--accent)'}22;border:1.5px solid ${pkg.color||'var(--accent)'}55;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">${pkg.icon}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:700;color:var(--text)">${pkg.title}</div>
+        <div style="font-size:10px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${pkg.url}</div>
+        ${pkg.desc ? `<div style="font-size:10px;color:var(--text2);margin-top:2px">${pkg.desc}</div>` : ''}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0">
+        <button onclick="openApp('${pkg.id}')" style="padding:5px 10px;border-radius:7px;border:none;background:var(--accent);color:white;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit">Öffnen</button>
+        <button onclick="novappDelete('${pkg.id}');novappShowOwn()" style="padding:5px 10px;border-radius:7px;border:1px solid rgba(255,80,80,0.3);background:transparent;color:#ff6a8a;font-size:10px;cursor:pointer;font-family:inherit">Löschen</button>
+      </div>
+    </div>`).join('');
+}
+
+function novappDelete(id) {
+  const customs = JSON.parse(localStorage.getItem('novos_custom_apps')||'[]');
+  localStorage.setItem('novos_custom_apps', JSON.stringify(customs.filter(a => a.id !== id)));
+  const installed = JSON.parse(localStorage.getItem('novos_store_installed')||'[]');
+  localStorage.setItem('novos_store_installed', JSON.stringify(installed.filter(i => i !== id)));
+  delete appDefs[id];
+  closeWindow(id);
+  if(typeof desktopRender === 'function') desktopRender();
+  showNotif('NovStore', 'App entfernt', 'var(--text2)');
+}
+
+function novappExport(id) {
+  const customs = JSON.parse(localStorage.getItem('novos_custom_apps')||'[]');
+  const pkg = customs.find(a => a.id === id);
+  if(!pkg) return;
+  const blob = new Blob([JSON.stringify(pkg, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (pkg.title||id).replace(/\s+/g,'_') + '.novapp';
+  a.click();
 }
 
 
@@ -7388,6 +7732,170 @@ function qrGenerate(txt){
   out.innerHTML=''; out.appendChild(img);
 }
 
+// ── NovTodo ──
+let _todos = [];
+function todoAdd() {
+  const inp = document.getElementById('todo-inp'); if(!inp||!inp.value.trim()) return;
+  _todos.push({text:inp.value.trim(), done:false, id:Date.now()});
+  inp.value = ''; todoRender();
+}
+function todoRender() {
+  const list = document.getElementById('todo-list'); if(!list) return;
+  list.innerHTML = _todos.map(t =>
+    `<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--panel2);border-radius:8px;border:1px solid ${t.done?'rgba(106,255,202,0.2)':'var(--border)'}">`
+    +`<div onclick="todoDone(${t.id})" style="width:16px;height:16px;border-radius:50%;border:2px solid ${t.done?'#6affca':'var(--border)'};background:${t.done?'#6affca':'transparent'};cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px">${t.done?'✓':''}</div>`
+    +`<span style="flex:1;font-size:12px;color:${t.done?'var(--text2)':'var(--text)'};text-decoration:${t.done?'line-through':'none'}">${t.text}</span>`
+    +`<button onclick="todoDelete(${t.id})" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:12px;padding:2px 4px">✕</button>`
+    +`</div>`).join('');
+  const c = document.getElementById('todo-count');
+  if(c) c.textContent = _todos.filter(t=>!t.done).length + ' offen, ' + _todos.filter(t=>t.done).length + ' erledigt';
+}
+function todoDone(id) { const t=_todos.find(t=>t.id===id); if(t){t.done=!t.done; todoRender();} }
+function todoDelete(id) { _todos=_todos.filter(t=>t.id!==id); todoRender(); }
+function todoClearDone() { _todos=_todos.filter(t=>!t.done); todoRender(); }
+
+// ── ColorPicker ──
+function hexUpdate(hex) {
+  const prev = document.getElementById('hex-preview');
+  if(prev) prev.style.background = hex;
+  const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+  const hexEl = document.getElementById('hex-hex'); if(hexEl) hexEl.textContent = hex.toUpperCase();
+  const rgbEl = document.getElementById('hex-rgb'); if(rgbEl) rgbEl.textContent = `${r}, ${g}, ${b}`;
+  // HSL
+  const rn=r/255, gn=g/255, bn=b/255;
+  const max=Math.max(rn,gn,bn), min=Math.min(rn,gn,bn), l=(max+min)/2;
+  let h=0,s=0;
+  if(max!==min){s=l<0.5?(max-min)/(max+min):(max-min)/(2-max-min);if(max===rn)h=(gn-bn)/(max-min)+(gn<bn?6:0);else if(max===gn)h=(bn-rn)/(max-min)+2;else h=(rn-gn)/(max-min)+4;h/=6;}
+  const hslEl = document.getElementById('hex-hsl');
+  if(hslEl) hslEl.textContent = `${Math.round(h*360)}°, ${Math.round(s*100)}%, ${Math.round(l*100)}%`;
+}
+
+// ── Stoppuhr (NovTimer store app) ──
+let _ntRunning=false, _ntStart=0, _ntElapsed=0, _ntInterval=null, _ntLaps=[];
+function ntToggle() {
+  _ntRunning=!_ntRunning;
+  const btn=document.getElementById('sw-btn');
+  if(_ntRunning){_ntStart=Date.now()-_ntElapsed;_ntInterval=setInterval(ntTick,100);if(btn)btn.textContent='⏸ Pause';}
+  else{clearInterval(_ntInterval);_ntElapsed=Date.now()-_ntStart;if(btn)btn.textContent='▶ Weiter';}
+}
+function ntTick(){_ntElapsed=Date.now()-_ntStart;ntDisplay();}
+function ntDisplay(){
+  const ms=_ntElapsed, min=Math.floor(ms/60000), sec=Math.floor((ms%60000)/1000), tenth=Math.floor((ms%1000)/100);
+  const el=document.getElementById('sw-display');
+  if(el) el.textContent=String(min).padStart(2,'0')+':'+String(sec).padStart(2,'0')+'.'+tenth;
+}
+function ntLap(){
+  if(!_ntRunning) return;
+  _ntLaps.push(_ntElapsed);
+  const el=document.getElementById('sw-laps'); if(!el) return;
+  el.innerHTML=_ntLaps.map((t,i)=>{
+    const ms=i>0?t-_ntLaps[i-1]:t;
+    const min=Math.floor(ms/60000),sec=Math.floor((ms%60000)/1000),tenth=Math.floor((ms%1000)/100);
+    return `<div style="display:flex;justify-content:space-between;font-size:11px;padding:4px 6px;background:var(--panel2);border-radius:5px"><span style="color:var(--text2)">Runde ${i+1}</span><span style="font-family:monospace;color:var(--text)">${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}.${tenth}</span></div>`;
+  }).reverse().join('');
+}
+function ntReset(){clearInterval(_ntInterval);_ntRunning=false;_ntElapsed=0;_ntLaps=[];ntDisplay();const btn=document.getElementById('sw-btn');if(btn)btn.textContent='▶ Start';const el=document.getElementById('sw-laps');if(el)el.innerHTML='';}
+
+// ── Einheitenrechner ──
+const _convData = {
+  length: { units:['Meter','Kilometer','Meilen','Fuß','Zoll','Yard','Nautische Meile'], factors:[1,1000,1609.34,0.3048,0.0254,0.9144,1852] },
+  weight: { units:['Gramm','Kilogramm','Pfund','Unze','Tonne'], factors:[1,1000,453.592,28.3495,1000000] },
+  temp:   { units:['Celsius','Fahrenheit','Kelvin'], special:true },
+  speed:  { units:['km/h','m/s','mph','Knoten'], factors:[1,3.6,1.60934,1.852] },
+};
+function convSetCat(cat) {
+  const data = _convData[cat]; if(!data) return;
+  ['conv-from','conv-to'].forEach(id=>{
+    const sel=document.getElementById(id); if(!sel) return;
+    sel.innerHTML=data.units.map((u,i)=>`<option value="${i}">${u}</option>`).join('');
+  });
+  if(document.getElementById('conv-to')) document.getElementById('conv-to').selectedIndex=1;
+  convCalc();
+}
+function convCalc() {
+  const cat=document.getElementById('conv-cat')?.value;
+  const data=_convData[cat]; if(!data) return;
+  const val=parseFloat(document.getElementById('conv-from-val')?.value)||0;
+  const fi=parseInt(document.getElementById('conv-from')?.value)||0;
+  const ti=parseInt(document.getElementById('conv-to')?.value)||0;
+  let result;
+  if(data.special) { // temp
+    let celsius=val;
+    if(fi===1)celsius=(val-32)/1.8; else if(fi===2)celsius=val-273.15;
+    if(ti===0)result=celsius; else if(ti===1)result=celsius*1.8+32; else result=celsius+273.15;
+  } else {
+    result = val * data.factors[fi] / data.factors[ti];
+  }
+  const out=document.getElementById('conv-to-val');
+  if(out) out.textContent = result % 1===0 ? result.toFixed(0) : result.toPrecision(6).replace(/\.?0+$/,'');
+  // Quick reference
+  const quick=document.getElementById('conv-quick');
+  if(quick && !data.special) {
+    quick.innerHTML = data.units.map((u,i)=>{
+      if(i===fi) return '';
+      const r = val * data.factors[fi] / data.factors[i];
+      const rs = r % 1===0 ? r.toFixed(0) : r.toPrecision(5).replace(/\.?0+$/,'');
+      return `<div style="display:flex;justify-content:space-between;padding:5px 8px;background:var(--panel2);border-radius:7px;font-size:11px"><span style="color:var(--text2)">${u}</span><span style="color:var(--text);font-family:monospace">${rs}</span></div>`;
+    }).join('');
+  }
+}
+function initConv(){convSetCat(document.getElementById('conv-cat')?.value||'length');}
+
+// ── Weltzeituhr ──
+const _worldCities = [
+  {name:'Berlin',     tz:'Europe/Berlin'},
+  {name:'London',     tz:'Europe/London'},
+  {name:'New York',   tz:'America/New_York'},
+  {name:'Los Angeles',tz:'America/Los_Angeles'},
+  {name:'Tokio',      tz:'Asia/Tokyo'},
+  {name:'Dubai',      tz:'Asia/Dubai'},
+  {name:'Sydney',     tz:'Australia/Sydney'},
+  {name:'São Paulo',  tz:'America/Sao_Paulo'},
+];
+let _worldSelected = JSON.parse(localStorage.getItem('novos_world_cities')||'["Berlin","London","New York","Tokio"]');
+let _worldInterval = null;
+function worldInit() {
+  clearInterval(_worldInterval);
+  worldRender();
+  _worldInterval = setInterval(worldRender, 10000);
+}
+function worldRender() {
+  const el = document.getElementById('world-clocks'); if(!el) return;
+  const now = new Date();
+  el.innerHTML = _worldSelected.map(name => {
+    const city = _worldCities.find(c=>c.name===name);
+    if(!city) return '';
+    const str = now.toLocaleTimeString('de-DE', {timeZone:city.tz,hour:'2-digit',minute:'2-digit'});
+    const dateStr = now.toLocaleDateString('de-DE', {timeZone:city.tz,weekday:'short',day:'numeric',month:'short'});
+    const h = parseInt(now.toLocaleTimeString('en-US',{timeZone:city.tz,hour:'2-digit',hour12:false}));
+    const isDay = h>=7 && h<21;
+    return `<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--panel2);border-radius:10px;border:1px solid var(--border)">`
+      +`<span style="font-size:22px">${isDay?'☀️':'🌙'}</span>`
+      +`<div style="flex:1"><div style="font-size:12px;font-weight:700;color:var(--text)">${name}</div><div style="font-size:10px;color:var(--text2)">${dateStr}</div></div>`
+      +`<div style="font-size:20px;font-weight:200;color:var(--accent);font-variant-numeric:tabular-nums">${str}</div>`
+      +`<button onclick="worldRemove('${name}')" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:13px;padding:2px">✕</button>`
+      +`</div>`;
+  }).join('');
+}
+function worldRemove(name){_worldSelected=_worldSelected.filter(n=>n!==name);localStorage.setItem('novos_world_cities',JSON.stringify(_worldSelected));worldRender();}
+function worldAddCity(){
+  const avail=_worldCities.filter(c=>!_worldSelected.includes(c.name));
+  if(!avail.length){showNotif('Weltzeituhr','Alle Städte bereits hinzugefügt','var(--text2)');return;}
+  novDialog({icon:'🌍',title:'Stadt hinzufügen',msg:'Wähle eine Stadt:\n'+avail.map((c,i)=>`${i+1}. ${c.name}`).join('\n')}).then(()=>{});
+  // Use a simple select overlay
+  const ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);z-index:9999;display:flex;align-items:center;justify-content:center';
+  ov.innerHTML=`<div style="background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:20px 24px;min-width:220px">`
+    +`<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:12px">Stadt hinzufügen</div>`
+    +avail.map(c=>`<button onclick="worldAdd('${c.name}');this.closest('[style]').remove()" style="display:block;width:100%;text-align:left;padding:8px 12px;border:none;background:transparent;color:var(--text);font-size:12px;font-family:inherit;cursor:pointer;border-radius:7px;margin-bottom:3px" onmouseover="this.style.background='var(--panel2)'" onmouseout="this.style.background='transparent'">${c.name}</button>`).join('')
+    +`<button onclick="this.closest('[style]').remove()" style="margin-top:6px;padding:5px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:11px;cursor:pointer;font-family:inherit">Abbrechen</button>`
+    +`</div>`;
+  document.body.appendChild(ov);
+  // Close open dialog if any
+  document.getElementById('nov-dialog-overlay')?.remove();
+}
+function worldAdd(name){if(!_worldSelected.includes(name)){_worldSelected.push(name);localStorage.setItem('novos_world_cities',JSON.stringify(_worldSelected));worldRender();}}
+
 // ── Markdown ──
 function mdRender(txt){
   const pre=document.getElementById('md-preview');if(!pre)return;
@@ -7556,7 +8064,7 @@ function desktopGoPage(n, animate=true) {
   const el = document.getElementById('desktop-pages');
   if (!el) return;
   if (animate) { el.classList.add('sliding'); setTimeout(() => el.classList.remove('sliding'), 380); }
-  el.style.transform = `translateX(${-n * 100}%)`;
+  el.style.transform = `translateX(${-n * (100 / TOTAL_PAGES)}%)`;
   desktopUpdateDots();
   localStorage.setItem('novos_current_page', n);
 }
@@ -7919,7 +8427,121 @@ function desktopInit() {
 // SCREEN TIME — per-app usage limits with PIN lock
 // ══════════════════════════════════════════════════════
 
+const ST_ALL_APPS = [
+  { id:'browser',      name:'NovBrowser',    ico:'🌐' },
+  { id:'terminal',     name:'Terminal',       ico:'💻' },
+  { id:'files',        name:'Dateien',        ico:'📂' },
+  { id:'music',        name:'NovMusic',       ico:'🎵' },
+  { id:'editor',       name:'TextEditor',     ico:'📝' },
+  { id:'calc',         name:'Rechner',        ico:'🧮' },
+  { id:'gallery',      name:'Galerie',        ico:'🖼️' },
+  { id:'weather',      name:'Wetter',         ico:'🌤️' },
+  { id:'sysmon',       name:'Systemmonitor',  ico:'📊' },
+  { id:'settings',     name:'Einstellungen',  ico:'⚙️' },
+  { id:'pdf',          name:'NovPDF',         ico:'📋' },
+  { id:'clock',        name:'NovUhr',         ico:'🕐' },
+  { id:'klassenblatt', name:'Klassenblatt',   ico:'📝' },
+  { id:'slideforge',   name:'SlideForge',     ico:'🎞️' },
+  { id:'kwiz',         name:'KWIZ!',          ico:'❓' },
+];
+
 let stData = null; // loaded on init
+
+function stLockApp(appId) {
+  // Close the window and show lock overlay on desktop icon
+  closeWindow(appId);
+  stUpdateIconBadge(appId, true);
+  const def = appDefs[appId] || {};
+  showNotif('Screen Time', `${def.title || appId} gesperrt 🔒`, '#ff6a8a');
+}
+
+function stShowLockOverlay(appId, title) {
+  // Show a full-screen lock overlay instead of opening
+  const existing = document.getElementById('st-lock-overlay');
+  if (existing) existing.remove();
+  const ov = document.createElement('div');
+  ov.id = 'st-lock-overlay';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(20px);z-index:9800;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px';
+  ov.innerHTML = `
+    <div style="font-size:52px">🔒</div>
+    <div style="font-size:18px;font-weight:700;color:#fff">${title}</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.5)">Tageslimit erreicht</div>
+    <div id="st-unlock-dots" style="display:flex;gap:10px;margin:8px 0">
+      ${[0,1,2,3].map(i=>`<div id="st-ud-${i}" style="width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,0.12);border:2px solid rgba(124,106,255,0.4);transition:all 0.15s"></div>`).join('')}
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:200px">
+      ${[1,2,3,4,5,6,7,8,9,'','0','⌫'].map(k => k==='' ? '<div></div>' :
+        `<button onclick="stUnlockKey('${k}','${appId}')" style="padding:12px;border-radius:10px;border:1px solid rgba(124,106,255,0.2);background:rgba(255,255,255,0.04);color:#fff;font-size:17px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.1s" onmouseover="this.style.background='rgba(124,106,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.04)'">${k}</button>`
+      ).join('')}
+    </div>
+    <button onclick="document.getElementById('st-lock-overlay').remove()" style="margin-top:8px;padding:8px 20px;border-radius:20px;border:1px solid rgba(255,255,255,0.15);background:transparent;color:rgba(255,255,255,0.4);font-size:11px;cursor:pointer;font-family:inherit">Abbrechen</button>`;
+  window._stUnlockBuf = '';
+  document.body.appendChild(ov);
+}
+
+function stUnlockKey(k, appId) {
+  if (!window._stUnlockBuf) window._stUnlockBuf = '';
+  if (k === '⌫') { window._stUnlockBuf = window._stUnlockBuf.slice(0,-1); }
+  else if (window._stUnlockBuf.length < 4) { window._stUnlockBuf += k; }
+  for (let i = 0; i < 4; i++) {
+    const d = document.getElementById('st-ud-' + i);
+    if (d) {
+      d.style.background = i < window._stUnlockBuf.length ? 'var(--accent)' : 'rgba(255,255,255,0.12)';
+      d.style.borderColor = i < window._stUnlockBuf.length ? 'var(--accent)' : 'rgba(124,106,255,0.4)';
+    }
+  }
+  if (window._stUnlockBuf.length === 4) {
+    const pin = window._stUnlockBuf;
+    window._stUnlockBuf = '';
+    setTimeout(() => {
+      if (!stData.pin || pin === stData.pin) {
+        stData.locks[appId] = false;
+        stUpdateIconBadge(appId, false);
+        stSave();
+        document.getElementById('st-lock-overlay')?.remove();
+        openApp(appId);
+      } else {
+        // Wrong PIN — flash red
+        for (let i = 0; i < 4; i++) {
+          const d = document.getElementById('st-ud-' + i);
+          if (d) { d.style.background = '#ff4a6a'; d.style.borderColor = '#ff4a6a'; }
+        }
+        setTimeout(() => {
+          for (let i = 0; i < 4; i++) {
+            const d = document.getElementById('st-ud-' + i);
+            if (d) { d.style.background = 'rgba(255,255,255,0.12)'; d.style.borderColor = 'rgba(124,106,255,0.4)'; }
+          }
+        }, 600);
+      }
+    }, 150);
+  }
+}
+
+function stUpdateIconBadge(appId, locked) {
+  const icons = document.querySelectorAll(`.desk-icon[data-appid="${appId}"]`);
+  icons.forEach(icon => {
+    let badge = icon.querySelector('.st-lock-badge');
+    if (locked) {
+      if (!badge) {
+        badge = document.createElement('div');
+        badge.className = 'st-lock-badge';
+        badge.style.cssText = 'position:absolute;top:2px;right:2px;font-size:12px;line-height:1;z-index:5;text-shadow:0 1px 3px rgba(0,0,0,0.8)';
+        badge.textContent = '🔒';
+        icon.style.position = 'relative';
+        icon.appendChild(badge);
+      }
+    } else {
+      badge?.remove();
+    }
+  });
+}
+
+function stRestoreBadges() {
+  if (!stData) return;
+  Object.entries(stData.locks || {}).forEach(([id, locked]) => {
+    if (locked) stUpdateIconBadge(id, true);
+  });
+}
 
 function stLoad() {
   if (stData) return; // already in memory — never overwrite with stale localStorage
@@ -7966,56 +8588,62 @@ function stCheckReset() {
 }
 
 // Called every second
+let _stSecCounter = 0; // counts 15s ticks, flushes to usage every 4 ticks (= 60s)
+
 function stTick() {
   if (!stData || !stData.enabled) return;
   stCheckReset();
 
+  _stSecCounter++;
+  const isMinuteTick = (_stSecCounter % 4 === 0); // 4 × 15s = 1 minute
+
   const open = Object.keys(windows);
   let anyChange = false;
 
-  for (const app of open) {
-    if (app === 'screentime') continue;
-    stData.usage[app] = (stData.usage[app] || 0) + 1;
-    anyChange = true;
+  if (isMinuteTick) {
+    for (const app of open) {
+      if (app === 'screentime') continue;
+      stData.usage[app] = (stData.usage[app] || 0) + 60;
+      anyChange = true;
 
-    // Per-app limit
-    const lim = stData.limits[app];
-    if (lim && lim > 0 && stData.usage[app] >= lim * 60 && !stData.locks[app]) {
-      stData.locks[app] = true;
-      stSave();
-      stLockApp(app);
-      continue;
+      // Per-app limit (in minutes → compare seconds)
+      const lim = stData.limits[app];
+      if (lim && lim > 0 && stData.usage[app] >= lim * 60 && !stData.locks[app]) {
+        stData.locks[app] = true;
+        stSave();
+        stLockApp(app);
+        continue;
+      }
     }
-  }
 
-  // Total limit check
-  const totalLim = stData.totalLimit;
-  if (totalLim && totalLim > 0) {
-    const totalUsed = Object.values(stData.usage).reduce((a,b)=>a+b,0);
-    if (totalUsed >= totalLim * 60) {
-      // Lock all unlocked open apps
-      for (const app of open) {
-        if (app === 'screentime') continue;
-        if (!stData.locks[app]) {
-          stData.locks[app] = true;
-          stLockApp(app);
+    // Total limit check
+    const totalLim = stData.totalLimit;
+    if (totalLim && totalLim > 0) {
+      const totalUsed = Object.values(stData.usage).reduce((a,b)=>a+b,0);
+      if (totalUsed >= totalLim * 60) {
+        for (const app of open) {
+          if (app === 'screentime') continue;
+          if (!stData.locks[app]) {
+            stData.locks[app] = true;
+            stLockApp(app);
+          }
         }
       }
     }
+
+    if (anyChange) stSave();
   }
 
-  if (anyChange) stSave();
-
-  // Live-update only the dynamic parts — no full re-render
+  // Live UI updates every second (time display ticks smoothly)
   stUpdateLiveUI();
 }
 
 function stFmtTime(secs) {
-  if (!secs) return '0s';
-  const h = Math.floor(secs/3600), m = Math.floor((secs%3600)/60), s = secs%60;
+  if (!secs) return '0 Min';
+  const h = Math.floor(secs/3600), m = Math.floor((secs%3600)/60);
   if (h > 0) return `${h}h ${m}m`;
-  if (m > 0) return `${m}m ${s}s`;
-  return `${s}s`;
+  if (m > 0) return `${m} Min`;
+  return '< 1 Min';
 }
 
 // ── Live update without re-render ────────────────────────────────────────────
@@ -8024,76 +8652,95 @@ function stUpdateLiveUI() {
   const root = document.getElementById('st-root');
   if (!root) return;
 
-  // Update total used
   const totalUsed = Object.values(stData.usage||{}).reduce((a,b)=>a+b,0);
+  const tl = stData.totalLimit || 0;
+  const enabled = stData.enabled;
+  const hasPin = !!stData.pin;
+
   const subEl = document.getElementById('st-total-used');
   if (subEl) subEl.textContent = `Heutige Nutzung · ${stFmtTime(totalUsed)} gesamt`;
 
-  // Update total limit bar
-  const tl = stData.totalLimit || 0;
-  const tlBar  = document.getElementById('st-total-bar');
-  const tlPct  = document.getElementById('st-total-pct');
-  if (tlBar && tl) {
+  const tog = document.getElementById('st-enabled-toggle');
+  const knob = document.getElementById('st-enabled-knob');
+  if (tog) tog.style.background = enabled ? 'var(--accent)' : 'rgba(255,255,255,0.15)';
+  if (knob) knob.style.left = enabled ? '17px' : '2px';
+
+  const barWrap = document.getElementById('st-total-bar-wrap');
+  const tlBar = document.getElementById('st-total-bar');
+  const tlPctEl = document.getElementById('st-total-pct');
+  if (barWrap) barWrap.style.display = tl ? 'block' : 'none';
+  if (tl && tlBar) {
     const pct = Math.min(100, totalUsed / (tl*60) * 100);
-    tlBar.style.width = pct + '%';
-    tlBar.style.background = pct > 90 ? '#ff4a6a' : pct > 70 ? '#ffca6a' : 'var(--accent)';
-    if (tlPct) tlPct.textContent = `${stFmtTime(totalUsed)} / ${tl}m`;
+    const col = pct>90?'#ff4a6a':pct>70?'#ffca6a':'var(--accent)';
+    tlBar.style.width = pct + '%'; tlBar.style.background = col;
+    if (tlPctEl) { tlPctEl.textContent = `${stFmtTime(totalUsed)} / ${tl}m`; tlPctEl.style.color = col; }
   }
 
-  // Update per-app rows
+  const tlDisp = document.getElementById('st-total-lim-display');
+  if (tlDisp) tlDisp.textContent = tl ? (tl>=60 ? tl/60+'h'+(tl%60?' '+tl%60+'m':'') : tl+' Min') : 'Kein Limit';
+
+  const pinStatus = document.getElementById('st-pin-status');
+  const pinBtns = document.getElementById('st-pin-btns');
+  if (pinStatus) pinStatus.textContent = hasPin ? 'Gesetzt ●●●●' : 'Nicht gesetzt';
+  if (pinBtns) pinBtns.innerHTML = hasPin
+    ? `<button onclick="stChangePinFlow()" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--panel2);color:var(--text2);font-size:10px;cursor:pointer;font-family:inherit">Ändern</button>
+       <button onclick="stRemovePin()" style="padding:4px 10px;border-radius:6px;border:1px solid rgba(255,80,80,0.3);background:transparent;color:#ff6a8a;font-size:10px;cursor:pointer;font-family:inherit;margin-left:4px">Entfernen</button>`
+    : `<button onclick="stSetPinFlow()" style="padding:4px 12px;border-radius:6px;border:none;background:var(--accent);color:white;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit">PIN setzen</button>`;
+
   ST_ALL_APPS.forEach(a => {
-    const used   = stData.usage[a.id] || 0;
-    const lim    = stData.limits[a.id] || 0;
-    const pct    = lim ? Math.min(100, used/(lim*60)*100) : 0;
-    const col    = pct > 90 ? '#ff4a6a' : pct > 70 ? '#ffca6a' : 'var(--accent2)';
-    const locked = stData.locks[a.id];
-
-    const timeEl = document.getElementById(`st-time-${a.id}`);
-    const barEl  = document.getElementById(`st-bar-${a.id}`);
-    const rowEl  = document.getElementById(`st-row-${a.id}`);
-    const lockEl = document.getElementById(`st-lock-${a.id}`);
-
-    if (timeEl) { timeEl.textContent = `${stFmtTime(used)}${lim ? ' / '+lim+'m' : ''}`; timeEl.style.color = col; }
-    if (barEl)  { barEl.style.width = pct + '%'; barEl.style.background = col; }
-    if (rowEl)  { rowEl.style.borderColor = locked ? 'rgba(255,80,80,0.35)' : 'var(--border)'; }
-    if (lockEl) { lockEl.style.display = locked ? 'inline' : 'none'; }
+    const used=stData.usage[a.id]||0, lim=stData.limits[a.id]||0;
+    const pct=lim?Math.min(100,used/(lim*60)*100):0;
+    const col=pct>90?'#ff4a6a':pct>70?'#ffca6a':'var(--accent2)';
+    const locked=stData.locks[a.id];
+    const timeEl=document.getElementById('st-time-'+a.id);
+    const barEl=document.getElementById('st-bar-'+a.id);
+    const barWrapEl=document.getElementById('st-bar-wrap-'+a.id);
+    const rowEl=document.getElementById('st-row-'+a.id);
+    const lockEl=document.getElementById('st-lock-'+a.id);
+    const limBtn=document.getElementById('st-lim-btn-'+a.id);
+    if(timeEl){timeEl.textContent=used>0?stFmtTime(used)+(lim?' / '+lim+'m':''):(lim?'0 / '+lim+'m':'–');timeEl.style.color=used>0?col:'var(--text2)';}
+    if(barEl){barEl.style.width=pct+'%';barEl.style.background=col;}
+    if(barWrapEl)barWrapEl.style.display=lim?'block':'none';
+    if(rowEl)rowEl.style.borderColor=locked?'rgba(255,80,80,0.35)':'var(--border)';
+    if(lockEl)lockEl.style.display=locked?'inline':'none';
+    if(limBtn)limBtn.textContent=lim?lim+'m ✎':'Limit';
   });
 
-  // Summary cards
   const summaryEl = document.getElementById('st-summary');
   if (summaryEl) {
-    const active = ST_ALL_APPS.filter(a => (stData.usage[a.id]||0)>0).slice(0,6);
-    summaryEl.innerHTML = active.length
-      ? active.map(a => {
-          const used = stData.usage[a.id]||0;
-          const lim  = stData.limits[a.id]||0;
-          const pct  = lim ? Math.min(100,used/(lim*60)*100) : 0;
-          const col  = pct>90?'#ff4a6a':pct>70?'#ffca6a':'var(--accent)';
-          return `<div style="flex-shrink:0;background:rgba(255,255,255,0.05);border-radius:10px;padding:8px 10px;min-width:72px;text-align:center">
-            <div style="font-size:18px">${a.ico}</div>
-            <div style="font-size:9px;color:var(--text2);margin:2px 0">${a.name}</div>
-            <div style="font-size:11px;font-weight:700;color:${col}">${stFmtTime(used)}</div>
-            ${lim?`<div style="height:2px;background:rgba(255,255,255,0.08);border-radius:1px;margin-top:4px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${col};transition:width 1s;border-radius:1px"></div></div>`:''}
-          </div>`;
-        }).join('')
-      : '<div style="color:var(--text2);font-size:11px;padding:8px">Noch keine Nutzung heute</div>';
+    const active = ST_ALL_APPS.filter(a=>(stData.usage[a.id]||0)>0).slice(0,6);
+    if (!active.length) {
+      if (!summaryEl.querySelector('[data-stempty]'))
+        summaryEl.innerHTML = '<div data-stempty style="color:var(--text2);font-size:11px;padding:8px">Noch keine Nutzung heute</div>';
+    } else {
+      const existing = [...summaryEl.querySelectorAll('[data-stcard]')].map(e=>e.dataset.stcard);
+      const needed = active.map(a=>a.id);
+      if (JSON.stringify(existing) !== JSON.stringify(needed)) {
+        summaryEl.innerHTML = active.map(a => {
+          const used=stData.usage[a.id]||0,lim=stData.limits[a.id]||0;
+          const pct=lim?Math.min(100,used/(lim*60)*100):0;
+          const col=pct>90?'#ff4a6a':pct>70?'#ffca6a':'var(--accent)';
+          return `<div data-stcard="${a.id}" style="flex-shrink:0;background:rgba(255,255,255,0.05);border-radius:10px;padding:8px 10px;min-width:72px;text-align:center"><div style="font-size:18px">${a.ico}</div><div style="font-size:9px;color:var(--text2);margin:2px 0">${a.name}</div><div id="st-card-time-${a.id}" style="font-size:11px;font-weight:700;color:${col}">${stFmtTime(used)}</div></div>`;
+        }).join('');
+      } else {
+        active.forEach(a => {
+          const used=stData.usage[a.id]||0,lim=stData.limits[a.id]||0,pct=lim?Math.min(100,used/(lim*60)*100):0;
+          const col=pct>90?'#ff4a6a':pct>70?'#ffca6a':'var(--accent)';
+          const el=document.getElementById('st-card-time-'+a.id);
+          if(el){el.textContent=stFmtTime(used);el.style.color=col;}
+        });
+      }
+    }
   }
 }
-
 // ── Full render (called once on open, and after settings changes) ─────────────
 function stRefreshUI() {
   const root = document.getElementById('st-root');
   if (!root) return;
   if (!stData) stLoad();
 
-  const totalUsed  = Object.values(stData.usage||{}).reduce((a,b)=>a+b,0);
-  const enabled    = stData.enabled;
-  const hasPin     = !!stData.pin;
-  const tl         = stData.totalLimit || 0;
-  const tlPct      = tl ? Math.min(100, totalUsed/(tl*60)*100) : 0;
-  const tlCol      = tlPct>90?'#ff4a6a':tlPct>70?'#ffca6a':'var(--accent)';
+  const tl = stData.totalLimit || 0;
 
-  // Build HTML as a string — set once, then stUpdateLiveUI keeps it fresh
   root.innerHTML = `
     <!-- Header -->
     <div style="padding:14px 18px 10px;background:var(--panel2);border-bottom:1px solid var(--border);flex-shrink:0">
@@ -8101,171 +8748,271 @@ function stRefreshUI() {
         <span style="font-size:20px">⏰</span>
         <div style="flex:1">
           <div style="font-size:14px;font-weight:800;color:var(--text)">Screen Time</div>
-          <div id="st-total-used" style="font-size:10px;color:var(--text2)">Heutige Nutzung · ${stFmtTime(totalUsed)} gesamt</div>
+          <div id="st-total-used" style="font-size:10px;color:var(--text2)">Heutige Nutzung · wird geladen…</div>
         </div>
         <div style="display:flex;align-items:center;gap:6px">
           <span style="font-size:11px;color:var(--text2)">Aktiv</span>
-          <div onclick="stToggleEnabled()" style="width:34px;height:19px;border-radius:10px;background:${enabled?'var(--accent)':'rgba(255,255,255,0.15)'};cursor:pointer;position:relative;transition:background 0.2s">
-            <div style="width:15px;height:15px;border-radius:8px;background:white;position:absolute;top:2px;left:${enabled?'17px':'2px'};transition:left 0.2s"></div>
+          <div id="st-enabled-toggle" onclick="stToggleEnabled()" style="width:34px;height:19px;border-radius:10px;cursor:pointer;position:relative;transition:background 0.2s">
+            <div id="st-enabled-knob" style="width:15px;height:15px;border-radius:8px;background:white;position:absolute;top:2px;transition:left 0.2s"></div>
           </div>
         </div>
       </div>
 
-      <!-- Total limit bar (shown only if tl > 0) -->
-      ${tl ? `<div style="margin-bottom:8px">
+      <!-- Total limit bar (always in DOM, shown/hidden via stUpdateLiveUI) -->
+      <div id="st-total-bar-wrap" style="margin-bottom:8px;display:none">
         <div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:3px">
           <span style="color:var(--text2)">Gesamtlimit</span>
-          <span id="st-total-pct" style="color:${tlCol};font-weight:700">${stFmtTime(totalUsed)} / ${tl}m</span>
+          <span id="st-total-pct" style="font-weight:700"></span>
         </div>
         <div style="height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden">
-          <div id="st-total-bar" style="height:100%;width:${tlPct}%;background:${tlCol};border-radius:2px;transition:width 1s"></div>
+          <div id="st-total-bar" style="height:100%;width:0%;border-radius:2px;transition:width 1s"></div>
         </div>
-      </div>` : '<div id="st-total-bar" style="display:none"></div><div id="st-total-pct" style="display:none"></div>'}
+      </div>
 
       <!-- Summary cards -->
       <div id="st-summary" style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px">
-        ${ST_ALL_APPS.filter(a=>(stData.usage[a.id]||0)>0).slice(0,6).map(a=>{
-          const used=stData.usage[a.id]||0,lim=stData.limits[a.id]||0;
-          const pct=lim?Math.min(100,used/(lim*60)*100):0;
-          const col=pct>90?'#ff4a6a':pct>70?'#ffca6a':'var(--accent)';
-          return `<div style="flex-shrink:0;background:rgba(255,255,255,0.05);border-radius:10px;padding:8px 10px;min-width:72px;text-align:center">
-            <div style="font-size:18px">${a.ico}</div>
-            <div style="font-size:9px;color:var(--text2);margin:2px 0">${a.name}</div>
-            <div style="font-size:11px;font-weight:700;color:${col}">${stFmtTime(used)}</div>
-            ${lim?`<div style="height:2px;background:rgba(255,255,255,0.08);border-radius:1px;margin-top:4px;overflow:hidden"><div style="height:100%;width:${pct}%;background:${col};border-radius:1px"></div></div>`:''}
-          </div>`;
-        }).join('') || '<div style="color:var(--text2);font-size:11px;padding:8px">Noch keine Nutzung heute</div>'}
+        <!-- filled by stUpdateLiveUI -->
       </div>
     </div>
 
-    <!-- Settings strip (PIN + total limit) -->
+    <!-- Settings strip -->
     <div style="padding:10px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;flex-wrap:wrap;row-gap:8px">
       <!-- PIN -->
       <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:180px">
         <div>
           <div style="font-size:11px;font-weight:700;color:var(--text)">PIN-Schutz</div>
-          <div style="font-size:9px;color:var(--text2)">${hasPin?'Gesetzt':'Nicht gesetzt'}</div>
+          <div id="st-pin-status" style="font-size:9px;color:var(--text2)"></div>
         </div>
-        ${hasPin
-          ? `<button onclick="stChangePinFlow()" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--panel2);color:var(--text2);font-size:10px;cursor:pointer;font-family:inherit">Ändern</button>
-             <button onclick="stRemovePin()" style="padding:4px 10px;border-radius:6px;border:1px solid rgba(255,80,80,0.3);background:transparent;color:#ff6a8a;font-size:10px;cursor:pointer;font-family:inherit">Entfernen</button>`
-          : `<button onclick="stSetPinFlow()" style="padding:4px 12px;border-radius:6px;border:none;background:var(--accent);color:white;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit">PIN setzen</button>`
-        }
+        <div id="st-pin-btns"></div>
       </div>
-      <!-- Total limit -->
+      <!-- Total limit via code -->
       <div style="display:flex;align-items:center;gap:8px">
         <div style="font-size:11px;font-weight:700;color:var(--text)">Gesamtlimit</div>
-        <select onchange="stSetTotalLimit(+this.value)" style="background:var(--panel);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:4px 6px;font-size:11px;font-family:inherit;cursor:pointer">
-          <option value="0" ${!tl?'selected':''}>Kein Limit</option>
-          ${[30,60,90,120,180,240,300].map(m=>`<option value="${m}" ${tl===m?'selected':''}>${m>=60?m/60+'h'+(m%60?' '+m%60+'m':''):m+' Min'}</option>`).join('')}
-        </select>
+        <div id="st-total-lim-display" style="font-size:10px;color:var(--text2)"></div>
+        <button onclick="stPromptTotalLimit()" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--panel);color:var(--text2);font-size:10px;cursor:pointer;font-family:inherit">Ändern</button>
       </div>
     </div>
 
-    <!-- App list — static structure, values updated by stUpdateLiveUI -->
+    <!-- App list — static rows, only values updated live -->
     <div style="flex:1;overflow-y:auto;padding:10px 16px 18px">
       <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">App-Limits</div>
-      <div style="display:flex;flex-direction:column;gap:5px">
-        ${ST_ALL_APPS.map(a => {
-          const used   = stData.usage[a.id] || 0;
-          const lim    = stData.limits[a.id] || 0;
-          const pct    = lim ? Math.min(100, used/(lim*60)*100) : 0;
-          const col    = pct>90?'#ff4a6a':pct>70?'#ffca6a':'var(--accent2)';
-          const locked = stData.locks[a.id];
-          return `<div id="st-row-${a.id}" style="display:flex;align-items:center;gap:8px;padding:9px 11px;background:var(--panel2);border:1px solid ${locked?'rgba(255,80,80,0.35)':'var(--border)'};border-radius:10px">
+      <div style="display:flex;flex-direction:column;gap:5px" id="st-app-list">
+        ${ST_ALL_APPS.map(a => `
+          <div id="st-row-${a.id}" style="display:flex;align-items:center;gap:8px;padding:9px 11px;background:var(--panel2);border:1px solid var(--border);border-radius:10px;transition:border-color 0.2s">
             <div style="font-size:19px;width:26px;text-align:center">${a.ico}</div>
             <div style="flex:1;min-width:0">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:${lim?'3px':'0'}">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
                 <span style="font-size:12px;font-weight:600;color:var(--text)">${a.name}</span>
-                <span id="st-time-${a.id}" style="font-size:10px;color:${col};font-weight:700">${stFmtTime(used)}${lim?' / '+lim+'m':''}</span>
+                <span id="st-time-${a.id}" style="font-size:10px;font-weight:700;color:var(--text2)">–</span>
               </div>
-              <div style="height:3px;background:rgba(255,255,255,0.07);border-radius:2px;overflow:hidden;display:${lim?'block':'none'}">
-                <div id="st-bar-${a.id}" style="height:100%;width:${pct}%;background:${col};border-radius:2px;transition:width 1s"></div>
+              <div id="st-bar-wrap-${a.id}" style="height:3px;background:rgba(255,255,255,0.07);border-radius:2px;overflow:hidden;display:none">
+                <div id="st-bar-${a.id}" style="height:100%;width:0%;border-radius:2px;transition:width 1s"></div>
               </div>
             </div>
-            <span id="st-lock-${a.id}" style="font-size:13px;display:${locked?'inline':'none'}">🔒</span>
-            <select onchange="stSetLimit('${a.id}',+this.value)" style="background:var(--panel);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:3px 5px;font-size:10px;font-family:inherit;cursor:pointer">
-              <option value="0" ${!lim?'selected':''}>Kein Limit</option>
-              ${[5,10,15,20,30,45,60,90,120].map(m=>`<option value="${m}" ${lim===m?'selected':''}>${m} Min</option>`).join('')}
-            </select>
-          </div>`;
-        }).join('')}
+            <span id="st-lock-${a.id}" style="font-size:13px;display:none">🔒</span>
+            <button onclick="stPromptLimit('${a.id}')" style="padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--panel);color:var(--text2);font-size:10px;cursor:pointer;font-family:inherit" id="st-lim-btn-${a.id}">Limit</button>
+          </div>`).join('')}
       </div>
       <div style="margin-top:12px;display:flex;gap:8px;justify-content:flex-end">
         <button onclick="stResetUsage()" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:var(--panel2);color:var(--text2);font-size:10px;cursor:pointer;font-family:inherit">Nutzung zurücksetzen</button>
         <button onclick="stUnlockAll()" style="padding:6px 12px;border-radius:8px;border:1px solid rgba(106,255,202,0.3);background:transparent;color:var(--accent2);font-size:10px;cursor:pointer;font-family:inherit">Alle entsperren</button>
       </div>
     </div>`;
+
+  stUpdateLiveUI();
+}
+// ── PIN gate — required before any ST change ─────────────────────────────────
+function stRequirePin(callback) {
+  if (!stData) stLoad();
+  if (!stData.pin) { callback(); return; } // no PIN set → proceed directly
+  document.getElementById('st-pin-gate-ov')?.remove();
+  let buf = '';
+  const ov = document.createElement('div');
+  ov.id = 'st-pin-gate-ov';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.72);backdrop-filter:blur(14px);z-index:99997;display:flex;align-items:center;justify-content:center';
+  const render = () => {
+    ov.innerHTML = `
+      <div style="background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:30px 36px;text-align:center;min-width:250px">
+        <div style="font-size:22px;margin-bottom:6px">🔒</div>
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">Screen Time PIN</div>
+        <div style="font-size:10px;color:var(--text2);margin-bottom:18px">PIN eingeben um fortzufahren</div>
+        <div style="display:flex;gap:10px;justify-content:center;margin-bottom:18px">
+          ${[0,1,2,3].map(i=>`<div style="width:14px;height:14px;border-radius:50%;transition:all 0.15s;background:${i<buf.length?'var(--accent)':'rgba(255,255,255,0.12)'};border:2px solid ${i<buf.length?'var(--accent)':'rgba(124,106,255,0.4)'}"></div>`).join('')}
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:190px;margin:0 auto 14px">
+          ${[1,2,3,4,5,6,7,8,9,'','0','⌫'].map(k => k==='' ? '<div></div>' :
+            `<button data-pgk="${k}" style="padding:12px;border-radius:10px;border:1px solid rgba(124,106,255,0.2);background:rgba(255,255,255,0.04);color:var(--text);font-size:17px;font-weight:600;cursor:pointer;font-family:inherit">${k}</button>`
+          ).join('')}
+        </div>
+        <button id="st-pg-cancel" style="padding:6px 16px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:11px;cursor:pointer;font-family:inherit">Abbrechen</button>
+        <div id="st-pg-err" style="font-size:10px;color:#ff4a6a;margin-top:8px;min-height:14px"></div>
+      </div>`;
+    ov.querySelectorAll('[data-pgk]').forEach(btn => {
+      btn.onmouseover = () => btn.style.background = 'rgba(124,106,255,0.15)';
+      btn.onmouseout  = () => btn.style.background = 'rgba(255,255,255,0.04)';
+      btn.onclick = () => {
+        const k = btn.dataset.pgk;
+        if (k === '⌫') { buf = buf.slice(0,-1); render(); return; }
+        if (buf.length >= 4) return;
+        buf += k;
+        render();
+        if (buf.length === 4) {
+          setTimeout(() => {
+            if (buf === stData.pin) {
+              ov.remove();
+              callback();
+            } else {
+              buf = '';
+              render();
+              const errEl = ov.querySelector('#st-pg-err');
+              if (errEl) errEl.textContent = 'Falscher PIN';
+              setTimeout(render, 700);
+            }
+          }, 150);
+        }
+      };
+    });
+    const cancelBtn = ov.querySelector('#st-pg-cancel');
+    if (cancelBtn) cancelBtn.onclick = () => ov.remove();
+  };
+  render();
+  document.body.appendChild(ov);
 }
 
 function stToggleEnabled() {
-  stData.enabled = !stData.enabled;
-  stSave();
-  stRefreshUI();
+  stRequirePin(() => {
+    stData.enabled = !stData.enabled;
+    stSave();
+    stUpdateLiveUI();
+  });
 }
 
 function stSetLimit(appId, minutes) {
   stData.limits[appId] = minutes;
-  const barWrap = document.getElementById('st-bar-' + appId)?.parentElement;
-  if (barWrap) barWrap.style.display = minutes ? 'block' : 'none';
   if (minutes > 0 && (stData.usage[appId]||0) >= minutes*60) {
     stData.locks[appId] = true;
     stUpdateIconBadge(appId, true);
   }
   stSave();
   stUpdateLiveUI();
-  showNotif('Screen Time', `${appId}: ${minutes ? minutes+'m Limit' : 'Kein Limit'}`, 'var(--accent)');
+  const appName = ST_ALL_APPS.find(a=>a.id===appId)?.name || appId;
+  showNotif('Screen Time', `${appName}: ${minutes ? minutes+'m Limit' : 'Kein Limit'}`, 'var(--accent)');
 }
 
 function stSetTotalLimit(minutes) {
   stData.totalLimit = minutes;
   stSave();
-  stRefreshUI(); // needs full re-render to show/hide total bar
+  stUpdateLiveUI();
   showNotif('Screen Time', `Gesamtlimit: ${minutes ? minutes+'m' : 'Kein Limit'}`, 'var(--accent)');
 }
 
 function stResetUsage() {
-  Object.keys(stData.locks||{}).forEach(id => stUpdateIconBadge(id, false));
-  stData.usage = {};
-  stData.locks = {};
-  stSave();
-  stRefreshUI();
-  showNotif('Screen Time', 'Nutzungsdaten zurückgesetzt', 'var(--accent2)');
+  stRequirePin(() => {
+    Object.keys(stData.locks||{}).forEach(id => stUpdateIconBadge(id, false));
+    stData.usage = {};
+    stData.locks = {};
+    stSave();
+    stUpdateLiveUI();
+    showNotif('Screen Time', 'Nutzungsdaten zurückgesetzt', 'var(--accent2)');
+  });
 }
 
 function stUnlockAll() {
-  stData.locks = {};
-  stData.usage = {};
-  stSave();
-  stRefreshUI();
-  document.getElementById('st-lock-overlay')?.remove();
-  showNotif('Screen Time', 'Alle Apps entsperrt', 'var(--accent2)');
+  stRequirePin(() => {
+    stData.locks = {};
+    stData.usage = {};
+    stSave();
+    stUpdateLiveUI();
+    document.getElementById('st-lock-overlay')?.remove();
+    showNotif('Screen Time', 'Alle Apps entsperrt', 'var(--accent2)');
+  });
+}
+
+function stPromptLimit(appId) {
+  stRequirePin(() => {
+    const app = ST_ALL_APPS.find(a=>a.id===appId);
+    const cur = stData.limits[appId] || 0;
+    stShowCodeInput(
+      `${app?.ico||'⏰'} Limit für ${app?.name||appId}`,
+      `Limit in Minuten (0 = kein Limit)\nAktuell: ${cur ? cur+'m' : 'kein Limit'}`,
+      'Minuten (z.B. 30)',
+      val => {
+        const mins = parseInt(val);
+        if (isNaN(mins) || mins < 0) { showNotif('Screen Time','Ungültige Eingabe','#ff4a6a'); return; }
+        stSetLimit(appId, mins);
+      }
+    );
+  });
+}
+
+function stPromptTotalLimit() {
+  stRequirePin(() => {
+    const cur = stData.totalLimit || 0;
+    stShowCodeInput(
+      '⏱ Gesamtlimit',
+      `Maximale Tagesnutzung in Minuten (0 = kein Limit)\nAktuell: ${cur ? cur+'m' : 'kein Limit'}`,
+      'Minuten (z.B. 120)',
+      val => {
+        const mins = parseInt(val);
+        if (isNaN(mins) || mins < 0) { showNotif('Screen Time','Ungültige Eingabe','#ff4a6a'); return; }
+        stSetTotalLimit(mins);
+      }
+    );
+  });
+}
+
+function stShowCodeInput(title, subtitle, placeholder, callback) {
+  document.getElementById('st-code-ov')?.remove();
+  const ov = document.createElement('div');
+  ov.id = 'st-code-ov';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.65);backdrop-filter:blur(12px);z-index:99995;display:flex;align-items:center;justify-content:center';
+  ov.innerHTML = `
+    <div style="background:var(--panel);border:1px solid var(--border);border-radius:18px;padding:26px 28px;min-width:270px;max-width:320px">
+      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:5px">${title}</div>
+      <div style="font-size:11px;color:var(--text2);margin-bottom:14px;white-space:pre-line">${subtitle}</div>
+      <input id="st-code-inp" type="number" min="0" placeholder="${placeholder}"
+        style="width:100%;background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:9px 12px;color:var(--text);font-family:inherit;font-size:13px;outline:none;box-sizing:border-box;margin-bottom:12px"
+        onkeydown="if(event.key==='Enter')document.getElementById('st-code-ok').click()">
+      <div style="display:flex;gap:8px">
+        <button onclick="document.getElementById('st-code-ov').remove()" style="flex:1;padding:8px;border-radius:9px;border:1px solid var(--border);background:var(--panel2);color:var(--text2);font-family:inherit;font-size:12px;cursor:pointer">Abbrechen</button>
+        <button id="st-code-ok" style="flex:1;padding:8px;border-radius:9px;border:1px solid rgba(124,106,255,0.4);background:rgba(124,106,255,0.2);color:var(--text);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer"
+          onclick="window._stCodeCb(document.getElementById('st-code-inp').value);document.getElementById('st-code-ov').remove()">Speichern</button>
+      </div>
+    </div>`;
+  window._stCodeCb = callback;
+  document.body.appendChild(ov);
+  setTimeout(() => document.getElementById('st-code-inp')?.focus(), 50);
 }
 
 // ── PIN flow ──────────────────────────────
 function stSetPinFlow() {
+  // No PIN yet — no gate needed
   stShowPinDialog('Neuen PIN setzen (4 Ziffern)', pin => {
     stData.pin = pin;
     stSave();
-    stRefreshUI();
+    stUpdateLiveUI();
     showNotif('Screen Time', 'PIN gesetzt 🔒', 'var(--accent)');
   });
 }
 
 function stChangePinFlow() {
-  stShowPinDialog('Neuen PIN eingeben', pin => {
-    stData.pin = pin;
-    stSave();
-    stRefreshUI();
-    showNotif('Screen Time', 'PIN geändert', 'var(--accent)');
+  stRequirePin(() => {
+    stShowPinDialog('Neuen PIN eingeben', pin => {
+      stData.pin = pin;
+      stSave();
+      stUpdateLiveUI();
+      showNotif('Screen Time', 'PIN geändert', 'var(--accent)');
+    });
   });
 }
 
 function stRemovePin() {
-  stData.pin = null;
-  stSave();
-  stRefreshUI();
-  showNotif('Screen Time', 'PIN entfernt', '#ffca6a');
+  stRequirePin(() => {
+    stData.pin = null;
+    stSave();
+    stUpdateLiveUI();
+    showNotif('Screen Time', 'PIN entfernt', '#ffca6a');
+  });
 }
 
 function stShowPinDialog(title, callback) {
@@ -8317,7 +9064,7 @@ const _origSetInterval = setInterval;
 // Start the screen-time ticker after login
 function startScreenTimeTicker() {
   stLoad();
-  setInterval(stTick, 1000);
+  setInterval(stTick, 15000);
 }
 
 // ── Initial boot sequence ────────────────
