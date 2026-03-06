@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>AI Chat Local + Drive</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter&family=Playfair+Display&family=Droid+Sans+Mono&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<style>
+body{font-family:Inter;background:#111;color:white;margin:0;display:flex;flex-direction:column;height:100vh;}
+#chat{flex:1;overflow:auto;padding:20px;}
+.user,.ai{padding:10px;margin:10px 0;border-radius:10px;}
+.user{background:#222;} .ai{background:#003b25;}
+h1,h2,h3{font-family:"Playfair Display";}
+code{font-family:"Droid Sans Mono";background:#000;padding:4px;border-radius:6px;}
+#inputbar{display:flex;border-top:1px solid #333;}
+input{flex:1;padding:12px;background:#111;color:white;border:none;}
+button{padding:12px;background:#00aa55;border:none;color:white;}
+</style>
+</head>
+
+<body>
+<div id="chat">KI lädt...</div>
+<div id="inputbar">
+<input id="input" placeholder="Nachricht schreiben...">
+<button onclick="send()">Senden</button>
+</div>
+
+<script type="module">
+import * as webllm from "https://esm.run/@mlc-ai/web-llm";
+
+// Direktlink von Google Drive
+const MODEL_URL = "https://drive.google.com/uc?export=download&id=DEINE_FILE_ID";
+
+let engine;
+
+async function init(){
+    engine = await webllm.CreateMLCEngine(MODEL_URL);
+    document.getElementById("chat").innerHTML="KI bereit!";
+}
+
+init();
+
+window.send = async function(){
+    const text=document.getElementById("input").value;
+    if(!text) return;
+    add("user",text);
+    document.getElementById("input").value="";
+    const reply = await engine.chat.completions.create({
+        messages:[{role:"user",content:text}]
+    });
+    add("ai",reply.choices[0].message.content);
+}
+
+function add(role,text){
+    const div=document.createElement("div");
+    div.className=role;
+    div.innerHTML=marked.parse(text);
+    document.getElementById("chat").appendChild(div);
+    document.getElementById("chat").scrollTop = document.getElementById("chat").scrollHeight;
+}
+</script>
+</body>
+</html>
